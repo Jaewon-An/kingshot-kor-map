@@ -1,0 +1,409 @@
+/* KSMapper shared base styles.
+ *
+ * Loaded by index.html and admin.html (and any future page sharing the
+ * same visual language). Page-specific overrides live in each page's
+ * inline <style> block AFTER this stylesheet, so they win on equal
+ * specificity. Keep this file additive — adding more page-specific
+ * rules here will regress one page or the other.
+ */
+
+:root {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --border: #30363d;
+  --gold: #c9a84c;
+  --gold-dim: #7a6330;
+  --ice: #a8d8ea;
+  --ice-dim: #4a8fa8;
+  --text: #e6edf3;
+  --text-dim: #8b949e;
+  --red: #f85149;
+  --green: #3fb950;
+  --blue: #58a6ff;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 19px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  padding: 14px 24px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  gap: 19px;
+}
+
+header h1 {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1.6875rem;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.coord-display {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1.215rem;
+  color: var(--ice);
+  background: rgba(168,216,234,0.08);
+  border: 1px solid var(--ice-dim);
+  padding: 5px 16px;
+  border-radius: 5px;
+  min-width: 202px;
+  text-align: center;
+}
+
+.header-hint {
+  margin-left: auto;
+  font-size: 1.107rem;
+  color: var(--text-dim);
+  font-family: 'Rajdhani', sans-serif;
+  white-space: nowrap;
+}
+
+.main { display: flex; flex: 1; overflow: hidden; }
+
+.sidebar {
+  width: 432px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 16px;
+  gap: 16px;
+}
+
+.sidebar h2 {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1.188rem;
+  color: var(--gold-dim);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+  margin-bottom: 2px;
+}
+
+.section { display: flex; flex-direction: column; gap: 6px; }
+
+.tool-row { display: flex; gap: 6px; }
+.tool-btn {
+  flex: 1; padding: 7px 5px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-dim);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1.215rem;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: all 0.13s;
+  white-space: nowrap;
+}
+.tool-btn:disabled { opacity: 0.35; cursor: default; }
+.tool-btn:not(:disabled):hover { border-color: var(--text-dim); color: var(--text); }
+.tool-btn.active-place  { background: rgba(63,185,80,0.1);  border-color: var(--green); color: var(--green); }
+.tool-btn.active-erase  { background: rgba(248,81,73,0.1);  border-color: var(--red);   color: var(--red); }
+.tool-btn.active-select { background: rgba(88,166,255,0.1); border-color: var(--blue);  color: var(--blue); }
+
+.building-btn {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; padding: 9px 14px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 1.188rem;
+  cursor: pointer;
+  transition: all 0.13s;
+  text-align: left;
+}
+.building-btn:hover { background: rgba(201,168,76,0.07); border-color: var(--gold-dim); }
+.building-btn.active { background: rgba(201,168,76,0.14); border-color: var(--gold); color: var(--gold); }
+.building-btn .swatch { width: 13px; height: 13px; border-radius: 3px; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.15); }
+.building-btn .size-tag { margin-left: auto; font-size: 1.053rem; color: var(--text-dim); font-family: 'Rajdhani', sans-serif; }
+
+label { font-size: 1.215rem; color: var(--text-dim); }
+input[type=text], input[type=color], select {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 1.2825rem;
+  padding: 9px 14px;
+}
+input[type=color] { height: 36px; padding: 2px 4px; cursor: pointer; }
+select { cursor: pointer; }
+select option { background: var(--bg); }
+
+.edit-panel {
+  background: rgba(88,166,255,0.06);
+  border: 1px solid rgba(88,166,255,0.25);
+  border-radius: 8px;
+  padding: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.edit-panel h3 { font-family:'Rajdhani',sans-serif; font-size:1.215rem; color:var(--blue); letter-spacing:0.02em; }
+.edit-row { display:flex; gap:7px; align-items:center; }
+.edit-row label { min-width:44px; flex-shrink:0; }
+.edit-row input, .edit-row select { flex:1; }
+.edit-coord { font-size:1.188rem; color:var(--text-dim); }
+
+.small-btn {
+  padding: 7px 16px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-dim);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1.188rem;
+  cursor: pointer;
+  transition: all 0.12s;
+  white-space: nowrap;
+}
+.small-btn:hover { border-color: var(--text-dim); color: var(--text); }
+.small-btn.danger { border-color: rgba(248,81,73,0.4); color: var(--red); }
+.small-btn.danger:hover { background: rgba(248,81,73,0.1); }
+
+.placed-list { display:flex; flex-direction:column; gap:3px; max-height:220px; overflow-y:auto; }
+.placed-item {
+  display:flex; align-items:center; gap:7px;
+  padding:5px 11px;
+  border-radius:5px;
+  border:1px solid transparent;
+  font-size:1.242rem;
+  cursor:pointer;
+  transition:all 0.1s;
+}
+.placed-item:hover { background:rgba(255,255,255,0.04); border-color:var(--border); }
+.placed-item.selected-item { background:rgba(88,166,255,0.08); border-color:rgba(88,166,255,0.3); }
+.placed-item .del { margin-left:auto; color:var(--red); font-size:1.485rem; line-height:1; background:none; border:none; cursor:pointer; opacity:0.5; flex-shrink:0; }
+.placed-item .del:hover { opacity:1; }
+.placed-item .pswatch { width:10px; height:10px; border-radius:2px; flex-shrink:0; }
+.placed-item .placed-name { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.placed-item .placed-coord { font-size:0.7rem; color:var(--text-dim); margin-right:2px; }
+
+.io-row { display:flex; gap:6px; }
+textarea {
+  width:100%; background:var(--bg); border:1px solid var(--border); border-radius:5px;
+  color:var(--text); font-family:'Inter',sans-serif; font-size:1.134rem;
+  padding:9px 13px; resize:vertical; min-height:108px;
+}
+.io-note { font-size:1.188rem; color:var(--text-dim); line-height:1.5; }
+.io-note code { color:var(--ice); background:rgba(168,216,234,0.08); padding:0 4px; border-radius:2px; }
+
+.canvas-wrap {
+  flex:1; overflow:hidden; position:relative;
+  background:#090d13;
+  background-image:radial-gradient(ellipse at 50% 50%, #0f1a24 0%, #090d13 70%);
+}
+canvas { display:block; }
+
+.zoom-controls { position:absolute; bottom:16px; right:16px; display:flex; flex-direction:column; gap:5px; }
+.zoom-btn {
+  width:46px; height:46px; background:var(--surface); border:1px solid var(--border);
+  color:var(--text); font-size:1.62rem; border-radius:4px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; transition:all 0.12s;
+}
+.zoom-btn:hover { border-color:var(--gold); color:var(--gold); }
+
+.hint { position:absolute; bottom:16px; left:16px; font-size:1.188rem; color:var(--text-dim); line-height:1.8; pointer-events:none; }
+
+.modal-overlay {
+  display:none; position:fixed; inset:0;
+  background:rgba(0,0,0,0.78); z-index:100;
+  align-items:center; justify-content:center;
+}
+.modal-overlay.open { display:flex; }
+.modal {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:11px; padding:27px; width:675px; max-width:95vw;
+  display:flex; flex-direction:column; gap:12px;
+}
+.modal h3 { font-family:'Rajdhani',sans-serif; color:var(--gold); font-size:1.5525rem; }
+.modal textarea { min-height:180px; font-size:1.134rem; }
+.modal-actions { display:flex; gap:8px; flex-wrap:wrap; }
+.btn {
+  flex:1; padding:8px; border-radius:4px; border:1px solid var(--border);
+  font-family:'Rajdhani',sans-serif; font-size:1.215rem; letter-spacing:0.01em; cursor:pointer; transition:all 0.15s;
+}
+.btn-primary { background:rgba(201,168,76,0.14); border-color:var(--gold); color:var(--gold); }
+.btn-primary:hover { background:rgba(201,168,76,0.26); }
+.btn-cancel { background:transparent; color:var(--text-dim); }
+.btn-cancel:hover { border-color:var(--text-dim); color:var(--text); }
+.error-msg { color:var(--red); font-size:1.107rem; min-height:1em; }
+
+/* Zone legend */
+.zone-legend { display:flex; flex-direction:column; gap:5px; }
+.zone-legend-item { display:flex; align-items:center; gap:8px; font-size:1.215rem; color:var(--text-dim); }
+.zone-legend-dot { width:14px; height:14px; border-radius:2px; flex-shrink:0; border:1px solid rgba(255,255,255,0.15); }
+
+/* Inline rename popup */
+#renamePopup {
+  display: none;
+  position: absolute;
+  z-index: 50;
+  background: var(--surface);
+  border: 1px solid var(--blue);
+  border-radius: 8px;
+  box-shadow: 0 5px 32px rgba(0,0,0,0.6);
+  padding: 14px 16px;
+  gap: 9px;
+  flex-direction: column;
+  min-width: 270px;
+}
+#renamePopup.open { display: flex; }
+#renamePopup label { font-family:'Rajdhani',sans-serif; font-size:1.188rem; color:var(--blue); letter-spacing:0.02em; }
+#renamePopup input {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 5px; color: var(--text);
+  font-family: 'Inter', sans-serif; font-size: 1.2825rem;
+  padding: 7px 13px; width: 100%;
+}
+#renamePopup input:focus { outline: none; border-color: var(--blue); }
+#renamePopup .hint-tiny { font-size:1.134rem; color:var(--text-dim); }
+
+/* ── Toolbar ───────────────────────────────────────────────────────── */
+.toolbar {
+  display: flex; align-items: center;
+  padding: 11px 22px; gap: 9px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0; overflow-x: auto; flex-wrap: nowrap;
+}
+.toolbar-sep { width:1px; height:22px; background:var(--border); margin:0 3px; flex-shrink:0; }
+.tb-title { font-family:'Rajdhani',sans-serif; font-size:1.5525rem; font-weight:700; color:var(--gold); white-space:nowrap; }
+.tb-btn {
+  display:flex; align-items:center; gap:5px;
+  padding:8px 16px; border-radius:5px; border:1px solid var(--border);
+  background:transparent; color:var(--text-dim);
+  font-family:'Rajdhani',sans-serif; font-size:1.215rem;
+  cursor:pointer; transition:all 0.13s; white-space:nowrap; flex-shrink:0;
+}
+.tb-btn:hover { border-color:var(--text-dim); color:var(--text); }
+.tb-btn:disabled { opacity:0.35; cursor:default; }
+.tb-btn.active-place  { background:rgba(63,185,80,0.12);  border-color:var(--green); color:var(--green); }
+.tb-btn.active-erase  { background:rgba(248,81,73,0.12);  border-color:var(--red);   color:var(--red); }
+.tb-btn.active-select { background:rgba(88,166,255,0.12); border-color:var(--blue);  color:var(--blue); }
+.tb-btn.tb-gold { border-color:var(--gold-dim); color:var(--gold); }
+.tb-btn.tb-gold:hover { background:rgba(201,168,76,0.12); }
+.coord-pill {
+  display:flex; align-items:center; gap:5px;
+  font-family:'Rajdhani',sans-serif; font-size:1.215rem; color:var(--ice);
+  background:rgba(168,216,234,0.08); border:1px solid var(--ice-dim);
+  padding:8px 16px; border-radius:5px; min-width:176px;
+  cursor:pointer; transition:border-color 0.13s; flex-shrink:0;
+}
+.coord-pill:hover { border-color:var(--ice); }
+.zoom-pill {
+  font-family:'Rajdhani',sans-serif; font-size:1.215rem; color:var(--text-dim);
+  background:transparent; border:1px solid var(--border);
+  padding:8px 14px; border-radius:5px; min-width:84px;
+  text-align:center; flex-shrink:0;
+}
+
+/* ── Hive view (alliance focus mode) ────────────────────────────────
+ * Activated by HiveView.open(tag) — see hive_view.js. While body has
+ * the .hive-view-active class, the regular chrome is hidden so the
+ * map canvas shows only the alliance's hive within its bounding box. */
+.hive-view-header {
+  display: none;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 24px;
+  background: linear-gradient(180deg, rgba(13,17,23,0.97), rgba(13,17,23,0.88));
+  border-bottom: 1px solid var(--gold-dim);
+  flex-shrink: 0;
+  font-family: 'Rajdhani', sans-serif;
+}
+.hive-view-header .hive-view-icon { font-size: 1.6rem; line-height: 1; }
+.hive-view-header .hive-view-tag {
+  color: var(--gold);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.hive-view-header .hive-view-suffix {
+  color: var(--text-dim);
+  font-size: 1.15rem;
+}
+.hive-view-header .hive-view-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+.hive-view-header .hive-view-action {
+  color: var(--gold);
+  background: transparent;
+  border: 1px solid var(--gold-dim);
+  border-radius: 5px;
+  padding: 6px 14px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.13s;
+  white-space: nowrap;
+}
+.hive-view-header .hive-view-action:hover {
+  background: rgba(201,168,76,0.12);
+  border-color: var(--gold);
+}
+.hive-view-header .hive-view-exit {
+  color: var(--text-dim);
+  text-decoration: none;
+  font-size: 1rem;
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  transition: all 0.13s;
+}
+.hive-view-header .hive-view-exit:hover {
+  color: var(--text);
+  border-color: var(--text-dim);
+  background: rgba(255,255,255,0.04);
+}
+
+body.hive-view-active #hiveViewHeader { display: flex; }
+body.hive-view-active header,
+body.hive-view-active .toolbar,
+body.hive-view-active .sidebar,
+body.hive-view-active .map-overlay-bar,
+body.hive-view-active .hint,
+body.hive-view-active .more-menu,
+body.hive-view-active .sheet-backdrop,
+body.hive-view-active .modal-overlay:not(#cityExportModal),
+body.hive-view-active #renamePopup,
+body.hive-view-active #coordJumpModal { display: none !important; }
+body.hive-view-active .canvas-wrap { background: var(--bg); }
+
+/* Hive Optimizer: keep its panel visible inside isolated view, and lock
+ * the user in by hiding the hive view header's share/export/exit controls
+ * until they explicitly Apply or Cancel. */
+body.hive-view-active.hive-opt-active #hiveOptPanel {
+  display: flex !important;
+}
+body.hive-opt-active .hive-view-actions,
+body.hive-opt-active .hive-view-exit {
+  display: none !important;
+}

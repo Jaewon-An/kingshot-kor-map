@@ -1,0 +1,2562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Kingshot Mapper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap">
+<link rel="stylesheet" href="styles.css">
+<style>
+  /* Shared base styles loaded from styles.css; rules below are
+     page-specific (index.html). Keep this <style> AFTER the link so
+     these rules win on equal specificity. */
+
+  /* Game selector — desktop styling (was inline style before; moved to CSS
+     so mobile overrides don't fight inline specificity). */
+  #gameSelector {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+    padding: 6px 8px;
+    cursor: pointer;
+    flex-shrink: 0;
+    align-self: stretch;
+    max-width: 160px;
+  }
+
+  /* ── Sidebar tabs ──────────────────────────────────────────────────── */
+  .sidebar {
+    width: 405px; flex-shrink:0;
+    background:var(--surface); border-right:1px solid var(--border);
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+  .sidebar-tabs { display:flex; border-bottom:1px solid var(--border); flex-shrink:0; }
+  .stab {
+    flex:1; padding:9px 4px;
+    font-family:'Rajdhani',sans-serif; font-size:1.188rem;
+    color:var(--text-dim); background:transparent;
+    border:none; border-bottom:2px solid transparent;
+    cursor:pointer; transition:all 0.13s; white-space:nowrap;
+  }
+  .stab:hover { color:var(--text); }
+  .stab.active { color:var(--gold); border-bottom-color:var(--gold); }
+  .sidebar-panel { display:none; flex:1; overflow-y:auto; padding:12px; flex-direction:column; gap:10px; }
+  .sidebar-panel.active { display:flex; }
+
+  /* ── Filter checkboxes ─────────────────────────────────────────────── */
+  .filter-item {
+    display:flex; align-items:center; gap:8px;
+    padding:3px 0; font-size:1.215rem; color:var(--text); cursor:pointer; user-select:none;
+  }
+  .filter-item input[type=checkbox] { width:15px; height:15px; accent-color:var(--gold); cursor:pointer; flex-shrink:0; }
+  .filter-item:hover { color:var(--gold); }
+  .perm-item {
+    display:flex; align-items:center; gap:7px;
+    padding:5px 8px; border-radius:5px;
+    font-size:1.134rem; color:var(--text-dim); cursor:pointer; transition:all 0.1s;
+  }
+  .perm-item:hover { background:rgba(255,255,255,0.04); color:var(--text); }
+  .perm-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+
+  /* ── Coord jump modal ──────────────────────────────────────────────── */
+  #coordJumpModal {
+    display:none; position:fixed; inset:0;
+    background:rgba(0,0,0,0.6); z-index:200;
+    align-items:flex-start; justify-content:center; padding-top:80px;
+  }
+  #coordJumpModal.open { display:flex; }
+  .coord-jump-box {
+    background:var(--surface); border:1px solid var(--ice-dim);
+    border-radius:11px; padding:22px 27px;
+    display:flex; flex-direction:column; gap:10px; width:280px;
+    box-shadow:0 11px 43px rgba(0,0,0,0.7);
+  }
+  .coord-jump-box h4 { font-family:'Rajdhani',sans-serif; font-size:1.35rem; color:var(--ice); }
+  .coord-jump-row { display:flex; gap:8px; }
+  .coord-jump-row input {
+    flex:1; background:var(--bg); border:1px solid var(--border);
+    border-radius:5px; color:var(--text); font-family:'Rajdhani',sans-serif;
+    font-size:1.35rem; padding:6px 9px; text-align:center;
+  }
+  .coord-jump-row input:focus { outline:none; border-color:var(--ice); }
+
+  /* ── Instructions modal ────────────────────────────────────────────── */
+  #instructionsModal {
+    display:none; position:fixed; inset:0;
+    background:rgba(0,0,0,0.82); z-index:300;
+    align-items:center; justify-content:center;
+  }
+  #instructionsModal.open { display:flex; }
+  .instr-box {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:14px; padding:24px 28px;
+    width:960px; max-width:95vw; max-height:88vh;
+    display:flex; flex-direction:column; gap:14px;
+  }
+  .instr-box h2 { font-family:'Rajdhani',sans-serif; font-size:1.755rem; color:var(--gold); flex-shrink:0; }
+  .instr-box h3 { font-family:'Rajdhani',sans-serif; font-size:1.35rem; color:var(--blue); margin-top:2px; }
+  .instr-tip {
+    display:flex; gap:10px; padding:8px 10px;
+    background:rgba(255,255,255,0.03); border-radius:6px;
+    border-left:3px solid var(--gold-dim);
+    font-size:1.188rem; line-height:1.55; color:var(--text);
+  }
+  .instr-tip .tip-icon { flex-shrink:0; font-size:1.485rem; margin-top:1px; }
+  .instr-footer {
+    display:flex; align-items:center; justify-content:space-between;
+    padding-top:11px; border-top:1px solid var(--border); gap:14px; flex-wrap:wrap;
+    flex-shrink:0;
+  }
+  .instr-no-show { display:flex; align-items:center; gap:7px; font-size:1.188rem; color:var(--text-dim); cursor:pointer; }
+  .instr-no-show input { width:15px; height:15px; accent-color:var(--gold); cursor:pointer; }
+  .shortcut-grid { display:grid; grid-template-columns:1fr 1fr; gap:5px 16px; font-size:1.188rem; }
+  .shortcut-grid .key {
+    display:inline-block; background:rgba(255,255,255,0.07);
+    border:1px solid var(--border); border-radius:3px;
+    padding:1px 8px; font-family:'Rajdhani',sans-serif;
+    font-size:1.107rem; color:var(--text); margin-right:4px;
+  }
+  /* Tabbed help layout */
+  .help-body { display:flex; gap:18px; flex:1; min-height:0; }
+  .help-tabs {
+    display:flex; flex-direction:column; gap:2px;
+    flex-shrink:0; width:180px;
+    border-right:1px solid var(--border); padding-right:10px;
+  }
+  .help-tab {
+    background:none; border:1px solid transparent;
+    color:var(--text-dim); cursor:pointer;
+    font-family:'Rajdhani',sans-serif; font-size:1.107rem;
+    text-align:left; padding:8px 12px; border-radius:6px;
+    transition:all 0.12s; white-space:nowrap;
+  }
+  .help-tab:hover { background:rgba(255,255,255,0.04); color:var(--text); }
+  .help-tab.active {
+    background:rgba(218,165,32,0.12); color:var(--gold);
+    border-color:var(--gold-dim);
+  }
+  .help-panels { flex:1; min-width:0; overflow-y:auto; padding-right:6px; }
+  .help-panel { display:none; flex-direction:column; gap:10px; }
+  .help-panel.active { display:flex; }
+  .help-panel h3:first-child { margin-top:0; }
+  @media (max-width:768px) {
+    .instr-box { padding:18px 16px; }
+    .help-body { flex-direction:column; gap:10px; }
+    .help-tabs {
+      flex-direction:row; width:auto;
+      border-right:none; border-bottom:1px solid var(--border);
+      padding-right:0; padding-bottom:8px;
+      overflow-x:auto; flex-wrap:nowrap;
+    }
+    .help-tab { flex-shrink:0; }
+  }
+
+  /* ── Map overlay: coord + zoom ──────────────────────────────────────── */
+  .map-overlay-bar {
+    position: absolute;
+    bottom: 16px; right: 16px;
+    display: flex; flex-direction: column; align-items: flex-end; gap: 6px;
+    pointer-events: none;
+  }
+  .map-overlay-pill {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.22rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-bottom: 2px solid var(--border);
+    padding: 6px 15px;
+    border-radius: 5px;
+    white-space: nowrap;
+    pointer-events: auto;
+    cursor: default;
+  }
+  .map-overlay-pill.coord-pill-overlay {
+    color: var(--ice);
+    border-color: var(--ice-dim);
+    cursor: pointer;
+  }
+  .map-overlay-pill.coord-pill-overlay:hover { border-color: var(--ice); }
+  .map-overlay-pill.perf-pill {
+    font-family: 'JetBrains Mono', 'Consolas', monospace;
+    font-size: 0.82rem;
+    color: #8be9fd;
+    border-color: #4b6478;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  /* ── Banner Optimizer Panel ─────────────────────────────────────────────── */
+  .bo-hdr {
+    display:flex; align-items:center; gap:10px;
+    padding:12px 16px; border-bottom:1px solid var(--border);
+    flex-shrink:0;
+  }
+  .bo-hdr-title {
+    font-family:'Rajdhani',sans-serif; font-size:1.35rem;
+    font-weight:700; color:var(--gold); flex:1;
+  }
+  .bo-close-btn {
+    background:none; border:none; color:var(--text-dim);
+    font-size:1.215rem; cursor:pointer; padding:3px 7px;
+    border-radius:4px; line-height:1; transition:all 0.12s;
+  }
+  .bo-close-btn:hover { color:var(--text); background:rgba(255,255,255,0.07); }
+  .bo-content {
+    flex:1; overflow-y:auto; padding:12px;
+    display:flex; flex-direction:column; gap:10px;
+    min-height:0;
+  }
+  .bo-section { border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+  .bo-section-hdr {
+    display:flex; align-items:center; gap:8px;
+    padding:10px 14px; background:rgba(255,255,255,0.02);
+    border-bottom:1px solid var(--border); flex-shrink:0;
+  }
+  .bo-step-badge {
+    width:22px; height:22px; border-radius:50%;
+    background:var(--gold-dim); color:#0d1117;
+    font-family:'Rajdhani',sans-serif; font-size:0.9rem; font-weight:700;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .bo-section-title {
+    font-family:'Rajdhani',sans-serif; font-size:1.107rem;
+    font-weight:600; color:var(--text-dim);
+    letter-spacing:0.04em; text-transform:uppercase; flex:1;
+  }
+  .bo-count-badge {
+    display:none; align-items:center;
+    font-family:'Rajdhani',sans-serif; font-size:1.053rem;
+    color:var(--blue); background:rgba(88,166,255,0.12);
+    border:1px solid rgba(88,166,255,0.3); border-radius:10px;
+    padding:1px 9px;
+  }
+  .bo-hdr-clear-btn {
+    background:none; border:1px solid rgba(248,81,73,0.35); color:var(--red);
+    font-family:'Rajdhani',sans-serif; font-size:1.026rem;
+    padding:2px 9px; border-radius:4px; cursor:pointer; transition:all 0.12s;
+  }
+  .bo-hdr-clear-btn:hover { background:rgba(248,81,73,0.1); }
+  .bo-section-body { padding:12px 14px; display:flex; flex-direction:column; gap:8px; }
+  .bo-hint { font-size:1.053rem; color:var(--text-dim); line-height:1.5; }
+  .bo-pick-btn {
+    display:flex; align-items:center; gap:7px;
+    padding:8px 14px; border-radius:5px;
+    border:1px solid var(--border); background:transparent;
+    color:var(--text-dim); font-family:'Rajdhani',sans-serif;
+    font-size:1.134rem; cursor:pointer; transition:all 0.13s;
+  }
+  .bo-pick-btn:hover { border-color:var(--gold-dim); color:var(--gold); }
+  .bo-pick-btn.picking {
+    border-color:var(--blue); color:var(--blue);
+    background:rgba(88,166,255,0.08);
+    animation:bo-pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes bo-pulse { 0%,100%{opacity:1} 50%{opacity:0.65} }
+  .bo-start-display {
+    display:flex; align-items:center; gap:9px;
+    padding:8px 12px; border-radius:6px;
+    border:1px solid var(--border); background:rgba(255,255,255,0.02);
+    min-height:44px;
+  }
+  .bo-start-none { color:var(--text-dim); font-size:1.053rem; font-style:italic; }
+  .bo-start-icon { font-size:1.35rem; flex-shrink:0; }
+  .bo-start-info { flex:1; display:flex; flex-direction:column; gap:2px; overflow:hidden; }
+  .bo-start-name { font-size:1.107rem; color:var(--text); font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .bo-start-coords { font-size:1.026rem; color:var(--text-dim); font-family:'Rajdhani',sans-serif; }
+  .bo-start-clear { background:none; border:none; color:var(--text-dim); font-size:1.215rem; cursor:pointer; padding:0 4px; flex-shrink:0; }
+  .bo-start-clear:hover { color:var(--red); }
+  .bo-accordion { display:flex; flex-direction:column; max-height:260px; overflow-y:auto; }
+  .bo-cat { border-top:1px solid var(--border); }
+  .bo-cat:first-child { border-top:none; }
+  .bo-cat-hdr {
+    display:flex; align-items:center; gap:8px;
+    padding:9px 14px; width:100%;
+    background:transparent; border:none;
+    color:var(--text); font-family:'Inter',sans-serif;
+    font-size:1.107rem; cursor:pointer; text-align:left;
+    transition:background 0.12s;
+  }
+  .bo-cat-hdr:hover { background:rgba(255,255,255,0.03); }
+  .bo-cat-hdr.open { background:rgba(88,166,255,0.04); }
+  .bo-cat-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+  .bo-cat-name { flex:1; }
+  .bo-cat-total { font-size:1.026rem; color:var(--text-dim); font-family:'Rajdhani',sans-serif; }
+  .bo-cat-sel {
+    font-size:1.026rem; color:var(--blue);
+    font-family:'Rajdhani',sans-serif; min-width:44px; text-align:right;
+  }
+  .bo-chevron { font-size:0.78rem; color:var(--text-dim); width:14px; flex-shrink:0; }
+  .bo-cat-body { background:rgba(0,0,0,0.2); padding:4px 0 8px; }
+  .bo-level-grp { padding:6px 14px 2px; }
+  .bo-level-lbl {
+    font-size:1.026rem; color:var(--gold-dim); font-family:'Rajdhani',sans-serif;
+    letter-spacing:0.04em; text-transform:uppercase;
+    padding-bottom:4px; border-bottom:1px solid rgba(255,255,255,0.04);
+    margin-bottom:3px;
+  }
+  .bo-level-cnt { color:var(--text-dim); text-transform:none; letter-spacing:0; font-weight:400; }
+  .bo-out-row {
+    display:flex; align-items:center; gap:8px;
+    padding:5px 8px; border-radius:5px; cursor:pointer;
+    font-size:1.107rem; color:var(--text-dim);
+    border:1px solid transparent; transition:all 0.1s; user-select:none;
+  }
+  .bo-out-row:hover { background:rgba(255,255,255,0.04); color:var(--text); }
+  .bo-out-row.selected { background:rgba(88,166,255,0.09); border-color:rgba(88,166,255,0.3); color:var(--blue); }
+  .bo-out-row input[type=radio] { accent-color:var(--blue); width:14px; height:14px; flex-shrink:0; cursor:pointer; }
+  .bo-out-lbl { font-family:'Rajdhani',sans-serif; font-size:1.107rem; }
+  .bo-check-row {
+    display:flex; align-items:center; gap:9px;
+    font-size:1.107rem; color:var(--text); cursor:pointer; user-select:none;
+  }
+  .bo-check-row input[type=checkbox] { width:15px; height:15px; accent-color:var(--gold); cursor:pointer; flex-shrink:0; }
+  .bo-check-row:hover { color:var(--gold); }
+  .bo-run-btn {
+    margin:4px 12px 12px; padding:11px;
+    border-radius:6px; border:1px solid var(--gold-dim);
+    background:rgba(201,168,76,0.1); color:var(--gold);
+    font-family:'Rajdhani',sans-serif; font-size:1.215rem;
+    font-weight:600; letter-spacing:0.03em; cursor:pointer;
+    transition:all 0.15s; flex-shrink:0;
+  }
+  .bo-run-btn:hover:not(:disabled) { background:rgba(201,168,76,0.22); border-color:var(--gold); }
+  .bo-run-btn:disabled { opacity:0.38; cursor:default; }
+  .bo-results {
+    margin:0 12px 12px; border:1px solid rgba(88,166,255,0.3);
+    border-radius:8px; overflow:hidden; flex-shrink:0;
+    display:flex; flex-direction:column;
+  }
+  .bo-res-hdr {
+    display:flex; align-items:center; padding:9px 14px; gap:8px;
+    background:rgba(88,166,255,0.06); border-bottom:1px solid rgba(88,166,255,0.2);
+  }
+  .bo-res-title {
+    font-family:'Rajdhani',sans-serif; font-size:1.107rem;
+    color:var(--blue); flex:1; letter-spacing:0.04em; text-transform:uppercase;
+  }
+  .bo-res-body { padding:12px 14px; display:flex; flex-direction:column; gap:10px; }
+  .bo-res-stats { display:flex; gap:10px; }
+  .bo-res-stat {
+    flex:1; display:flex; flex-direction:column; align-items:center;
+    padding:9px; border-radius:6px;
+    background:rgba(255,255,255,0.03); border:1px solid var(--border); gap:3px;
+  }
+  .bo-res-stat-val { font-family:'Rajdhani',sans-serif; font-size:1.755rem; color:var(--text); font-weight:700; }
+  .bo-res-stat-lbl { font-size:0.972rem; color:var(--text-dim); text-align:center; }
+  .bo-res-msg { font-size:1.053rem; color:var(--text-dim); line-height:1.5; }
+  .bo-res-nav { display:flex; align-items:center; gap:4px; margin-left:auto; }
+  .bo-nav-btn {
+    background:none; border:1px solid rgba(88,166,255,0.3); color:var(--blue);
+    width:26px; height:26px; border-radius:4px; cursor:pointer; font-size:1.08rem;
+    display:flex; align-items:center; justify-content:center; transition:background 0.12s;
+    font-family:'Rajdhani',sans-serif; font-weight:700;
+  }
+  .bo-nav-btn:hover:not(:disabled) { background:rgba(88,166,255,0.14); }
+  .bo-nav-btn:disabled { opacity:0.3; cursor:default; }
+  .bo-nav-info { font-size:1.026rem; color:var(--text-dim); font-family:'Rajdhani',sans-serif; white-space:nowrap; padding:0 3px; }
+  .bo-apply-btn {
+    padding:9px; border-radius:6px; border:1px solid rgba(80,200,120,0.4);
+    background:rgba(80,200,120,0.1); color:#5cc87a;
+    font-family:'Rajdhani',sans-serif; font-size:1.134rem;
+    font-weight:600; letter-spacing:0.03em; cursor:pointer; transition:all 0.15s;
+  }
+  .bo-apply-btn:hover { background:rgba(80,200,120,0.22); border-color:#5cc87a; }
+
+  /* ── Mobile-only chrome (default: hidden on desktop) ─────────────────────── */
+  .mobile-only { display: none; }
+  .sheet-handle-row { display: none; }
+  .sheet-backdrop { display: none; }
+  .more-menu { display: none; }
+  .mobile-tool-bar { display: none; }
+
+  /* ── Disable sticky :hover on touch devices ──────────────────────────────── */
+  @media (hover: none) {
+    .tb-btn:hover, .tool-btn:hover, .building-btn:hover, .stab:hover,
+    .placed-item:hover, .small-btn:hover, .btn-primary:hover, .btn-cancel:hover,
+    .coord-pill:hover, .zoom-btn:hover, .filter-item:hover, .perm-item:hover,
+    .bo-pick-btn:hover, .bo-cat-hdr:hover, .bo-out-row:hover, .bo-check-row:hover,
+    .map-overlay-pill.coord-pill-overlay:hover, .bo-run-btn:hover:not(:disabled),
+    .bo-apply-btn:hover, .bo-close-btn:hover, .bo-nav-btn:hover:not(:disabled),
+    .bo-hdr-clear-btn:hover, .bo-start-clear:hover, .placed-item .del:hover,
+    .stab:hover, .tb-btn.tb-gold:hover {
+      background: inherit;
+      border-color: inherit;
+      color: inherit;
+    }
+    .tb-btn:active, .tool-btn:active, .building-btn:active,
+    .small-btn:active, .btn:active, .stab:active,
+    .placed-item:active, .filter-item:active, .perm-item:active,
+    .bo-pick-btn:active, .bo-cat-hdr:active, .bo-out-row:active {
+      opacity: 0.7;
+    }
+  }
+
+  /* ── Mobile breakpoint: bottom-sheet layout ──────────────────────────────── */
+  @media (max-width: 900px) {
+    :root {
+      --tb-h: 52px;
+    }
+    body {
+      font-size: 14px;
+      height: 100dvh;
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Toolbar: compress to a 52px icon bar.
+       align-items: center is inherited from the base rule; we additionally
+       force every child to height: 38px + line-height: 1 + align-self: center
+       so different glyph metrics (emoji vs Rajdhani vs native select chrome)
+       all sit on the same vertical baseline. */
+    .toolbar {
+      height: var(--tb-h);
+      padding: 0 8px;
+      gap: 5px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+    }
+    .toolbar > * { align-self: center; }
+    .toolbar-sep { height: 18px; margin: 0 1px; }
+    .tb-title {
+      font-size: 1.15rem;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      height: 38px;
+    }
+    /* Drop the "Kingshot Mapper" / "Whiteout Survival Mapper" text on mobile —
+       keep the ⚔/❄ emoji as the brand mark. Game selector still shows which
+       game is active, so the long text is redundant and just costs space. */
+    #appTitle .app-title-text { display: none; }
+    .tb-btn {
+      padding: 5px 9px;
+      height: 38px;
+      min-width: 40px;
+      font-size: 0.95rem;
+      gap: 2px;
+      border-radius: 5px;
+    }
+    .tb-btn .tb-label { display: none; }   /* hide text-after-icon spans tagged as .tb-label */
+    /* Hide non-essential toolbar buttons on mobile — they go into the overflow menu */
+    .toolbar .tb-hide-mobile { display: none; }
+    .mobile-only { display: flex !important; }
+
+    /* Game selector on mobile: strip native rendering so CSS centering works
+       reliably (Chrome ignores line-height/padding for vertical text position
+       inside a native <select> when explicit height is set). With appearance:
+       none, the select becomes a regular box — line-height: 38px equal to the
+       height vertically centers the text cleanly. Custom ▼ arrow painted as
+       a background SVG since we lose the native one. Switch to Inter font for
+       a more predictable baseline than Rajdhani. */
+    #gameSelector {
+      max-width: 72px;
+      width: 72px;
+      height: 38px;
+      align-self: center;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 0.92rem;
+      font-weight: 600;
+      line-height: 38px;
+      padding: 0 22px 0 8px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      background-color: var(--surface);
+      background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%238b949e' d='M5 6L0 0h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 6px center;
+      background-size: 8px;
+    }
+
+    /* Right-size hamburger ☰ and more ⋮: identical 38×38 squares.
+       display: inline-flex + center alignment puts the glyph dead-center
+       regardless of font baseline quirks. */
+    .tb-btn.mobile-only {
+      min-width: 38px;
+      width: 38px;
+      height: 38px;
+      padding: 0;
+      font-size: 1.35rem;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Coord/zoom pills in toolbar — hide, rely on map overlay pills */
+    .toolbar .coord-pill, .toolbar .zoom-pill { display: none; }
+
+    /* Sidebar → bottom sheet */
+    .main { position: relative; }
+    .sidebar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      width: 100%;
+      max-height: 72dvh;
+      border-right: none;
+      border-top: 1px solid var(--border);
+      border-radius: 14px 14px 0 0;
+      transform: translateY(100%);
+      transition: transform 0.26s cubic-bezier(0.4,0,0.2,1);
+      padding-bottom: var(--safe-bottom);
+      z-index: 100;
+      box-shadow: 0 -6px 20px rgba(0,0,0,0.4);
+    }
+    .sidebar.open { transform: translateY(0); }
+
+    /* Sheet handle (drag pill at top) */
+    .sheet-handle-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 0 6px;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+    .sheet-handle {
+      width: 40px;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--border);
+    }
+
+    /* Sheet backdrop */
+    .sheet-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.3);
+      z-index: 90;
+    }
+    .sheet-backdrop.open { display: block; }
+
+    .sidebar-tabs { flex-shrink: 0; }
+    .stab { padding: 9px 4px; font-size: 0.95rem; }
+    .sidebar-panel { padding: 10px; gap: 8px; }
+    .sidebar h2 { font-size: 0.92rem; padding-bottom: 5px; }
+
+    /* Mobile-only sheet tool bar: segmented Place/Select/Erase + Undo/Redo/Share */
+    .mobile-tool-bar {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 4px 12px 10px;
+      flex-shrink: 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .seg-tools {
+      display: flex;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      overflow: hidden;
+      background: var(--bg);
+    }
+    .seg-btn {
+      flex: 1;
+      padding: 11px 4px;
+      border: none;
+      border-right: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-dim);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.13s, color 0.13s;
+      white-space: nowrap;
+    }
+    .seg-btn:last-child { border-right: none; }
+    .seg-btn:active { opacity: 0.7; }
+    .seg-btn.active-place  { background: rgba(63,185,80,0.16);  color: var(--green); font-weight: 600; }
+    .seg-btn.active-select { background: rgba(88,166,255,0.16); color: var(--blue);  font-weight: 600; }
+    .seg-btn.active-erase  { background: rgba(248,81,73,0.16);  color: var(--red);   font-weight: 600; }
+    .seg-extras { display: flex; gap: 6px; }
+    .seg-extra-btn {
+      flex: 1;
+      padding: 9px 4px;
+      border-radius: 5px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-dim);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 0.92rem;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .seg-extra-btn:active { opacity: 0.7; }
+    .seg-extra-btn:disabled { opacity: 0.35; cursor: default; }
+    .seg-extra-btn.seg-gold { border-color: var(--gold-dim); color: var(--gold); }
+
+    /* Canvas fills the screen below toolbar */
+    .canvas-wrap { touch-action: none; }
+    canvas { touch-action: none; }
+
+    /* Modals: bottom-sheet style on small viewport */
+    .modal-overlay {
+      align-items: flex-end;
+      justify-content: center;
+      background: rgba(0,0,0,0.78);
+    }
+    .modal {
+      width: 100%;
+      max-width: 100%;
+      border-radius: 14px 14px 0 0;
+      padding: 18px 14px calc(18px + var(--safe-bottom));
+      max-height: 88dvh;
+      overflow-y: auto;
+    }
+    .modal h3 { font-size: 1.1rem; }
+    .modal textarea { font-size: 0.88rem; min-height: 120px; }
+
+    /* Coord jump modal */
+    #coordJumpModal {
+      align-items: flex-end;
+      padding-top: 0;
+      background: rgba(0,0,0,0.78);
+    }
+    .coord-jump-box {
+      width: 100%;
+      border-radius: 14px 14px 0 0;
+      padding: 18px 16px calc(18px + var(--safe-bottom));
+    }
+
+    /* Instructions modal */
+    .instr-box {
+      width: 100%;
+      max-width: 100%;
+      max-height: 92dvh;
+      border-radius: 14px 14px 0 0;
+      padding: 18px 14px calc(14px + var(--safe-bottom));
+    }
+    .instr-box h2 { font-size: 1.15rem; }
+    .instr-box h3 { font-size: 0.95rem; }
+
+    /* Rename popup as bottom sheet on mobile */
+    #renamePopup {
+      position: fixed !important;
+      bottom: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      top: auto !important;
+      width: 100%;
+      min-width: 0;
+      border-radius: 14px 14px 0 0;
+      box-shadow: 0 -6px 20px rgba(0,0,0,0.4);
+      padding: 14px 14px calc(14px + var(--safe-bottom));
+      z-index: 400;
+    }
+
+    /* Hint pill — repositioned bottom-left for thumb reach */
+    .hint { bottom: 12px; left: 10px; font-size: 0.72rem; }
+
+    /* Map overlay pills (zoom/coord) — shrink */
+    .map-overlay-bar { bottom: 12px; right: 10px; gap: 5px; }
+    .map-overlay-pill { font-size: 0.85rem; padding: 4px 10px; }
+
+    /* Form inputs must remain tappable — body's touch-action/user-select shouldn't block them */
+    input, select, textarea, button, label {
+      -webkit-user-select: auto;
+      user-select: auto;
+    }
+    input, select, textarea {
+      touch-action: auto;
+    }
+
+    /* More menu (overflow ⋮) */
+    .more-menu {
+      position: fixed;
+      top: calc(var(--tb-h) + 4px);
+      right: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 6px 0;
+      z-index: 400;
+      display: none;
+      flex-direction: column;
+      min-width: 180px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+    }
+    .more-menu.open { display: flex; }
+    .more-item {
+      padding: 12px 18px;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 0.98rem;
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: none;
+      background: none;
+      text-align: left;
+      width: 100%;
+    }
+    .more-item:active { background: rgba(255,255,255,0.06); }
+    .more-item.danger { color: var(--red); }
+
+    /* Banner Optimizer on mobile: hide map-pick path. Map screen is covered by
+       the BO sheet, so map selection is awkward — force users to use the alliance
+       dropdown for start and the accordion for targets. */
+    #boPickStartBtn { display: none !important; }
+    #boTargetManualHint { display: none !important; }
+
+    /* Long-press ring (custom touch affordance) */
+    .longpress-ring {
+      position: absolute;
+      pointer-events: none;
+      z-index: 50;
+      width: 48px;
+      height: 48px;
+      margin-left: -24px;
+      margin-top: -24px;
+      border-radius: 50%;
+      border: 2px solid var(--red);
+      animation: lpRing 0.5s ease-out forwards;
+    }
+    @keyframes lpRing {
+      from { opacity: 1; transform: scale(0.5); }
+      to   { opacity: 0; transform: scale(1.8); }
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- HIVE VIEW HEADER (only shown when document.body has .hive-view-active) -->
+<div id="hiveViewHeader" class="hive-view-header" style="display:none">
+  <span class="hive-view-icon">🪖</span>
+  <span class="hive-view-tag"></span>
+  <span class="hive-view-suffix">Hive Plan</span>
+  <div class="hive-view-actions">
+    <button class="hive-view-action" type="button" onclick="copyHiveShareLink(this)" title="Copy the shareable link to this hive plan">🔗 Copy Link</button>
+    <button class="hive-view-action" type="button" onclick="openCityExport()" title="Export this alliance's cities">🏙 Export Cities</button>
+  </div>
+  <a class="hive-view-exit" href="#" onclick="event.preventDefault();HiveView.close()">✕ Exit</a>
+</div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <span class="tb-title" id="appTitle"><span class="app-title-emoji">⚔</span><span class="app-title-text"> Kingshot Mapper</span></span>
+  <select id="gameSelector" onchange="(async()=>{ window.switchGame && await window.switchGame(this.value); })()" title="Switch game mode">
+    <option value="kingshot">Kingshot</option>
+    <option value="whiteout">Whiteout Survival</option>
+  </select>
+  <div class="toolbar-sep tb-hide-mobile"></div>
+  <button class="tb-btn active-place tb-hide-mobile" id="btnPlace"  onclick="setTool('place')" title="[D] Place">✦ Place</button>
+  <button class="tb-btn tb-hide-mobile"              id="btnSelect" onclick="setTool('select')" title="[S] Select">↖ Select</button>
+  <button class="tb-btn tb-hide-mobile"              id="btnErase"  onclick="setTool('erase')"  title="[E] Erase">✕ Erase</button>
+  <div class="toolbar-sep tb-hide-mobile"></div>
+  <button class="tb-btn tb-hide-mobile" id="btnUndo" onclick="undo()" disabled title="Undo (Ctrl+Z)">↩ Undo</button>
+  <button class="tb-btn tb-hide-mobile" id="btnRedo" onclick="redo()" disabled title="Redo (Ctrl+Y)">↪ Redo</button>
+  <div class="toolbar-sep tb-hide-mobile"></div>
+  <button class="tb-btn tb-hide-mobile" onclick="openImport()" title="Import CSV">↓ Import</button>
+  <button class="tb-btn tb-hide-mobile" onclick="openExport()" title="Export CSV">↑ Export</button>
+  <button class="tb-btn tb-hide-mobile" onclick="openCityExport()" title="Export city locations">🏰 Cities</button>
+  <button class="tb-btn tb-gold tb-hide-mobile" onclick="openShare()" title="Share map">🔗 Share</button>
+  <button class="tb-btn tb-hide-mobile" onclick="confirmClearAll()" title="Clear all" style="color:var(--red);border-color:rgba(248,81,73,0.4)">🗑 Clear</button>
+  <div class="toolbar-sep tb-hide-mobile"></div>
+  <button class="tb-btn tb-hide-mobile" onclick="openInstructions()" title="Help">? Help</button>
+  <select id="langSelect" class="tb-hide-mobile" onchange="setLang(this.value)"
+    style="background:var(--surface);border:1px solid var(--border);border-radius:5px;
+           color:var(--text-dim);font-family:'Rajdhani',sans-serif;font-size:1.215rem;
+           padding:8px 8px;cursor:pointer;width:72px;flex-shrink:0;box-sizing:border-box;align-self:stretch">
+    <option value="en">EN</option>
+    <option value="tl" hidden>TL</option>
+    <option value="es" hidden>ES</option>
+    <option value="pt" hidden>PT</option>
+    <option value="vi" hidden>VI</option>
+    <option value="id" hidden>ID</option>
+    <option value="zh" hidden>ZH</option>
+  </select>
+  <div class="toolbar-sep tb-hide-mobile"></div>
+  <span class="tb-title tb-hide-mobile" style="margin-left:auto;cursor:default">
+    <span id="creditLink">Made by : FluffyPiñata | Kingdom 1249</span>
+  </span>
+  <!-- Mobile-only: hamburger to open bottom sheet -->
+  <button class="tb-btn mobile-only" style="margin-left:auto" onclick="toggleMainSheet()" title="Open panel">☰</button>
+  <button class="tb-btn mobile-only" onclick="toggleMoreMenu()" title="More">⋮</button>
+</div>
+<div class="more-menu" id="moreMenu">
+  <button class="more-item" onclick="closeMoreMenu();openImport()">↓ Import CSV</button>
+  <button class="more-item" onclick="closeMoreMenu();openExport()">↑ Export CSV</button>
+  <button class="more-item" onclick="closeMoreMenu();openCityExport()">🏰 Export Cities</button>
+  <button class="more-item" onclick="closeMoreMenu();openInstructions()">? Help</button>
+  <div style="border-top:1px solid var(--border);margin:4px 0"></div>
+  <button class="more-item danger" onclick="closeMoreMenu();confirmClearAll()">🗑 Clear All</button>
+</div>
+<div class="sheet-backdrop" id="sheetBackdrop" onclick="closeAllSheets()"></div>
+
+<div class="main">
+  <!-- LEFT SIDEBAR -->
+  <div class="sidebar" id="mainSidebar">
+    <div class="sheet-handle-row" onclick="closeAllSheets()"><div class="sheet-handle"></div></div>
+    <!-- Mobile-only tool bar: segmented Place/Select/Erase + Undo/Redo/Share -->
+    <div class="mobile-tool-bar">
+      <div class="seg-tools" role="tablist" aria-label="Tool">
+        <button class="seg-btn active-place" id="btnPlaceM" onclick="setTool('place')"  aria-label="Place">✦ Place</button>
+        <button class="seg-btn"              id="btnSelectM" onclick="setTool('select')" aria-label="Select">↖ Select</button>
+        <button class="seg-btn"              id="btnEraseM"  onclick="setTool('erase')"  aria-label="Erase">✕ Erase</button>
+      </div>
+      <div class="seg-extras">
+        <button class="seg-extra-btn" id="btnUndoM" onclick="undo()" disabled>↩ Undo</button>
+        <button class="seg-extra-btn" id="btnRedoM" onclick="redo()" disabled>↪ Redo</button>
+        <button class="seg-extra-btn seg-gold" onclick="openShare()">🔗 Share</button>
+      </div>
+    </div>
+    <div class="sidebar-tabs">
+      <button class="stab active" onclick="showSideTab('place',this)">🏗 Place</button>
+      <button class="stab"        onclick="showSideTab('placed',this)">📋 Placed</button>
+      <button class="stab"        onclick="showSideTab('map',this)">🗺 Map</button>
+    </div>
+
+    <!-- TAB: Place -->
+    <div class="sidebar-panel active" id="panel-place">
+      <div class="section" id="typeSection">
+        <h2>Building Type</h2>
+        <button class="building-btn active" onclick="selectType('city')"     id="bt_city">
+          <span class="swatch" style="background:#4a9edd"></span>City<span class="size-tag">2×2</span></button>
+        <button class="building-btn"        onclick="selectType('beartrap')" id="bt_beartrap">
+          <span class="swatch" style="background:#c0392b"></span>Bear Trap<span class="size-tag">3×3</span></button>
+        <button class="building-btn"        onclick="selectType('banner')"   id="bt_banner">
+          <span class="swatch" style="background:#aaaaaa"></span>Banner<span class="size-tag">1×1 +7×7</span></button>
+        <button class="building-btn"        onclick="selectType('resource')" id="bt_resource">
+          <span class="swatch" style="background:#27ae60"></span>Resource Node<span class="size-tag">2×2</span></button>
+        <button class="building-btn"        onclick="selectType('hq')"       id="bt_hq">
+          <span class="swatch" style="background:#8e44ad"></span>Alliance HQ<span class="size-tag">3×3 +15×15</span></button>
+        <button class="building-btn"        onclick="selectType('obs1')"     id="bt_obs1">
+          <span class="swatch" style="background:#222222"></span>Obstacle<span class="size-tag">1×1</span></button>
+        <button class="building-btn"        onclick="selectType('obs2')"     id="bt_obs2">
+          <span class="swatch" style="background:#222222"></span>Obstacle<span class="size-tag">2×2</span></button>
+        <button class="building-btn"        onclick="selectType('obs3')"     id="bt_obs3">
+          <span class="swatch" style="background:#222222"></span>Obstacle<span class="size-tag">3×3</span></button>
+      </div>
+      <div class="section" id="labelSection">
+        <h2>Label &amp; Color</h2>
+        <label>Label</label>
+        <input type="text"  id="buildingLabel" placeholder="e.g. PHZ or Main Base" />
+        <select id="resourceSubtype" style="display:none;width:100%;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:Inter,sans-serif;font-size:0.95rem">
+          <option value="bread">Bread</option>
+          <option value="woodmill">Wood</option>
+          <option value="quarry">Stone</option>
+          <option value="ironmine">Iron</option>
+        </select>
+        <div id="colorRow"><label>Color</label>
+        <input type="color" id="buildingColor" value="#4a9edd" /></div>
+        <div style="margin-top:6px">
+          <label style="font-size:0.78rem;color:var(--text-dim);cursor:pointer;display:flex;align-items:center;gap:5px">
+            <input type="checkbox" id="chkSuppressWarnings" onchange="_suppressPlacementWarnings=this.checked">
+            Don't show placement warnings
+          </label>
+        </div>
+      </div>
+      <div class="section">
+        <button class="btn btn-primary" onclick="openBannerOpt()" style="width:100%;padding:10px;margin-bottom:6px">🚩 Banner Optimizer</button>
+        <button class="btn btn-primary" onclick="openHiveOpt()" style="width:100%;padding:10px;margin-bottom:6px">🏙️ Hive Optimizer</button>
+        <button class="btn btn-primary" onclick="openTemplatePicker()" style="width:100%;padding:10px;margin-bottom:6px">🏗️ Use Hive Template</button>
+        <button class="btn btn-primary" onclick="openTemplateEditor()" style="width:100%;padding:10px">📐 Create Hive Template</button>
+        <button class="btn btn-primary" onclick="openTrapOptimizer()" style="width:100%;padding:10px;display:none">🎯 Bear Trap Optimizer</button>
+        <!-- Step 1: Area selection -->
+        <div id="optimizerAreaPanel" style="display:none;margin-top:10px;padding:10px;background:var(--bg);border:1px solid var(--gold-dim);border-radius:6px">
+          <div style="font-weight:600;color:var(--gold);margin-bottom:6px;font-size:0.9rem">Step 1: Working Area</div>
+          <div style="color:var(--text-dim);font-size:0.78rem;margin-bottom:6px">Drag a rectangle on the map, or type coordinates.</div>
+          <div id="optAreaCoords" style="font-family:monospace;color:var(--ice);margin:6px 0;font-size:0.78rem"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:6px 0">
+            <div><label style="font-size:0.72rem;color:var(--text-dim)">TL X</label><input type="number" id="optAreaX1" min="0" max="1199" style="width:100%;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--ice);font-family:monospace;font-size:0.78rem"></div>
+            <div><label style="font-size:0.72rem;color:var(--text-dim)">TL Y</label><input type="number" id="optAreaY1" min="0" max="1199" style="width:100%;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--ice);font-family:monospace;font-size:0.78rem"></div>
+            <div><label style="font-size:0.72rem;color:var(--text-dim)">BR X</label><input type="number" id="optAreaX2" min="0" max="1199" style="width:100%;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--ice);font-family:monospace;font-size:0.78rem"></div>
+            <div><label style="font-size:0.72rem;color:var(--text-dim)">BR Y</label><input type="number" id="optAreaY2" min="0" max="1199" style="width:100%;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--ice);font-family:monospace;font-size:0.78rem"></div>
+          </div>
+          <div class="error-msg" id="optAreaError" style="font-size:0.78rem;color:var(--red);margin:4px 0"></div>
+          <div style="display:flex;gap:5px;margin-top:6px">
+            <button class="btn btn-cancel" onclick="closeOptimizer()" style="flex:1;padding:6px;font-size:0.82rem">Cancel</button>
+            <button class="btn btn-primary" onclick="_optAreaConfirm()" style="flex:1;padding:6px;font-size:0.82rem">Next →</button>
+          </div>
+        </div>
+        <!-- Step 2: Parameters -->
+        <div id="optimizerParamsPanel" style="display:none;margin-top:10px;padding:10px;background:var(--bg);border:1px solid var(--gold-dim);border-radius:6px">
+          <div style="font-weight:600;color:var(--gold);margin-bottom:6px;font-size:0.9rem">Step 2: Parameters</div>
+          <div id="optAreaSummary" style="color:var(--text-dim);font-size:0.78rem;margin-bottom:8px;font-family:monospace"></div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div>
+              <label style="font-size:0.78rem;color:var(--text-dim)">Bear traps</label>
+              <select id="optTrapCount" onchange="_optToggleCitiesBetween()" style="width:100%;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:0.85rem">
+                <option value="1">1 trap</option>
+                <option value="2" selected>2 traps</option>
+              </select>
+            </div>
+            <div id="optCitiesBetweenRow" style="display:block;padding:6px;border-left:3px solid var(--gold);background:rgba(212,175,55,0.06);border-radius:4px">
+              <label style="font-size:0.78rem;color:var(--gold);font-weight:600">Cities between traps</label>
+              <select id="optCitiesBetween" style="width:100%;padding:6px;margin-top:3px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:0.85rem">
+                <option value="0">0 — touching</option>
+                <option value="2" selected>2 (4-cell gap)</option>
+                <option value="3">3 (6-cell gap)</option>
+                <option value="4">4 (8-cell gap)</option>
+                <option value="5">5 (10-cell gap)</option>
+                <option value="6">6 (12-cell gap)</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:0.78rem;color:var(--text-dim)">Cities per trap</label>
+              <input type="number" id="optCitiesPerTrap" min="1" max="100" value="20" style="width:100%;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--ice);font-family:monospace;font-size:0.85rem">
+              <div style="color:var(--text-dim);font-size:0.7rem;margin-top:2px">Total ≤ 100</div>
+            </div>
+            <div>
+              <label style="font-size:0.78rem;color:var(--text-dim)">Alliance label</label>
+              <input type="text" id="optAllianceLabel" placeholder="e.g. PHZ" maxlength="20" style="width:100%;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:0.85rem">
+            </div>
+          </div>
+          <div class="error-msg" id="optParamsError" style="font-size:0.78rem;color:var(--red);margin:4px 0"></div>
+          <div style="display:flex;gap:5px;margin-top:6px">
+            <button class="btn btn-cancel" onclick="closeOptimizer()" style="flex:1;padding:6px;font-size:0.82rem">Cancel</button>
+            <button class="btn btn-primary" onclick="_optParamsConfirm()" style="flex:1;padding:6px;font-size:0.82rem">Compute →</button>
+          </div>
+        </div>
+        <!-- Step 3: Progress -->
+        <div id="optimizerProgressPanel" style="display:none;margin-top:10px;padding:10px;background:var(--bg);border:1px solid var(--gold-dim);border-radius:6px;text-align:center">
+          <div style="font-size:1.5rem;margin:8px 0">⏳</div>
+          <div id="optProgressMsg" style="color:var(--text-dim);font-size:0.82rem">Computing layouts…</div>
+        </div>
+        <!-- Step 4: Preview -->
+        <div id="optimizerPreviewPanel" style="display:none;margin-top:10px;padding:10px;background:var(--bg);border:1px solid var(--gold-dim);border-radius:6px">
+          <div style="font-weight:600;color:var(--gold);margin-bottom:6px;font-size:0.9rem">Preview</div>
+          <div id="optPreviewStats" style="font-size:0.82rem;line-height:1.5;margin-bottom:6px"></div>
+          <div style="color:var(--text-dim);font-size:0.7rem;margin-bottom:6px">Yellow: area · Red: traps · Blue: cities · Grey: banners · Purple: HQ</div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap">
+            <button class="btn btn-cancel" onclick="closeOptimizer()" style="flex:1;padding:6px;font-size:0.82rem">Cancel</button>
+            <button class="btn btn-cancel" id="optBtnNext" onclick="optNextResult()" style="flex:1;padding:6px;font-size:0.82rem">Next →</button>
+            <button class="btn btn-primary" onclick="optApply()" style="flex:1;padding:6px;font-size:0.82rem">Apply</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: Placed — edit panel lives here -->
+    <div class="sidebar-panel" id="panel-placed">
+      <div class="section">
+        <button class="btn btn-primary" onclick="openAllianceSummary()" style="width:100%;padding:10px">⚔ Alliance Territory Summary</button>
+      </div>
+      <div class="section" id="editSection" style="display:none">
+        <h2 id="editSectionTitle">Edit Selected</h2>
+        <div class="edit-panel" id="editPanelUser">
+          <h3 id="editTitle">—</h3>
+          <div class="edit-row">
+            <label>Label</label>
+            <input type="text" id="editLabel" placeholder="Label" oninput="applyEdit()" />
+            <select id="editResLabel" style="display:none;width:100%;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:Inter,sans-serif;font-size:0.95rem" onchange="applyEdit()">
+              <option value="Bread">Bread</option>
+              <option value="Wood">Wood</option>
+              <option value="Stone">Stone</option>
+              <option value="Iron">Iron</option>
+            </select>
+          </div>
+          <div class="edit-row" id="editColorRow">
+            <label>Color</label>
+            <input type="color" id="editColor" value="#e8a838" oninput="applyEditColor()" onchange="applyEdit()" />
+          </div>
+          <div class="edit-row">
+            <label>Type</label>
+            <select id="editType" onchange="applyEditType()">
+              <option value="city">City (2×2)</option>
+              <option value="beartrap">Bear Trap (3×3)</option>
+              <option value="banner">Banner (1×1)</option>
+              <option value="resource">Resource Node (2×2)</option>
+              <option value="hq">Alliance HQ (3×3)</option>
+              <option value="obs1">Obstacle 1×1</option>
+              <option value="obs2">Obstacle 2×2</option>
+              <option value="obs3">Obstacle 3×3</option>
+            </select>
+          </div>
+          <div class="edit-coord" id="editCoordInfo"></div>
+          <div class="edit-row">
+            <button class="small-btn" onclick="deselectBuilding()">Deselect</button>
+            <button class="small-btn danger" onclick="deleteSelected()">Delete</button>
+          </div>
+        </div>
+        <div class="edit-panel" id="editPanelCanonical" style="display:none">
+          <h3 id="canonicalTitle">—</h3>
+          <div class="edit-coord" id="canonicalCoordInfo"></div>
+          <div style="font-size:0.82rem;color:var(--text-dim);line-height:1.4;margin:6px 0">
+            This is a canonical resource node. To make changes, submit a report for admin review.
+          </div>
+          <div class="edit-row">
+            <button class="small-btn" onclick="deselectBuilding()">Deselect</button>
+            <button class="small-btn" onclick="openReport(selectedId)" style="background:rgba(201,168,76,0.15);border-color:var(--gold-dim);color:var(--gold)">📝 Report Issue</button>
+          </div>
+        </div>
+      </div>
+      <div class="section">
+        <h2>Placed Buildings (<span id="placedCount">0</span>)</h2>
+        <div class="placed-list" id="placedList"></div>
+      </div>
+      <div class="section" id="allianceSection" style="display:none">
+        <h2>Territory Owners</h2>
+        <div class="zone-legend" id="allianceLegend"></div>
+      </div>
+    </div>
+
+    <!-- TAB: Map -->
+    <div class="sidebar-panel" id="panel-map">
+      <div class="section">
+        <h2>Map Zones</h2>
+        <div class="zone-legend">
+          <div class="zone-legend-item"><div class="zone-legend-dot" style="background:#4a0010"></div>Forbidden (no build)</div>
+          <div class="zone-legend-item"><div class="zone-legend-dot" style="background:#5a3214"></div>Ruins (no alliance)</div>
+          <div class="zone-legend-item"><div class="zone-legend-dot" style="background:#1a4020"></div>Fertile Lands</div>
+          <div class="zone-legend-item"><div class="zone-legend-dot" style="background:#2d5e2a"></div>Plains</div>
+          <div class="zone-legend-item"><div class="zone-legend-dot" style="background:#3d7035"></div>Badlands</div>
+        </div>
+      </div>
+      <div class="section">
+        <h2>Terrain & Resources</h2>
+        <div class="zone-legend">
+          <div class="zone-legend-item"><div class="zone-legend-dot" style="background:rgba(30,90,170,0.7)"></div>Lakes (501)</div>
+          <div class="zone-legend-item"><div class="zone-legend-dot" style="background:rgba(110,75,35,0.7)"></div>Mountains (1948)</div>
+        </div>
+        <div style="font-size:0.82rem;color:var(--text-dim);margin-top:4px">Nothing can be placed on lakes or mountains. Territory can overlay them.</div>
+        <div style="display:flex;flex-direction:column;gap:5px;margin-top:8px">
+          <label class="filter-item"><input type="checkbox" checked onchange="toggleResourceNodes(this.checked)"> Show Resource Nodes</label>
+          <label class="filter-item"><input type="checkbox" checked onchange="toggleTerrain('lake',this.checked)"> Show Lakes</label>
+          <label class="filter-item"><input type="checkbox" checked onchange="toggleTerrain('mt',this.checked)"> Show Mountains</label>
+          <label class="filter-item"><input type="checkbox" onchange="toggleBuildOverTerrain(this.checked)"> Allow build over terrain &amp; resources</label>
+        </div>
+      </div>
+      <div class="section">
+        <h2>Fixed Structure Filters</h2>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <label class="filter-item"><input type="checkbox" checked onchange="toggleFilter('Fortress',this.checked)"> Fortress</label>
+          <label class="filter-item"><input type="checkbox" checked onchange="toggleFilter('Sanctuary',this.checked)"> Sanctuary</label>
+          <label class="filter-item"><input type="checkbox" checked onchange="toggleFilter('Construction Outpost',this.checked)"> Construction Outpost</label>
+          <label class="filter-item"><input type="checkbox" checked onchange="toggleFilter('Defense Outpost',this.checked)"> Defense Outpost</label>
+          <label class="filter-item"><input type="checkbox" checked onchange="toggleFilter('Research Outpost',this.checked)"> Research Outpost</label>
+          <label class="filter-item"><input type="checkbox" checked onchange="toggleFilter('Resource Production Outpost',this.checked)"> Resource Production</label>
+          <label class="filter-item"><input type="checkbox" checked onchange="toggleFilter('Frontier Lodge',this.checked)"> Frontier Lodge</label>
+          <label class="filter-item"><input type="checkbox" checked onchange="toggleFilter('Gathering Outpost',this.checked)"> Gathering Outpost</label>
+          <label class="filter-item"><input type="checkbox" checked onchange="toggleFilter('Attack Outpost',this.checked)"> Attack Outpost</label>
+          <label class="filter-item"><input type="checkbox" checked onchange="toggleFilter('Training Outpost',this.checked)"> Training Outpost</label>
+        </div>
+      </div>
+      <div class="section" style="flex:1;min-height:0">
+        <h2>Fixed Buildings — click to navigate</h2>
+        <div id="permBuildingList" style="display:flex;flex-direction:column;gap:2px;overflow-y:auto;max-height:280px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BANNER OPTIMIZER PANEL -->
+  <div class="sidebar" id="bannerOptPanel" style="display:none">
+    <div class="sheet-handle-row" onclick="closeAllSheets()"><div class="sheet-handle"></div></div>
+    <div class="bo-hdr">
+      <span class="bo-hdr-title">⚡ Banner Optimizer</span>
+      <button class="bo-close-btn" onclick="closeBannerOpt()" title="Close optimizer">✕</button>
+    </div>
+    <div class="bo-content">
+
+      <!-- Step 1: Starting Point -->
+      <div class="bo-section">
+        <div class="bo-section-hdr">
+          <span class="bo-step-badge">1</span>
+          <span class="bo-section-title">Starting Point</span>
+        </div>
+        <div class="bo-section-body">
+          <p class="bo-hint">Pick a starting point: click a specific Banner/HQ on the map, or choose any active alliance from the list.</p>
+          <button class="bo-pick-btn" id="boPickStartBtn" onclick="boActivateStartPick()">↖ Select from Map</button>
+          <select class="bo-pick-btn" id="boAllianceSelect" onchange="boOnAllianceChange(this)">
+            <option value="">— or pick an alliance —</option>
+          </select>
+          <div class="bo-start-display" id="boStartDisplay">
+            <span class="bo-start-none">No starting point selected</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Target Outposts -->
+      <div class="bo-section">
+        <div class="bo-section-hdr">
+          <span class="bo-step-badge">2</span>
+          <span class="bo-section-title" id="boTargetSectionTitle">Target Outposts</span>
+          <span class="bo-count-badge" id="boTargetCount"></span>
+          <button class="bo-hdr-clear-btn" id="boClearTargetsBtn" onclick="boClearAllTargets()" style="display:none">Clear</button>
+        </div>
+        <div class="bo-section-body" style="padding-bottom:6px">
+          <label class="bo-check-row">
+            <input type="checkbox" id="boOptAutoPickTargets" onchange="boToggleAutoPickTargets(this)">
+            <span id="boAutoPickLabelText">🎯 Auto-pick the closest outpost of each type</span>
+          </label>
+          <p class="bo-hint" id="boTargetManualHint">Click outposts on the map, or expand a category to select by location.</p>
+          <p class="bo-hint" id="boTargetAutoHint" style="display:none;color:var(--blue)">Will pick the nearest reachable outpost of each type when you run the optimizer.</p>
+        </div>
+        <div class="bo-accordion" id="boAccordion"></div>
+      </div>
+
+      <!-- Step 3: Options -->
+      <div class="bo-section">
+        <div class="bo-section-hdr">
+          <span class="bo-step-badge">3</span>
+          <span class="bo-section-title">Options</span>
+        </div>
+        <div class="bo-section-body">
+          <label class="bo-check-row">
+            <input type="checkbox" id="boOptSameAlliance" checked>
+            Use existing banners from the same alliance
+          </label>
+          <label class="bo-check-row">
+            <input type="checkbox" id="boOptCaptureRes" checked>
+            Capture resource nodes along the path (no extra banners)
+          </label>
+        </div>
+      </div>
+
+    </div>
+
+    <button class="bo-run-btn" id="boRunBtn" onclick="boRunOptimizer()" disabled>⚡ Optimize Connection</button>
+
+    <div class="bo-results" id="boResults" style="display:none">
+      <div class="bo-res-hdr">
+        <span class="bo-res-title">Route Preview</span>
+        <div class="bo-res-nav" id="boResNav" style="display:none">
+          <button class="bo-nav-btn" id="boPrevSolBtn" onclick="boPrevSolution()">‹</button>
+          <span class="bo-nav-info" id="boSolInfo">1/1</span>
+          <button class="bo-nav-btn" id="boNextSolBtn" onclick="boNextSolution()">›</button>
+        </div>
+        <button class="bo-close-btn" onclick="boClearResults()">✕</button>
+      </div>
+      <div class="bo-res-body">
+        <div class="bo-res-stats">
+          <div class="bo-res-stat">
+            <span class="bo-res-stat-val" id="boResBanners">—</span>
+            <span class="bo-res-stat-lbl">New Banners</span>
+          </div>
+          <div class="bo-res-stat">
+            <span class="bo-res-stat-val" id="boResNodes">—</span>
+            <span class="bo-res-stat-lbl">Resource Nodes</span>
+          </div>
+        </div>
+        <p class="bo-res-msg" id="boResMsg"></p>
+        <button class="bo-apply-btn" id="boApplyBtn" onclick="boApplyBanners()">✓ Place All Banners</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HIVE OPTIMIZER PANEL -->
+  <div class="sidebar" id="hiveOptPanel" style="display:none">
+    <div class="sheet-handle-row" onclick="closeAllSheets()"><div class="sheet-handle"></div></div>
+    <div class="bo-hdr">
+      <span class="bo-hdr-title">🏙️ Hive Optimizer</span>
+      <button class="bo-close-btn" onclick="closeHiveOpt()" title="Cancel and exit (discards preview, exits isolated view)">✕</button>
+    </div>
+    <div class="bo-content">
+
+      <!-- Step 1+2: alliance, count, enter isolated -->
+      <div class="bo-section" id="hoStepConfig">
+        <div class="bo-section-hdr">
+          <span class="bo-step-badge">1</span>
+          <span class="bo-section-title">Alliance &amp; City Count</span>
+        </div>
+        <div class="bo-section-body">
+          <div class="bo-hint" style="border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:5px;background:rgba(88,166,255,0.06);padding:9px 11px">
+            <div style="color:var(--blue);font-weight:600;margin-bottom:4px">Before you start</div>
+            <ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:3px">
+              <li>Cities are placed inside the chosen alliance's territory (the alliance's full bbox is used — no area drawing).</li>
+              <li>A bear trap must already exist within or near the alliance's territory. Alliances without one are not shown in the list.</li>
+              <li>The optimizer places <strong>cities only</strong> — it does <strong>not</strong> place banners, HQ, or bear traps.</li>
+            </ul>
+          </div>
+          <p class="bo-hint">Pick an alliance, enter how many cities to place, then run the optimizer.</p>
+          <select class="bo-pick-btn" id="hoAllianceSelect" onchange="hoOnAllianceChange(this)">
+            <option value="">— pick an alliance —</option>
+          </select>
+          <p class="bo-hint" style="margin:4px 2px 0;font-style:italic;opacity:0.85">Only alliances with a bear trap nearby their territory are shown.</p>
+          <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:0.85rem;color:var(--text-dim)">
+            Cities to place:
+            <input type="number" id="hoCityCount" value="10" min="1" max="100"
+                   style="width:80px;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--ice);font-family:monospace;font-size:0.9rem"
+                   onchange="hoOnCityCountChange(this)">
+          </label>
+          <button class="bo-run-btn" id="hoEnterBtn" onclick="hoEnterIsolated()" disabled style="margin-top:10px">
+            ▶ Run Optimizer
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 2: results / preview -->
+      <div class="bo-section" id="hoStepResults" style="display:none">
+        <div class="bo-section-hdr">
+          <span class="bo-step-badge">2</span>
+          <span class="bo-section-title">Preview</span>
+          <span class="bo-count-badge" id="hoSolName" style="display:inline-flex">Closest</span>
+        </div>
+        <div class="bo-section-body">
+          <div class="bo-res-nav" id="hoSolNav" style="display:none;justify-content:center;align-items:center;gap:10px;margin-bottom:8px">
+            <button class="bo-nav-btn" onclick="hoPrevSolution()">‹</button>
+            <span class="bo-nav-info" id="hoSolIdx">1/1</span>
+            <button class="bo-nav-btn" onclick="hoNextSolution()">›</button>
+          </div>
+          <div class="bo-res-stats" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+            <div class="bo-res-stat">
+              <span class="bo-res-stat-val" id="hoSolCities">—</span>
+              <span class="bo-res-stat-lbl">Cities</span>
+            </div>
+            <div class="bo-res-stat">
+              <span class="bo-res-stat-val" id="hoSolAvg">—</span>
+              <span class="bo-res-stat-lbl">Avg seconds</span>
+            </div>
+          </div>
+          <p class="bo-hint" style="margin:4px 0 8px">
+            Total: <span id="hoSolTotal">—</span>s &nbsp;·&nbsp; <span id="hoSolSplit">—</span>
+          </p>
+          <label style="display:flex;align-items:center;gap:8px;margin:6px 0;font-size:0.85rem;color:var(--text-dim)">
+            Cities to place:
+            <input type="number" id="hoCityCountResults" value="10" min="1" max="100"
+                   style="width:80px;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--ice);font-family:monospace;font-size:0.9rem"
+                   onchange="hoOnCityCountChange(this)">
+          </label>
+          <button class="bo-apply-btn" onclick="hoApply()">✓ Apply These Cities</button>
+          <button class="bo-pick-btn" onclick="closeHiveOpt()" style="margin-top:6px">✕ Cancel</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- CANVAS -->
+  <div class="canvas-wrap" id="canvasWrap">
+    <canvas id="mapCanvas"></canvas>
+    <div id="renamePopup">
+      <label>Rename Building</label>
+      <input type="text" id="renameInput" placeholder="Label…" />
+      <span class="hint-tiny">Enter to confirm · Esc to cancel</span>
+    </div>
+    <div class="hint" id="hintText">Left-click: place building  |  Scroll: zoom  |  Alt+drag: pan</div>
+    <div class="map-overlay-bar">
+      <div class="map-overlay-pill" id="zoomDisplay">100%</div>
+      <div class="map-overlay-pill coord-pill-overlay" id="coordDisplay" onclick="openCoordJump()" title="Click to navigate to coordinates">
+        <span id="coordText">— , —</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- COORD JUMP MODAL -->
+<div id="coordJumpModal">
+  <div class="coord-jump-box">
+    <h4>📍 Navigate to Coordinates</h4>
+    <div class="coord-jump-row">
+      <input type="number" id="jumpX" placeholder="X" min="0" max="1199" />
+      <input type="number" id="jumpY" placeholder="Y" min="0" max="1199" />
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary" onclick="doCoordJump()" style="flex:1">Go ↵</button>
+      <button class="btn btn-cancel" onclick="closeCoordJump()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- INSTRUCTIONS MODAL -->
+<div id="instructionsModal">
+  <div class="instr-box">
+    <h2>⚔ Kingshot Mapper <span style="font-size:0.78rem;color:var(--text-dim);font-weight:400">User Guide</span></h2>
+    <div class="help-body">
+      <div class="help-tabs" role="tablist">
+        <button class="help-tab active" data-help-tab="quickstart" onclick="selectHelpTab('quickstart')">🗺 Quick Start</button>
+        <button class="help-tab" data-help-tab="tools" onclick="selectHelpTab('tools')">✏ Tools &amp; Editing</button>
+        <button class="help-tab" data-help-tab="alliance" onclick="selectHelpTab('alliance')">🏰 Alliances</button>
+        <button class="help-tab" data-help-tab="hiveview" onclick="selectHelpTab('hiveview')">🪖 Hive View</button>
+        <button class="help-tab" data-help-tab="optimizer" onclick="selectHelpTab('optimizer')">⚡ Banner Optimizer</button>
+        <button class="help-tab" data-help-tab="hiveopt" onclick="selectHelpTab('hiveopt')">🏙️ Hive Optimizer</button>
+        <button class="help-tab" data-help-tab="templates" onclick="selectHelpTab('templates')">📐 Hive Templates</button>
+        <button class="help-tab" data-help-tab="display" onclick="selectHelpTab('display')">🗺 Map &amp; Display</button>
+        <button class="help-tab" data-help-tab="sharing" onclick="selectHelpTab('sharing')">📦 Import &amp; Share</button>
+        <button class="help-tab" data-help-tab="shortcuts" onclick="selectHelpTab('shortcuts')">⌨ Shortcuts</button>
+      </div>
+      <div class="help-panels">
+
+        <div class="help-panel active" data-help-panel="quickstart">
+          <h3>🗺 Quick Start</h3>
+          <div class="instr-tip"><span class="tip-icon">💡</span><span>Pick a tool: <strong style="color:var(--gold)">Place [D]</strong> drops buildings · <strong style="color:var(--blue)">Select [S]</strong> moves &amp; edits · <strong style="color:var(--red)">Erase [E]</strong> removes. Select a building type in the sidebar, then click the map.</span></div>
+          <div class="instr-tip"><span class="tip-icon">📂</span><span>For lots of buildings, it's much faster to type coordinates into a spreadsheet and <strong style="color:var(--gold)">↓ Import</strong> a CSV than to place each one manually.</span></div>
+          <div class="instr-tip"><span class="tip-icon">💾</span><span>Save your work with <strong style="color:var(--gold)">↑ Export</strong> (CSV file backup) and/or <strong style="color:var(--gold)">🔗 Share</strong> (cloud link).</span></div>
+          <div class="instr-tip"><span class="tip-icon">🎮</span><span>Use the <strong style="color:var(--gold)">game selector</strong> in the top toolbar to switch between Kingshot and Whiteout Survival — building names, resource labels (Bread↔Meat, Stone↔Coal), and permanent structures change accordingly.</span></div>
+        </div>
+
+        <div class="help-panel" data-help-panel="tools">
+          <h3>✏ Tools &amp; Editing</h3>
+          <div class="instr-tip"><span class="tip-icon">🛠</span><span><strong style="color:var(--gold)">Place / Select / Erase</strong> — pick from the toolbar or press <strong>D / S / E</strong>.</span></div>
+          <div class="instr-tip"><span class="tip-icon">🖱</span><span><strong>Right-click</strong> erases a single building in Select or Erase mode — no need to switch tools.</span></div>
+          <div class="instr-tip"><span class="tip-icon">▭</span><span><strong style="color:var(--red)">Rectangle erase</strong> — in Erase mode, right-click-drag a box, then right-click again to confirm the removal.</span></div>
+          <div class="instr-tip"><span class="tip-icon">☑</span><span><strong style="color:var(--blue)">Multi-select</strong> — in Select mode, left-drag over empty space to box-select multiple buildings. Drag the selected group to <strong>multi-move</strong> them as one unit.</span></div>
+          <div class="instr-tip"><span class="tip-icon">✏</span><span><strong>Double-click</strong> a selected building to rename it.</span></div>
+          <div class="instr-tip"><span class="tip-icon">📋</span><span><strong>Ctrl+C</strong> copies the selected building; <strong>Ctrl+V</strong> places a new copy with the same label and color.</span></div>
+          <div class="instr-tip"><span class="tip-icon">↩</span><span><strong>Ctrl+Z</strong> undo · <strong>Ctrl+Y</strong> (or <strong>Ctrl+Shift+Z</strong>) redo.</span></div>
+          <div class="instr-tip"><span class="tip-icon">🔍</span><span><strong>Pan</strong>: middle-click-drag, or Alt+drag. <strong>Zoom</strong>: scroll wheel. <strong>Jump to coordinates</strong>: click the coord pill at the bottom of the map to enter an X,Y.</span></div>
+        </div>
+
+        <div class="help-panel" data-help-panel="alliance">
+          <h3>🏰 Alliance Banners &amp; Territory</h3>
+          <div class="instr-tip"><span class="tip-icon">⚠</span><span>Use your <strong style="color:var(--gold)">3-letter alliance tag</strong> as the label for Banners and HQ (e.g. PHZ). Territory merges by label — same label = shared territory.</span></div>
+          <div class="instr-tip"><span class="tip-icon">🔢</span><span><strong>Placement sequence matters</strong> — banners and HQ placed first take priority where territories would overlap, just like in-game.</span></div>
+          <div class="instr-tip"><span class="tip-icon">🔴</span><span>Cities marked with a <strong style="color:var(--red)">red ✕</strong> sit outside all alliance territory and don't get alliance bonuses.</span></div>
+          <div class="instr-tip"><span class="tip-icon">📏</span><span>Limits per alliance: <strong>285 banners, 2 HQs</strong>. You can override placement warnings, but the game won't honor anything beyond these.</span></div>
+          <div class="instr-tip"><span class="tip-icon">📊</span><span>Open <strong style="color:var(--gold)">Alliance Summary</strong> from the toolbar to see counts (HQ · banners · cities), validation warnings, resource production per hour, and territory broken down by zone. Each row also shows the city count attributed by ownership (≥3 of 4 cells inside the alliance's territory).</span></div>
+          <div class="instr-tip"><span class="tip-icon">🪖</span><span>Each summary row exposes two action buttons: <strong style="color:var(--gold)">Hive Plan</strong> (only when the alliance has 10+ cities clustered together) opens the isolated <strong>Hive View</strong>; <strong style="color:var(--gold)">Export Cities</strong> opens the city export modal scoped to that alliance's territory. See the <strong>Hive View</strong> tab for the full feature.</span></div>
+          <div class="instr-tip"><span class="tip-icon">🌾</span><span><strong>Resource nodes</strong> (<strong style="color:#daa520">Bread/Meat</strong> · <strong style="color:#66BB6A">Wood</strong> · <strong style="color:#B0BEC5">Stone/Coal</strong> · <strong style="color:#42A5F5">Iron</strong>) are fixed and match the in-game map. Select a node and click <strong style="color:var(--gold)">📝 Report Issue</strong> if a location is wrong (requires a published cloud map).</span></div>
+        </div>
+
+        <div class="help-panel" data-help-panel="hiveview">
+          <h3>🪖 Hive View</h3>
+          <div class="instr-tip"><span class="tip-icon">👀</span><span><strong>Isolated alliance view</strong> — focus the map on one alliance's hive (HQ + banners + cities + bear trap) with every other alliance's buildings hidden. Useful for sharing a clean snapshot or for scouting an enemy hive.</span></div>
+          <div class="instr-tip"><span class="tip-icon">▶</span><span><strong>Open it</strong> from <strong style="color:var(--gold)">Alliance Summary</strong>: the <strong style="color:var(--gold)">Hive Plan</strong> button appears on any row whose alliance has at least 10 cities clustered together.</span></div>
+          <div class="instr-tip"><span class="tip-icon">🔗</span><span><strong>Share a direct link:</strong> use the <strong style="color:var(--gold)">🔗 Copy Link</strong> button inside the view — recipients open straight into the same hive view.</span></div>
+          <div class="instr-tip"><span class="tip-icon">🏙</span><span><strong>🏙 Export Cities</strong> (top bar) opens the city export scoped to just this hive — handy for sending relocation messages to your players.</span></div>
+          <div class="instr-tip"><span class="tip-icon">🖱</span><span>Pan with left-drag, zoom with the scroll wheel. Hive View is <strong>read-only</strong>. Press <strong>Esc</strong> to exit.</span></div>
+        </div>
+
+        <div class="help-panel" data-help-panel="optimizer">
+          <h3>⚡ Banner Optimizer</h3>
+          <div class="instr-tip"><span class="tip-icon">🚀</span><span>Open with the <strong style="color:var(--gold)">⚡ Banner Optimizer</strong> button in the toolbar. It finds the minimum number of banners needed to connect your HQ to a set of outposts.</span></div>
+          <div class="instr-tip"><span class="tip-icon">1️⃣</span><span><strong>Step 1 — Starting point:</strong> pick your HQ or an existing banner, either by clicking the map or by selecting from the alliance dropdown.</span></div>
+          <div class="instr-tip"><span class="tip-icon">2️⃣</span><span><strong>Step 2 — Target outposts:</strong> pick the outposts you want to capture (Builder's Guild, Armory, Scholar's, Frontier, etc.). Tick <strong style="color:var(--gold)">Auto-pick closest</strong> to grab the nearest of each type automatically.</span></div>
+          <div class="instr-tip"><span class="tip-icon">3️⃣</span><span><strong>Step 3 — Options:</strong> <strong style="color:var(--gold)">Same alliance only</strong> keeps the solution inside one alliance's territory. <strong style="color:var(--gold)">Capture resource nodes</strong> also connects nearby resources.</span></div>
+          <div class="instr-tip"><span class="tip-icon">▶</span><span>Click <strong style="color:var(--gold)">Run</strong> to compute. Use <strong>Previous / Next</strong> to flip through alternate solutions, then <strong style="color:var(--gold)">Apply</strong> to drop the banners on the map.</span></div>
+        </div>
+
+        <div class="help-panel" data-help-panel="hiveopt">
+          <h3>🏙️ Hive Optimizer</h3>
+          <div class="instr-tip"><span class="tip-icon">🚀</span><span>Open with the <strong style="color:var(--gold)">🏙️ Hive Optimizer</strong> button in the sidebar. It auto-places <strong>cities</strong> inside an alliance's territory to minimize bear-trap march time.</span></div>
+          <div class="instr-tip"><span class="tip-icon">⚠</span><span><strong>Before you run:</strong> the alliance's <strong>HQ and at least one Bear Trap</strong> must already be on the map. The optimizer places <strong>cities only</strong> — not banners, HQ, or bear traps.</span></div>
+          <div class="instr-tip"><span class="tip-icon">▶</span><span>Pick an alliance, enter the number of cities (1–100), then click <strong style="color:var(--gold)">▶ Run Optimizer</strong>. The map switches into isolated Hive View and shows the city preview.</span></div>
+          <div class="instr-tip"><span class="tip-icon">🎨</span><span><strong>Preview:</strong> deep-orange cities rally to <strong>B1</strong>, lighter-orange to <strong>B2</strong> (the chosen traps are outlined in gold). Use <strong>◀ ▶</strong> to compare variants — <strong>Closest</strong> (shortest total march time) and <strong>Balanced</strong> (split evenly between the two traps).</span></div>
+          <div class="instr-tip"><span class="tip-icon">🔢</span><span>Change <strong>Cities to place</strong> on the preview to re-run live. If you ask for more cities than fit, you'll be offered the maximum that fits.</span></div>
+          <div class="instr-tip"><span class="tip-icon">✓</span><span><strong>Apply</strong> places the cities (labeled <code style="color:var(--ice);background:rgba(168,216,234,0.1);padding:1px 5px;border-radius:3px">[TAG] N</code>) and exits. <strong>✕</strong> cancels without placing anything.</span></div>
+        </div>
+
+        <div class="help-panel" data-help-panel="templates">
+          <h3>📐 Hive Templates</h3>
+          <div class="instr-tip"><span class="tip-icon">🏗</span><span><strong>Browse &amp; stamp (🏗 button):</strong> filter templates by sort (popular / newest), trap count, or city count. Click a template to select it, then click the map to stamp.</span></div>
+          <div class="instr-tip"><span class="tip-icon">🔄</span><span><strong>While stamping:</strong> <span class="key">Q</span> rotate left · <span class="key">E</span> rotate right · <span class="key">X</span> flip across X · <span class="key">Y</span> flip across Y · <span class="key">Esc</span> cancel. Clicking commits the stamp — you'll be asked to confirm before overwriting any existing buildings.</span></div>
+          <div class="instr-tip"><span class="tip-icon">📐</span><span><strong>Create (📐 button):</strong> opens a 99×99 grid editor with an anchor point. Use the tool palette or press number keys <span class="key">1</span>–<span class="key">4</span> to swap between City, Banner, HQ, Bear Trap, Erase, and Pan tools.</span></div>
+          <div class="instr-tip"><span class="tip-icon">🧭</span><span>In the editor, <strong>middle-click or Alt+drag</strong> to pan, scroll to zoom. <strong>Validation:</strong> max 2 bear traps, max 1 HQ, max 100 cities per template.</span></div>
+          <div class="instr-tip"><span class="tip-icon">📤</span><span>Save with a name and description, then submit for approval. Approved templates show up in everyone's picker.</span></div>
+        </div>
+
+        <div class="help-panel" data-help-panel="display">
+          <h3>🗺 Map &amp; Display</h3>
+          <div class="instr-tip"><span class="tip-icon">🗺</span><span><strong>Map tab</strong> (sidebar) — toggle terrain overlays (Lakes, Mountains, Fertile, Badlands, etc.), resource nodes, and per-outpost type filters (Fortress, Sanctuary, Construction, Defense, Research, Resource, Gathering, Attack, Training).</span></div>
+          <div class="instr-tip"><span class="tip-icon">🧱</span><span><strong>Allow build over terrain &amp; resources</strong> — bypasses placement warnings for restricted zones. Useful when you're planning around terrain rather than dodging it.</span></div>
+          <div class="instr-tip"><span class="tip-icon">📋</span><span><strong>Placed list tab</strong> — full inventory of every building you've placed. Click an entry to select it on the map; trash icon to delete.</span></div>
+          <div class="instr-tip"><span class="tip-icon">📍</span><span><strong>Coordinate jump</strong> — click the coord pill at the bottom-right of the map to jump to any X,Y. The pill also shows your live hover coordinates.</span></div>
+          <div class="instr-tip"><span class="tip-icon">🌐</span><span><strong>Language selector</strong> (top right) — EN · TL · ES · PT · VI · ID · ZH.</span></div>
+          <div class="instr-tip"><span class="tip-icon">📱</span><span><strong>Mobile</strong> — a touch-friendly layout is available at <code style="color:var(--ice);background:rgba(168,216,234,0.1);padding:1px 5px;border-radius:3px">mobile.html</code> (auto-redirected on small screens).</span></div>
+        </div>
+
+        <div class="help-panel" data-help-panel="sharing">
+          <h3>📦 Import, Export &amp; Sharing</h3>
+          <div class="instr-tip"><span class="tip-icon">📄</span><span><strong>CSV format:</strong> <code style="color:var(--ice);background:rgba(168,216,234,0.1);padding:1px 5px;border-radius:3px">type,X,Y,label,#color,seq</code><br>Types: city · beartrap · banner · resource · hq · obs1 · obs2 · obs3<br>Label, color, and seq are optional.</span></div>
+          <div class="instr-tip"><span class="tip-icon">↓</span><span><strong>Import</strong> — paste CSV text or drag a file into the import modal.</span></div>
+          <div class="instr-tip"><span class="tip-icon">↑</span><span><strong>Export</strong> — full map as CSV (copy to clipboard or download). <strong>🏙 Cities Export</strong> exports only city coordinates, with optional custom-template formatting or plain text.</span></div>
+          <div class="instr-tip"><span class="tip-icon">🔗</span><span><strong>Cloud sharing (🔗 Share):</strong> publishes your map and gives you a <strong>read link</strong> (share with everyone) and a private <strong style="color:var(--gold)">edit token</strong> (share only with trusted R4s / Hive Planners). You can update or unpublish from the same modal anytime.</span></div>
+          <div class="instr-tip"><span class="tip-icon">🪖</span><span><strong>Hive-view share link</strong>: append <code style="color:var(--ice);background:rgba(168,216,234,0.1);padding:1px 5px;border-radius:3px">&amp;tag=ABC</code> to the read link to send people straight into a single alliance's hive view. See the <strong>Hive View</strong> tab.</span></div>
+          <div class="instr-tip"><span class="tip-icon">⚠</span><span>Cloud is a convenience — <strong style="color:var(--gold)">always keep a CSV backup</strong>. Cloud maps may be lost due to service interruptions or expiry. <span style="color:var(--text-dim)">The developer is not liable for any data loss.</span></span></div>
+        </div>
+
+        <div class="help-panel" data-help-panel="shortcuts">
+          <h3>⌨ Keyboard Shortcuts</h3>
+          <div class="shortcut-grid">
+            <div><span class="key">D</span> Place tool</div>
+            <div><span class="key">Ctrl+C</span> Copy selected</div>
+            <div><span class="key">S</span> Select tool</div>
+            <div><span class="key">Ctrl+V</span> Paste copy</div>
+            <div><span class="key">E</span> Erase tool</div>
+            <div><span class="key">Del</span> Delete selected</div>
+            <div><span class="key">Ctrl+Z</span> Undo</div>
+            <div><span class="key">Esc</span> Deselect / close</div>
+            <div><span class="key">Ctrl+Y</span> Redo</div>
+            <div><span class="key">Dbl-click</span> Rename building</div>
+            <div><span class="key">Ctrl+Shift+Z</span> Redo (alt)</div>
+            <div><span class="key">Scroll</span> Zoom</div>
+            <div><span class="key">1</span>–<span class="key">4</span> Template tools (in editor)</div>
+            <div><span class="key">Alt+drag</span> / <span class="key">Middle-drag</span> Pan</div>
+            <div><span class="key">Q</span> / <span class="key">E</span> Rotate template (stamping)</div>
+            <div><span class="key">Right-click</span> Erase single / rect-erase</div>
+            <div><span class="key">X</span> / <span class="key">Y</span> Flip template (stamping)</div>
+            <div></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="instr-footer">
+      <label class="instr-no-show">
+        <input type="checkbox" id="noShowInstr" onchange="saveNoShowInstr(this.checked)">
+        Don't show this again
+      </label>
+      <button class="btn btn-primary" onclick="closeInstructions()" style="flex:0;padding:7px 24px">OK ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- Import Modal -->
+<!-- Resource Report Modal -->
+<div class="modal-overlay" id="allianceSummaryModal">
+  <div class="modal" style="width:680px;max-width:95vw;max-height:85vh;overflow-y:auto">
+    <h3>⚔ Alliance Territory Summary</h3>
+    <div id="allianceSummaryContent" style="margin-top:12px"></div>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeAllianceSummary()">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="reportModal">
+  <div class="modal" style="width:420px">
+    <h3>📝 Report Resource Node</h3>
+    <div id="reportNodeInfo" style="font-size:0.88rem;color:var(--ice);font-family:monospace;margin-bottom:8px"></div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <label style="font-size:0.85rem;color:var(--text-dim)">What's wrong?</label>
+      <select id="reportAction" onchange="onReportActionChange()"
+        style="padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);font-size:0.95rem">
+        <option value="delete">This node doesn't exist here</option>
+        <option value="move">Wrong location (I know the correct one)</option>
+        <option value="rename">Wrong type</option>
+      </select>
+      <div id="reportMoveFields" style="display:none;gap:8px;align-items:center">
+        <label style="font-size:0.82rem;color:var(--text-dim)">Correct coordinates:</label>
+        <div style="display:flex;gap:6px">
+          <input type="number" id="reportNewX" min="0" max="1199" placeholder="X"
+            style="width:70px;padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--ice);font-family:monospace;font-size:0.9rem">
+          <input type="number" id="reportNewY" min="0" max="1199" placeholder="Y"
+            style="width:70px;padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--ice);font-family:monospace;font-size:0.9rem">
+        </div>
+      </div>
+      <div id="reportRenameFields" style="display:none">
+        <label style="font-size:0.82rem;color:var(--text-dim)">Correct type:</label>
+        <select id="reportNewType"
+          style="width:100%;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);font-size:0.95rem">
+          <option value="bread">Bread</option>
+          <option value="woodmill">Wood</option>
+          <option value="quarry">Stone</option>
+          <option value="ironmine">Iron</option>
+        </select>
+      </div>
+    </div>
+    <div class="error-msg" id="reportError"></div>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeReport()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitReport()">Submit Report</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="importModal">
+  <div class="modal">
+    <h3>Import CSV</h3>
+    <div style="font-size:0.8rem;color:var(--text-dim);line-height:1.5">
+      One building per line: <strong style="color:var(--ice)">type,X,Y,label,#color</strong><br>
+      Types: city · beartrap · banner · resource · hq · obs1 · obs2 · obs3<br>
+      Label and color are optional — defaults used if blank.
+    </div>
+    <!-- File upload -->
+    <div id="csvDropZone" onclick="document.getElementById('csvFileInput').click()"
+      style="border:1.5px dashed var(--border);border-radius:6px;padding:12px 16px;margin:10px 0 6px;
+             text-align:center;cursor:pointer;color:var(--text-dim);font-size:0.8rem;transition:border-color 0.15s"
+      ondragover="event.preventDefault();this.style.borderColor='var(--gold)'"
+      ondragleave="this.style.borderColor='var(--border)'"
+      ondrop="handleCsvDrop(event)">
+      ↑ Click to upload .csv file, or drag &amp; drop
+    </div>
+    <input type="file" id="csvFileInput" accept=".csv,text/csv" style="display:none" onchange="handleCsvFile(this)">
+    <div style="text-align:center;font-size:0.7rem;color:var(--text-dim);margin-bottom:4px">— or paste below —</div>
+    <textarea id="importText" placeholder="city,100,100,Main Base,#e8a838&#10;banner,200,200&#10;hq,300,300,,#9b59b6&#10;obs1,50,50"></textarea>
+    <div class="error-msg" id="importError"></div>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeImport()">Cancel</button>
+      <button class="btn btn-primary" onclick="doImport()">Import ✦</button>
+    </div>
+  </div>
+</div>
+
+<!-- Export Modal -->
+<div class="modal-overlay" id="exportModal">
+  <div class="modal">
+    <h3>Export CSV</h3>
+    <textarea id="exportText" readonly></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeExport()">Close</button>
+      <button class="btn btn-primary" id="copyBtn" onclick="copyExport()">Copy to Clipboard</button>
+      <button class="btn btn-primary" onclick="downloadExport()">↓ Download .csv</button>
+      <button class="btn btn-cancel" onclick="clearStorage()" style="font-size:0.7rem;opacity:0.65" title="Clear auto-saved map and start fresh">🗑 Clear Cache</button>
+    </div>
+  </div>
+</div>
+
+<!-- City Export Modal -->
+<div class="modal-overlay" id="cityExportModal">
+  <div class="modal" style="width:560px">
+    <h3 id="cityExportTitle">🏙 Export City Locations</h3>
+
+    <!-- Template editor -->
+    <div>
+      <label style="display:block;margin-bottom:6px;font-size:0.9rem;color:var(--text-dim)">
+        Message template — use <code style="color:var(--gold);background:rgba(201,168,76,0.1);padding:1px 5px;border-radius:3px">{label}</code>
+        <code style="color:var(--ice);background:rgba(168,216,234,0.1);padding:1px 5px;border-radius:3px">{x}</code>
+        <code style="color:var(--ice);background:rgba(168,216,234,0.1);padding:1px 5px;border-radius:3px">{y}</code>
+      </label>
+      <textarea id="cityExportTemplate"
+        style="min-height:72px;font-size:0.88rem;resize:vertical"
+        oninput="refreshCityExport()"
+        placeholder="Enter your message template…">Hey {label}! We are moving to a new hive, this is your new coordinates. please move here as soon as possible. X: {x}, Y: {y}</textarea>
+      <div class="error-msg" id="cityExportTemplateError"></div>
+    </div>
+
+    <!-- Plain list toggle -->
+    <label style="display:flex;align-items:center;gap:10px;font-size:0.9rem;color:var(--text-dim);cursor:pointer;margin-top:2px">
+      <input type="checkbox" id="cityExportPlain"
+        style="width:15px;height:15px;accent-color:var(--gold);cursor:pointer;flex-shrink:0"
+        onchange="refreshCityExport()">
+      Plain list only (Label, X, Y) — ignore template
+    </label>
+
+    <!-- Output -->
+    <textarea id="cityExportText" readonly style="min-height:180px;font-size:0.84rem"></textarea>
+    <div class="error-msg" id="cityExportError"></div>
+
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeCityExport()">Close</button>
+      <button class="btn btn-primary" id="cityExportCopyBtn" onclick="copyCityExport()">Copy to Clipboard</button>
+    </div>
+  </div>
+</div>
+
+<!-- Share Modal -->
+<div class="modal-overlay" id="shareModal">
+  <div class="modal" style="max-width:460px">
+    <h3>🔗 Share Map</h3>
+
+    <!-- Not yet published -->
+    <div id="shareStateNew">
+      <p style="font-size:0.78rem;color:var(--text-dim);margin:0 0 12px">
+        Publish your map to the cloud. You'll get a <strong style="color:var(--text)">read link</strong> to share with everyone
+        and a private <strong style="color:var(--gold)">edit token</strong> to push updates.
+      </p>
+      <button class="btn btn-primary" id="publishBtn" onclick="publishMap()" style="width:100%">
+        ☁ Publish Map
+      </button>
+    </div>
+
+    <!-- Owner view -->
+    <div id="shareStateOwner" style="display:none">
+      <div style="font-size:0.72rem;color:var(--text-dim);margin-bottom:4px">Read link — share this with everyone:</div>
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:10px">
+        <input id="shareReadUrl" readonly style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:4px;
+          padding:5px 8px;color:var(--text);font-size:0.72rem;font-family:monospace;min-width:0">
+        <button class="btn btn-primary" id="shareCopyBtn" onclick="copyShareUrl()" style="white-space:nowrap;font-size:0.75rem">Copy</button>
+      </div>
+
+      <div style="font-size:0.72rem;color:var(--text-dim);margin-bottom:4px">Edit token — keep this private (officers only):</div>
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:12px">
+        <input id="shareTokenDisplay" type="password" readonly style="flex:1;background:var(--bg);border:1px solid var(--gold-dim);border-radius:4px;
+          padding:5px 8px;color:var(--gold);font-size:0.72rem;font-family:monospace;min-width:0">
+        <button class="btn btn-cancel" onclick="toggleTokenVisibility()" style="font-size:0.75rem;white-space:nowrap" id="tokenToggleBtn">Show</button>
+        <button class="btn btn-cancel" onclick="copyToken()" style="font-size:0.75rem;white-space:nowrap">Copy</button>
+      </div>
+
+      <button class="btn btn-primary" id="updateBtn" onclick="updateMap()" style="width:100%;margin-bottom:6px">
+        ↑ Push Update
+      </button>
+      <button class="btn btn-cancel" onclick="unpublishMap()" style="width:100%;font-size:0.72rem;opacity:0.65">
+        🗑 Unpublish (delete from cloud)
+      </button>
+    </div>
+
+    <!-- Reader view (has ?map= but no token) -->
+    <div id="shareStateReader" style="display:none">
+      <p style="font-size:0.78rem;color:var(--text-dim);margin:0 0 10px">
+        You're viewing a shared map. You can read but not edit it on the server.
+      </p>
+      <div style="font-size:0.72rem;color:var(--text-dim);margin-bottom:4px">Read link:</div>
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:10px">
+        <input id="shareReadUrlReader" readonly style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:4px;
+          padding:5px 8px;color:var(--text);font-size:0.72rem;font-family:monospace;min-width:0">
+        <button class="btn btn-primary" onclick="copyShareUrlReader()" style="white-space:nowrap;font-size:0.75rem">Copy</button>
+      </div>
+      <div style="font-size:0.72rem;color:var(--text-dim)">Have an edit token? Enter it below to enable updates:</div>
+      <div style="display:flex;gap:6px;margin-top:6px;margin-bottom:10px">
+        <input id="claimTokenInput" type="password" placeholder="Paste edit token…"
+          style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:5px 8px;color:var(--text);font-size:0.75rem;min-width:0">
+        <button class="btn btn-primary" onclick="claimToken()" style="white-space:nowrap;font-size:0.75rem">Claim</button>
+      </div>
+    </div>
+
+    <div id="shareStatus" style="font-size:0.75rem;min-height:1.2em;margin-top:4px"></div>
+    <div class="modal-actions" style="margin-top:8px">
+      <button class="btn btn-cancel" onclick="closeShare()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="perf.js"></script>
+<script src="kor-layout.js"></script>
+<script src="core.js"></script>
+<script src="template_thumbnail.js"></script>
+<script src="template_editor.js"></script>
+<script src="template_submit.js"></script>
+<script src="template_picker.js"></script>
+<script src="template_stamp.js"></script>
+<script src="banner_optimizer.js"></script>
+<script src="hive_optimizer.js"></script>
+<script src="hive_view.js"></script>
+<script>
+// ── Compatibility shim ────────────────────────────────────────────────
+// The bear trap optimizer is being phased out (Phase 7 removes the panels +
+// references entirely). If your local core.js no longer defines these
+// functions, the existing canvas mouse/key handlers in this file would
+// throw on every event — breaking pan, click-to-place, etc.
+//
+// Stub them defensively: if core.js still exports them, our stubs are
+// skipped (typeof check). If not, the stubs return falsy/no-op so the
+// mouse handlers' `if (isOptimizerActive() && ...)` branches fall through
+// cleanly to the normal map interaction code.
+(function () {
+  const stubs = {
+    isOptimizerActive:    () => false,
+    optHandleMouseMove:   () => false,
+    optHandleMouseDown:   () => false,
+    optHandleMouseUp:     () => false,
+    optDrawOverlay:       () => {},
+    closeOptimizer:       () => {},
+    openTrapOptimizer:    () => {},
+    _optAreaConfirm:      () => {},
+    _optParamsConfirm:    () => {},
+    optNextResult:        () => {},
+    optApply:             () => {},
+    _optToggleCitiesBetween: () => {},
+  };
+  for (const [name, fn] of Object.entries(stubs)) {
+    if (typeof window[name] !== 'function') window[name] = fn;
+  }
+})();
+
+// ── Phase 4: launch editor, submit on save, show structured result ────
+//
+// Path selection:
+//   • If localStorage 'kingshot-admin-key' is set  → admin path
+//     (POST /admin/templates/save with header, status:'approved'). Phase 6
+//     will hook this up via admin.html's session key instead of localStorage.
+//   • Else                                          → user path
+//     (POST /templates/submit with submitterMapId from cloud share).
+//
+// On error, the user's layout is preserved — clicking "Edit" reopens the
+// editor pre-loaded with what they had so they don't lose their work.
+
+const TPL_ADMIN_KEY_LS = 'kingshot-admin-key';
+
+function openTemplateEditor(initialBuildings) {
+  TemplateEditor.open({
+    initialTemplate: initialBuildings ? { buildings: initialBuildings } : null,
+    onSave: (payload) => { _submitAndShowResult(payload); },
+    onCancel: () => { /* nothing to do */ },
+  });
+}
+
+// ── Picker → tag prompt → stamp ───────────────────────────────────────
+function openTemplatePicker() {
+  const workerUrl = (typeof getWorkerUrl === 'function') ? getWorkerUrl() : '';
+  if (!workerUrl) { alert('Worker URL not available.'); return; }
+  TemplatePicker.open({
+    workerUrl,
+    onPick: (template) => {
+      const tag = _promptAllianceTag();
+      if (tag == null) return;   // user cancelled the prompt
+      // Cache worker URL on the stamp module for use-count POSTs
+      if (TemplateStamp._setWorkerUrl) TemplateStamp._setWorkerUrl(workerUrl);
+      TemplateStamp.activate({
+        template, allianceTag: tag, workerUrl,
+        onCommit: () => { /* stamp committed; HUD already removed */ },
+        onCancel: () => { /* stamp cancelled */ },
+      });
+    },
+    onCancel: () => {},
+  });
+}
+
+// Prompt for a 3-char alphanumeric alliance tag. Case is preserved exactly
+// as entered (the validation regex is case-insensitive). Returns the tag
+// string, or null if the user cancels.
+function _promptAllianceTag() {
+  while (true) {
+    const raw = prompt('Alliance tag (3 letters/digits, e.g. PHX):');
+    if (raw == null) return null;
+    const v = String(raw).trim();
+    if (/^[A-Za-z0-9]{3}$/.test(v)) return v;
+    alert('Tag must be exactly 3 alphanumeric characters.');
+  }
+}
+
+async function _submitAndShowResult(payload) {
+  const workerUrl      = (typeof getWorkerUrl === 'function') ? getWorkerUrl() : '';
+  const adminKey       = localStorage.getItem(TPL_ADMIN_KEY_LS) || null;
+  const submitterMapId = localStorage.getItem('kingshot-cloud-id') || null;
+
+  const modal = _openSubmitResultModal();
+  modal.setState('submitting', { name: payload.name });
+
+  const result = await TemplateSubmit.submitTemplate(payload, {
+    workerUrl, adminKey, submitterMapId,
+  });
+
+  if (result.ok) {
+    modal.setState('success', { id: result.id, status: result.status, isAdmin: result.isAdmin, name: payload.name });
+  } else {
+    modal.setState('error', {
+      kind: result.kind,
+      error: result.error,
+      onEdit: () => {
+        modal.close();
+        const abs = TemplateSubmit.payloadToAbsoluteBuildings(payload);
+        openTemplateEditor(abs);
+      },
+      onRetry: () => { modal.close(); _submitAndShowResult(payload); },
+    });
+  }
+}
+
+// ── Result modal — single component with state machine ────────────────
+function _openSubmitResultModal() {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;padding:32px;';
+  overlay.innerHTML = `
+    <div id="_tplResBox" style="background:#161b22;border:1px solid #30363d;border-radius:8px;padding:22px;max-width:520px;width:100%;color:#e6edf3;font:14px/1.5 -apple-system,sans-serif;">
+      <div id="_tplResTitle" style="font-weight:600;font-size:16px;margin-bottom:10px;color:#c9a84c;">Submitting…</div>
+      <div id="_tplResBody" style="color:#c9d1d9;margin-bottom:16px;"></div>
+      <div id="_tplResActions" style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;"></div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const titleEl = overlay.querySelector('#_tplResTitle');
+  const bodyEl  = overlay.querySelector('#_tplResBody');
+  const actsEl  = overlay.querySelector('#_tplResActions');
+
+  function btn(label, primary, onClick) {
+    const b = document.createElement('button');
+    b.textContent = label;
+    b.style.cssText = primary
+      ? 'background:#c9a84c;border:1px solid #c9a84c;color:#0d1117;padding:8px 16px;border-radius:6px;cursor:pointer;font:inherit;font-weight:600;'
+      : 'background:#21262d;border:1px solid #30363d;color:#e6edf3;padding:8px 16px;border-radius:6px;cursor:pointer;font:inherit;';
+    b.addEventListener('click', onClick);
+    return b;
+  }
+  function close() { overlay.remove(); }
+
+  function setState(state, opts) {
+    opts = opts || {};
+    actsEl.innerHTML = '';
+    if (state === 'submitting') {
+      titleEl.textContent = 'Submitting template…';
+      titleEl.style.color = '#c9a84c';
+      bodyEl.innerHTML = `<div style="color:#8b949e;">Sending <strong>${_escape(opts.name || '')}</strong> to the server.</div>`;
+      // No buttons during submit
+    } else if (state === 'success') {
+      titleEl.textContent = opts.isAdmin ? '✓ Template approved' : '✓ Template submitted';
+      titleEl.style.color = '#3fb950';
+      const statusLine = opts.isAdmin
+        ? 'Admin path — published immediately. Available in the picker now.'
+        : 'Pending admin review. You\'ll see it in the picker once approved.';
+      bodyEl.innerHTML = `
+        <div><strong>${_escape(opts.name)}</strong> &mdash; <code style="color:#8b949e;font-size:12px;">${_escape(opts.id || '')}</code></div>
+        <div style="color:#8b949e;margin-top:6px;">${statusLine}</div>`;
+      actsEl.appendChild(btn('Done', true, close));
+    } else if (state === 'error') {
+      titleEl.style.color = '#f85149';
+      let title = 'Submission failed', msg = opts.error || 'Unknown error';
+      let showEdit = true, showRetry = false;
+      if (opts.kind === 'name-taken') {
+        title = 'Name already taken';
+        msg = 'A template with this name already exists. Click Edit to change the name and try again.';
+        showEdit = true;  showRetry = false;
+      } else if (opts.kind === 'unauthorized') {
+        title = 'Admin key invalid';
+        msg = 'Your admin key was rejected by the server. Update it via:<br><code>localStorage.setItem(\'kingshot-admin-key\', \'…\')</code>';
+        showEdit = true;  showRetry = true;
+      } else if (opts.kind === 'validation') {
+        title = 'Validation failed';
+        showEdit = true;  showRetry = false;
+      } else if (opts.kind === 'network') {
+        showEdit = true;  showRetry = true;
+      } else {
+        showEdit = true;  showRetry = true;
+      }
+      titleEl.textContent = '✕ ' + title;
+      bodyEl.innerHTML = `<div>${msg}</div>${opts.kind !== 'name-taken' && opts.error ? `<div style="color:#8b949e;margin-top:8px;font-family:monospace;font-size:12px;">${_escape(opts.error)}</div>` : ''}`;
+      actsEl.appendChild(btn('Cancel', false, close));
+      if (showEdit && opts.onEdit)   actsEl.appendChild(btn('Edit',   false, opts.onEdit));
+      if (showRetry && opts.onRetry) actsEl.appendChild(btn('Retry',  true,  opts.onRetry));
+      if (!showRetry && opts.onEdit) {
+        // Make Edit primary when retry isn't offered, so it's clearly the next step
+        actsEl.lastChild.style.cssText = 'background:#c9a84c;border:1px solid #c9a84c;color:#0d1117;padding:8px 16px;border-radius:6px;cursor:pointer;font:inherit;font-weight:600;';
+      }
+    }
+  }
+  function _escape(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  return { setState, close };
+}
+</script>
+<script>
+// ─────────────────────────────────────
+// Inline script: event listeners + init only.
+// All state, constants, and functions are in core.js.
+// ─────────────────────────────────────
+
+// Must run first — sets up canvas, ctx, wrap and DOM references that event listeners need.
+coreInitDOM();
+
+// In hive view, all canvas input is suppressed — the view is read-only and
+// the camera is locked. See hive_view.js + the "View Hive Plan" feature.
+function _hvBlock() { return window.HiveView && HiveView.isActive(); }
+
+canvas.addEventListener('mousemove', e => {
+  const rect=canvas.getBoundingClientRect();
+  const sx=e.clientX-rect.left, sy=e.clientY-rect.top;
+  const {gx,gy}=screenToGrid(sx,sy);
+  const igx=Math.floor(gx), igy=Math.floor(gy);
+
+  const prevGx = hoverCell ? hoverCell.gx : -1;
+  const prevGy = hoverCell ? hoverCell.gy : -1;
+
+  if (igx>=0&&igx<GRID_SIZE&&igy>=0&&igy<GRID_SIZE) {
+    updateCoordDisplay(igx, igy);
+    hoverCell={gx:igx,gy:igy};
+  } else {
+    updateCoordDisplay();
+    hoverCell=null;
+  }
+
+  // Drag-pan — allowed in hive view (so the user can pan around the hive).
+  if (isDragging) {
+    camX=dragCamX+(sx-dragStartX)/camScale;
+    camY=dragCamY+(sy-dragStartY)/camScale;
+    scheduleDraw(); return;
+  }
+
+  // Everything below mutates buildings/selection — skip in hive view.
+  if (_hvBlock()) return;
+
+  // Optimizer area drag tracking
+  if (isOptimizerActive() && hoverCell && optHandleMouseMove(hoverCell.gx, hoverCell.gy)) return;
+
+  // Multi-select drag preview
+  if (_multiSelectStart && hoverCell) {
+    updateMultiSelect(hoverCell.gx, hoverCell.gy);
+    return;
+  }
+
+  // Multi-move drag
+  if (_multiMoving && hoverCell) {
+    updateMultiMove(hoverCell.gx, hoverCell.gy);
+    return;
+  }
+
+  if (isMoving && selectedId && hoverCell) {
+    const b=buildings.find(x=>x.id===selectedId);
+    if (b) {
+      const def=BUILDING_DEFS[b.type];
+      const newGx = hoverCell.gx - moveOriginGx;
+      const newGy = hoverCell.gy - moveOriginGy;
+      if (newGx>=0 && newGy>=0 && newGx+def.size<=GRID_SIZE && newGy+def.size<=GRID_SIZE &&
+          !wouldOverlap(newGx, newGy, def.size, selectedId) &&
+          !inForbiddenZone(newGx, newGy, def.size, b.type) &&
+          !(b.type === 'banner' && inEnemyTerritory(newGx, newGy, def.size, b.label))) {
+        // Capture the building's last-applied position once at the start of
+        // the drag so the incremental sync BFS in _drawImmediate can compute
+        // an old-vs-new delta and only re-flood affected alliances.
+        if (def.territory && (!_pendingIncrementalMove || _pendingIncrementalMove.bldg !== b)) {
+          _pendingIncrementalMove = { bldg: b, refGx: b.gx, refGy: b.gy };
+        }
+        b.gx=newGx; b.gy=newGy;
+        invalidateBuildings();
+        if (def.territory) invalidateTset();
+      }
+      syncEditPanel(b);
+    }
+    scheduleDraw(); return;
+  }
+
+  // Only redraw if hover cell actually changed AND we're in a mode that shows a ghost
+  const cellChanged = hoverCell ? (igx !== prevGx || igy !== prevGy) : (prevGx !== -1);
+  if (cellChanged && tool === 'place') {
+    scheduleDraw();
+  }
+  // Update erase rectangle preview
+  if (cellChanged && _eraseRectStart && hoverCell) {
+    updateEraseRect(hoverCell.gx, hoverCell.gy);
+  }
+});
+
+canvas.addEventListener('mousedown', e => {
+  const rect=canvas.getBoundingClientRect();
+  const sx=e.clientX-rect.left, sy=e.clientY-rect.top;
+
+  // Pan initiator (middle-click or alt+left-drag) is allowed even in hive
+  // view — only edit actions are blocked there.
+  if (e.button===1||(e.button===0&&e.altKey)) {
+    isDragging=true; dragStartX=sx; dragStartY=sy; dragCamX=camX; dragCamY=camY;
+    canvas.style.cursor='grabbing'; return;
+  }
+
+  // In hive view: plain left-click also pans (edit actions are blocked, so
+  // the left button is free for view manipulation — more intuitive than
+  // requiring Alt). Right-click still does nothing.
+  if (_hvBlock()) {
+    if (e.button === 0) {
+      isDragging=true; dragStartX=sx; dragStartY=sy; dragCamX=camX; dragCamY=camY;
+      canvas.style.cursor='grabbing';
+    }
+    return;
+  }
+
+  // Optimizer area-select mode intercepts left-click
+  if (isOptimizerActive() && e.button === 0 && hoverCell) {
+    if (optHandleMouseDown(hoverCell.gx, hoverCell.gy)) return;
+  }
+
+  // Banner optimizer intercepts left-clicks when active
+  if (typeof boHandleMapClick === 'function' && e.button === 0) {
+    if (boHandleMapClick(sx, sy)) return;
+  }
+  if (e.button===2) {
+    // Right-click in erase mode: rectangle erase (2-click flow)
+    if (tool==='erase' && hoverCell) {
+      if (_eraseRectStart) {
+        // Second right-click: commit the rectangle
+        commitEraseRect(hoverCell.gx, hoverCell.gy);
+      } else {
+        // First right-click: start the rectangle
+        startEraseRect(hoverCell.gx, hoverCell.gy);
+      }
+      return;
+    }
+    // Right-click erases single building in select mode
+    if (tool==='select' && hoverCell) {
+      eraseAt(hoverCell.gx, hoverCell.gy);
+    }
+    return;
+  }
+  if (!hoverCell) return;
+
+  if (tool==='place') {
+    placeBuilding(hoverCell.gx, hoverCell.gy);
+  } else if (tool==='erase') {
+    eraseAt(hoverCell.gx, hoverCell.gy);
+  } else if (tool==='select') {
+    // Multi-move: if we have a multi-selection and click inside it, start moving
+    if (_multiSelected.length && !_multiSelectStart && hoverCell) {
+      const hit = getBuildingAt(sx, sy);
+      if (hit && _multiSelected.some(b => b.id === hit.id)) {
+        startMultiMove(hoverCell.gx, hoverCell.gy);
+        canvas.style.cursor='grabbing';
+        return;
+      }
+      // Clicked outside selection — clear it and fall through to normal select
+      clearMultiSelect();
+    }
+    const hit=getBuildingAt(sx,sy);
+    if (hit) {
+      pushHistory();
+      selectBuilding(hit.id);
+      if (hit._canonical) {
+        canvas.style.cursor=getCursor();
+      } else {
+        moveOriginGx = hoverCell.gx - hit.gx;
+        moveOriginGy = hoverCell.gy - hit.gy;
+        isMoving=true;
+        canvas.style.cursor='grabbing';
+      }
+    } else {
+      deselectBuilding();
+      // Start multi-select drag on empty space
+      if (hoverCell) {
+        startMultiSelect(hoverCell.gx, hoverCell.gy);
+      }
+    }
+  }
+});
+
+canvas.addEventListener('mouseup', e => {
+  // Pan-drag release is allowed in hive view (matches mousedown's gating).
+  if (isDragging) { isDragging=false; canvas.style.cursor=getCursor(); }
+  if (_hvBlock()) return;
+  if (isOptimizerActive() && hoverCell && optHandleMouseUp(hoverCell.gx, hoverCell.gy)) return;
+  if (isMoving)   {
+    isMoving=false; _pendingIncrementalMove=null; canvas.style.cursor=getCursor();
+    // Defer the heavy persistence + sidebar rebuild so the mouseup handler
+    // returns instantly. With ~100+ user buildings these two together used
+    // to take ~150 ms inside the handler (Chrome 'mouseup' violation).
+    setTimeout(() => { saveToStorage(); updatePlacedList(); }, 0);
+  }
+  // Commit multi-select rectangle on mouse release
+  if (_multiSelectStart) { commitMultiSelect(); canvas.style.cursor=getCursor(); }
+  // Commit multi-move on mouse release
+  if (_multiMoving) { commitMultiMove(); canvas.style.cursor=getCursor(); }
+});
+
+canvas.addEventListener('dblclick', e => {
+  if (_hvBlock()) return;
+  if (tool !== 'select') return;
+  const rect=canvas.getBoundingClientRect();
+  const sx=e.clientX-rect.left, sy=e.clientY-rect.top;
+  const hit=getBuildingAt(sx,sy);
+  if (!hit) return;
+  selectBuilding(hit.id);
+  openRenamePopup(hit, sx, sy);
+});
+
+canvas.addEventListener('mouseleave', () => {
+  // Always clean up drag state — pan must release even in hive view.
+  hoverCell=null; isDragging=false; isMoving=false;
+  _pendingIncrementalMove=null;
+  if (_multiSelectStart) { _multiSelectStart=null; _multiSelectEnd=null; }
+  if (_multiMoving) { _multiMoving=false; _multiMoveAnchor=null; _multiMoveOffset=null; }
+  canvas.style.cursor=getCursor();
+});
+
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  const f=e.deltaY<0?1.12:0.89;
+  const rect=canvas.getBoundingClientRect();
+  const sx=e.clientX-rect.left, sy=e.clientY-rect.top;
+  const {ix,iy}=screenToIso(sx,sy);
+  camScale=Math.max(0.03,Math.min(8,camScale*f));
+  const n=screenToIso(sx,sy); camX+=n.ix-ix; camY+=n.iy-iy;
+  updateZoomDisplay();
+  scheduleDraw();
+},{passive:false});
+
+canvas.addEventListener('contextmenu', e=>e.preventDefault());
+
+
+// ─────────────────────────────────────
+document.addEventListener('keydown', e=>{
+  if (['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) return;
+  if (_hvBlock()) {
+    if (e.key === 'Escape') {
+      const cm = document.getElementById('cityExportModal');
+      if (cm && cm.classList.contains('open')) closeCityExport();
+      else if (window.HiveOpt && HiveOpt.isActive()) closeHiveOpt();
+      else HiveView.close();
+    }
+    return;
+  }
+  if (e.key==='d') setTool('place');
+  if (e.key==='s') setTool('select');
+  if (e.key==='e') setTool('erase');
+  if ((e.key==='Delete'||e.key==='Backspace')&&selectedId) deleteSelected();
+  if (e.key==='Escape') {
+    if (_eraseRectStart) { cancelEraseRect(); return; }
+    if (_multiSelected.length || _multiSelectStart) { clearMultiSelect(); draw(); return; }
+    if (tool === 'place') { setTool('select'); }
+    deselectBuilding(); closeImport(); closeExport(); closeCityExport(); closeShare(); closeRenamePopup(); closeCoordJump(); closeInstructions(); closeReport(); closeAllianceSummary(); closeOptimizer();
+  }
+  if (e.ctrlKey||e.metaKey) {
+    if (e.key==='z') { e.preventDefault(); undo(); }
+    if (e.key==='y'||(e.key==='z'&&e.shiftKey)) { e.preventDefault(); redo(); }
+    if (e.key==='c') { e.preventDefault(); copyBuilding(); }
+    if (e.key==='v') { e.preventDefault(); pasteBuilding(); }
+  }
+});
+
+// ─────────────────────────────────────
+// INIT
+// ─────────────────────────────────────
+// ── Game mode UI sync ──
+function _updateGameUI(game) {
+  const sel = document.getElementById('gameSelector');
+  if (sel) sel.value = game;
+  const titleEmoji = document.querySelector('#appTitle .app-title-emoji');
+  const titleText  = document.querySelector('#appTitle .app-title-text');
+  if (titleEmoji) titleEmoji.textContent = (game === 'whiteout') ? '❄' : '⚔';
+  if (titleText)  titleText.textContent  = (game === 'whiteout') ? ' Whiteout Survival Mapper' : ' Kingshot Mapper';
+  document.title = (game === 'whiteout') ? 'Whiteout Survival Mapper' : 'Kingshot Mapper';
+
+  // Refresh resource type dropdowns with game-appropriate labels
+  const labels = (typeof RES_SUBTYPE_LABELS !== 'undefined') ? RES_SUBTYPE_LABELS
+    : { bread:'Bread', woodmill:'Wood', quarry:'Stone', ironmine:'Iron' };
+
+  // #resourceSubtype — place panel (values are type ids, only text changes)
+  const subSel = document.getElementById('resourceSubtype');
+  if (subSel) {
+    for (const opt of subSel.options) {
+      if (labels[opt.value]) opt.textContent = labels[opt.value];
+    }
+  }
+
+  // #reportNewType — report panel (values are type ids, only text changes)
+  const repSel = document.getElementById('reportNewType');
+  if (repSel) {
+    for (const opt of repSel.options) {
+      if (labels[opt.value]) opt.textContent = labels[opt.value];
+    }
+  }
+
+  // #editResLabel — edit panel (values are display names used for reverse-mapping in applyEdit)
+  const editSel = document.getElementById('editResLabel');
+  if (editSel) {
+    const typeIds = ['bread','woodmill','quarry','ironmine'];
+    for (let i = 0; i < editSel.options.length && i < typeIds.length; i++) {
+      editSel.options[i].value = labels[typeIds[i]];
+      editSel.options[i].textContent = labels[typeIds[i]];
+    }
+  }
+}
+_updateGameUI(window.getActiveGame ? window.getActiveGame() : 'kingshot');
+if (typeof onGameChange === 'function') onGameChange(_updateGameUI);
+
+setTool('place');
+window.addEventListener('resize', ()=>{ resizeCanvas(); });
+// KOR: seed the KOR banner layout (kor-layout.js) when there is no saved draft, or on ?kor=reset
+let _korSeeded = false;
+if (new URLSearchParams(location.search).get('kor') === 'reset') {
+  try { localStorage.removeItem(STORAGE_KEY); } catch(e) { /* localStorage may be unavailable */ }
+}
+if (loadFromStorage()) { updatePlacedList(); }
+else if (window.KOR_LAYOUT && getActiveGame() === 'kingshot') {
+  buildings = KOR_LAYOUT.buildings.map(b => ({...b}));
+  placementSeq = KOR_LAYOUT.placementSeq;
+  _nextUserId = buildings.length;
+  invalidateTset();
+  saveToStorage();
+  updatePlacedList();
+  _korSeeded = true;
+}
+resizeCanvas();
+resetView();
+if (_korSeeded) fitCameraToBbox(...KOR_LAYOUT.meta.bbox);
+startAnimLoop();
+_updateUndoRedoUI();
+buildPermBuildingList();
+checkUrlShare();
+setTimeout(maybeShowInstructions, 600);
+fetchAndMergeCanonical();
+
+// ── Resource Report UI helper (inline-only; uses DOM ids specific to this page) ──
+// ── Bear Trap Optimizer UI helper ──
+function _optToggleCitiesBetween() {
+  const tc = document.getElementById('optTrapCount');
+  const row = document.getElementById('optCitiesBetweenRow');
+  if (!tc || !row) return;
+  row.style.display = (tc.value === '2') ? 'block' : 'none';
+}
+
+function onReportActionChange() {
+  const action = document.getElementById('reportAction').value;
+  document.getElementById('reportMoveFields').style.display = action === 'move' ? 'flex' : 'none';
+  document.getElementById('reportRenameFields').style.display = action === 'rename' ? '' : 'none';
+}
+
+// ── Player credit fetch ──────────────────────────────────────────────────────
+(async () => {
+  const el = document.getElementById('creditLink');
+  if (!el) return;
+  if (!WORKER_URL) return;
+  try {
+    const resp = await fetch(WORKER_URL + '/player', { signal: AbortSignal.timeout(5000) });
+    if (resp.ok) {
+      const json = await resp.json();
+      const name = json?.data?.name, kingdom = json?.data?.kingdom;
+      if (name && kingdom) { el.textContent = 'Made by : ' + name + ' | Kingdom ' + kingdom; }
+    }
+  } catch(e) { /* silent */ }
+})();
+
+// ─────────────────────────────────────
+// MOBILE SUPPORT — touch events + bottom-sheet wiring
+// Ported from mobile.html so a single index.html serves both desktop and mobile.
+// Mouse events above remain authoritative on desktop; touch events here fire
+// independently on touch devices (browsers don't double-fire when touch handlers
+// call preventDefault and touch-action:none is set on the canvas).
+// ─────────────────────────────────────
+
+function isMobileViewport() { return window.matchMedia('(max-width: 900px)').matches; }
+
+// ── Game selector: abbreviate labels on mobile (KS / WoS) for compactness ──
+function _updateGameSelectorLabels() {
+  const sel = document.getElementById('gameSelector');
+  if (!sel) return;
+  const mobile = isMobileViewport();
+  for (const opt of sel.options) {
+    if (opt.value === 'kingshot') opt.textContent = mobile ? 'KS'  : 'Kingshot';
+    if (opt.value === 'whiteout') opt.textContent = mobile ? 'WoS' : 'Whiteout Survival';
+  }
+}
+_updateGameSelectorLabels();
+window.addEventListener('resize', _updateGameSelectorLabels);
+
+// ── Sheet open/close ──
+let _mainSheetOpen = false;
+function _backdrop() { return document.getElementById('sheetBackdrop'); }
+function _mainSheet() { return document.getElementById('mainSidebar'); }
+function _boPanel() { return document.getElementById('bannerOptPanel'); }
+function _anySheetVisuallyOpen() {
+  return _mainSheet().classList.contains('open') || _boPanel().classList.contains('open');
+}
+function openMainSheet() {
+  if (!isMobileViewport()) return;
+  _boPanel().classList.remove('open');
+  _mainSheet().classList.add('open');
+  _backdrop().classList.add('open');
+  _mainSheetOpen = true;
+}
+function closeMainSheet() {
+  _mainSheet().classList.remove('open');
+  _mainSheetOpen = false;
+  if (!_boPanel().classList.contains('open')) _backdrop().classList.remove('open');
+}
+function toggleMainSheet() { _mainSheetOpen ? closeMainSheet() : openMainSheet(); }
+function openBoSheet() {
+  if (!isMobileViewport()) return;
+  closeMainSheet();
+  _boPanel().classList.add('open');
+  _backdrop().classList.add('open');
+}
+function closeAllSheets() {
+  _mainSheet().classList.remove('open');
+  _boPanel().classList.remove('open');
+  _backdrop().classList.remove('open');
+  _mainSheetOpen = false;
+  closeMoreMenu();
+}
+
+// ── Sheet tab helper: activate a sidebar panel + its stab button visually ──
+function _activateSheetTab(name) {
+  document.querySelectorAll('.sidebar-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.stab').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + name)?.classList.add('active');
+  const stab = document.querySelector(`.stab[onclick*="'${name}'"]`);
+  if (stab) stab.classList.add('active');
+}
+
+// ── Overflow ⋮ menu ──
+function toggleMoreMenu() {
+  const m = document.getElementById('moreMenu');
+  if (m) m.classList.toggle('open');
+}
+function closeMoreMenu() {
+  const m = document.getElementById('moreMenu');
+  if (m) m.classList.remove('open');
+}
+// Click-outside-to-close for the More menu
+document.addEventListener('click', e => {
+  const menu = document.getElementById('moreMenu');
+  if (!menu || !menu.classList.contains('open')) return;
+  if (menu.contains(e.target)) return;
+  if (e.target.closest('[onclick*="toggleMoreMenu"]')) return;
+  closeMoreMenu();
+}, true);
+
+// ── Wrap setTool: sync sheet-mirror tool buttons + mobile sheet behavior ──
+// The original setTool (core.js) only updates the toolbar's btnPlace/btnSelect/btnErase.
+// We also sync the sheet's segmented mirror buttons (btnPlaceM/btnSelectM/btnEraseM)
+// so the active state is consistent regardless of which copy the user tapped.
+// On mobile, tapping Place also pops the sheet up to the Place tab.
+let _setToolInitDone = false;
+(function wrapSetToolForMobile() {
+  const orig = window.setTool;
+  if (typeof orig !== 'function') return;
+  window.setTool = function(t) {
+    orig.apply(this, arguments);
+    // Sync sheet-mirror buttons (runs on both desktop and mobile — harmless on desktop)
+    const mirrors = [
+      { id: 'btnPlaceM',  cls: 'active-place'  },
+      { id: 'btnSelectM', cls: 'active-select' },
+      { id: 'btnEraseM',  cls: 'active-erase'  },
+    ];
+    for (const m of mirrors) {
+      const btn = document.getElementById(m.id);
+      if (!btn) continue;
+      btn.classList.remove('active-place', 'active-select', 'active-erase');
+    }
+    const activeId = t === 'place' ? 'btnPlaceM' : t === 'select' ? 'btnSelectM' : t === 'erase' ? 'btnEraseM' : null;
+    if (activeId) {
+      const btn = document.getElementById(activeId);
+      if (btn) btn.classList.add('active-' + t);
+    }
+    // Mobile UX layering
+    if (!_setToolInitDone) return;
+    if (!isMobileViewport()) return;
+    if (t === 'place') {
+      _activateSheetTab('place');
+      openMainSheet();
+    } else if (t === 'erase') {
+      closeMainSheet();
+    } else if (t === 'select') {
+      _activateSheetTab('placed');
+    }
+  };
+})();
+// Mark init complete so subsequent setTool calls (from user taps) trigger mobile UX
+setTimeout(() => { _setToolInitDone = true; }, 0);
+
+// ── Wrap _updateUndoRedoUI to mirror disabled state onto sheet buttons ──
+(function wrapUndoRedoUIForMobile() {
+  const orig = window._updateUndoRedoUI;
+  if (typeof orig !== 'function') return;
+  window._updateUndoRedoUI = function() {
+    orig.apply(this, arguments);
+    const u = document.getElementById('btnUndo');
+    const r = document.getElementById('btnRedo');
+    const uM = document.getElementById('btnUndoM');
+    const rM = document.getElementById('btnRedoM');
+    if (uM && u) uM.disabled = u.disabled;
+    if (rM && r) rM.disabled = r.disabled;
+  };
+  // Sync once at install time so the initial disabled state is reflected
+  window._updateUndoRedoUI();
+})();
+
+// ── Banner Optimizer mobile integration ──
+// On mobile: BO panel slides up as a bottom sheet. The map-pick path
+// (#boPickStartBtn + map-tap target picking) is disabled because the sheet
+// covers half the screen — users use the alliance dropdown for start and the
+// accordion for targets. Map taps are swallowed while BO is open.
+(function wrapBoForMobile() {
+  const origOpen  = window.openBannerOpt;
+  const origClose = window.closeBannerOpt;
+  const origClick = window.boHandleMapClick;
+
+  if (typeof origOpen === 'function') {
+    window.openBannerOpt = function() {
+      origOpen.apply(this, arguments);
+      // If the alliance dropdown has no real options, replace the placeholder
+      // with an actionable hint so the empty state isn't mistaken for a bug.
+      const sel = document.getElementById('boAllianceSelect');
+      if (sel && sel.options.length === 1) {
+        sel.options[0].text = '⚠ No alliances yet — place a banner with a label first';
+      }
+      if (isMobileViewport()) openBoSheet();
+    };
+  }
+  if (typeof origClose === 'function') {
+    window.closeBannerOpt = function() {
+      origClose.apply(this, arguments);
+      closeAllSheets();
+    };
+  }
+  if (typeof origClick === 'function') {
+    window.boHandleMapClick = function(sx, sy) {
+      // On mobile, while BO is open, the map is "locked": swallow taps so the
+      // user can't accidentally pick targets or trigger other tools through
+      // the sheet's uncovered area.
+      if (isMobileViewport() && _boPanel().style.display === 'flex') {
+        return true;
+      }
+      return origClick(sx, sy);
+    };
+  }
+})();
+
+// ── Touch event handlers (mirror of mobile.html flow) ──
+let _isPinching = false, _isPanning = false, _isMovingTouch = false;
+let _longPressTimer = null, _touchStartX = 0, _touchStartY = 0, _touchMoved = false;
+let _lastTapTime = 0, _lastTapX = 0, _lastTapY = 0;
+let _pendingHit = null;
+let _pinchStartDist = 0, _pinchStartScale = 1, _pinchMidX = 0, _pinchMidY = 0, _pinchCamX = 0, _pinchCamY = 0;
+let _touchMoveOriginGx = 0, _touchMoveOriginGy = 0;
+
+function _getTouchPos(t) {
+  const r = canvas.getBoundingClientRect();
+  return { x: t.clientX - r.left, y: t.clientY - r.top };
+}
+function _touchDist(a, b) {
+  const dx = a.clientX - b.clientX, dy = a.clientY - b.clientY;
+  return Math.sqrt(dx*dx + dy*dy);
+}
+function _touchMid(a, b) {
+  const r = canvas.getBoundingClientRect();
+  return { x: (a.clientX + b.clientX)/2 - r.left, y: (a.clientY + b.clientY)/2 - r.top };
+}
+function _snapCell(sx, sy) {
+  const { gx, gy } = screenToGrid(sx, sy);
+  const igx = Math.floor(gx), igy = Math.floor(gy);
+  return (igx >= 0 && igx < GRID_SIZE && igy >= 0 && igy < GRID_SIZE) ? { gx: igx, gy: igy } : null;
+}
+function _showLPRing(sx, sy) {
+  const r = document.createElement('div');
+  r.className = 'longpress-ring';
+  r.style.left = sx + 'px';
+  r.style.top  = sy + 'px';
+  wrap.appendChild(r);
+  setTimeout(() => r.remove(), 600);
+}
+
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  closeMoreMenu();
+  const ts = e.touches;
+  const hv = _hvBlock();
+  if (ts.length === 1) {
+    const pos = _getTouchPos(ts[0]);
+    _touchStartX = pos.x; _touchStartY = pos.y;
+    _touchMoved = false; _isPanning = false; _isMovingTouch = false; _pendingHit = null;
+    // Long-press erase + select-mode move-setup are edit actions — skip in
+    // hive view. Single-finger pan is set up by touchmove and works anyway.
+    if (!hv) {
+      _longPressTimer = setTimeout(() => {
+        _longPressTimer = null;
+        const cell = _snapCell(_touchStartX, _touchStartY); if (!cell) return;
+        const lpHit = getBuildingAt(_touchStartX, _touchStartY);
+        if (lpHit && lpHit._canonical) { selectBuilding(lpHit.id); openReport(lpHit.id); return; }
+        _showLPRing(_touchStartX, _touchStartY);
+        hoverCell = cell;
+        eraseAt(cell.gx, cell.gy);
+      }, 500);
+      if (tool === 'select') {
+        const cell = _snapCell(pos.x, pos.y); hoverCell = cell;
+        const hit = getBuildingAt(pos.x, pos.y);
+        if (hit) {
+          _pendingHit = { hit, originGx: cell ? cell.gx - hit.gx : 0, originGy: cell ? cell.gy - hit.gy : 0 };
+        }
+      }
+    }
+  } else if (ts.length === 2) {
+    if (_longPressTimer) { clearTimeout(_longPressTimer); _longPressTimer = null; }
+    _isMovingTouch = false; _pendingHit = null; _isPanning = false; _isPinching = true;
+    _pinchStartDist = _touchDist(ts[0], ts[1]);
+    _pinchStartScale = camScale;
+    const mid = _touchMid(ts[0], ts[1]);
+    _pinchMidX = mid.x; _pinchMidY = mid.y; _pinchCamX = camX; _pinchCamY = camY;
+  }
+}, { passive: false });
+
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  const ts = e.touches;
+  if (ts.length >= 2 && _isPinching) {
+    const dist = _touchDist(ts[0], ts[1]);
+    const ns = Math.max(0.03, Math.min(8, _pinchStartScale * dist / _pinchStartDist));
+    const mid = _touchMid(ts[0], ts[1]);
+    const { ix: ix0, iy: iy0 } = screenToIso(_pinchMidX, _pinchMidY);
+    camScale = ns;
+    const { ix: ix1, iy: iy1 } = screenToIso(_pinchMidX, _pinchMidY);
+    camX = _pinchCamX + (ix1 - ix0) + (mid.x - _pinchMidX) / camScale;
+    camY = _pinchCamY + (iy1 - iy0) + (mid.y - _pinchMidY) / camScale;
+    _pinchMidX = mid.x; _pinchMidY = mid.y; _pinchCamX = camX; _pinchCamY = camY;
+    updateZoomDisplay();
+    scheduleDraw();
+    return;
+  }
+  if (ts.length === 1) {
+    const pos = _getTouchPos(ts[0]);
+    const dx = pos.x - _touchStartX, dy = pos.y - _touchStartY;
+    if (Math.sqrt(dx*dx + dy*dy) > 8) {
+      _touchMoved = true;
+      if (_longPressTimer) { clearTimeout(_longPressTimer); _longPressTimer = null; }
+      if (_pendingHit && !_isMovingTouch) {
+        pushHistory();
+        selectBuilding(_pendingHit.hit.id);
+        _touchMoveOriginGx = _pendingHit.originGx;
+        _touchMoveOriginGy = _pendingHit.originGy;
+        if (!_pendingHit.hit._canonical) _isMovingTouch = true;
+        _pendingHit = null;
+      }
+    }
+    if (_isMovingTouch && selectedId) {
+      const cell = _snapCell(pos.x, pos.y); hoverCell = cell;
+      if (cell) {
+        const b = buildings.find(x => x.id === selectedId);
+        if (b) {
+          const def = BUILDING_DEFS[b.type];
+          const ngx = cell.gx - _touchMoveOriginGx, ngy = cell.gy - _touchMoveOriginGy;
+          if (ngx >= 0 && ngy >= 0 && ngx + def.size <= GRID_SIZE && ngy + def.size <= GRID_SIZE
+              && !wouldOverlap(ngx, ngy, def.size, selectedId)
+              && !inForbiddenZone(ngx, ngy, def.size, b.type)
+              && !(b.type === 'banner' && inEnemyTerritory(ngx, ngy, def.size, b.label))) {
+            b.gx = ngx; b.gy = ngy;
+            invalidateBuildings();
+            if (def.territory) invalidateTset();
+          }
+          syncEditPanel(b);
+        }
+      }
+      scheduleDraw();
+      return;
+    }
+    if (_touchMoved) {
+      _isPanning = true;
+      camX += dx / camScale; camY += dy / camScale;
+      _touchStartX = pos.x; _touchStartY = pos.y;
+      scheduleDraw();
+    }
+    const cell = _snapCell(pos.x, pos.y); hoverCell = cell;
+    if (cell) updateCoordDisplay(cell.gx, cell.gy);
+  }
+}, { passive: false });
+
+canvas.addEventListener('touchend', e => {
+  e.preventDefault();
+  if (_longPressTimer) { clearTimeout(_longPressTimer); _longPressTimer = null; }
+  const wasPinching = _isPinching;
+  const wasPanning  = _isPanning;
+  if (e.touches.length < 2) _isPinching = false;
+  if (e.touches.length === 0) _isPanning = false;
+  if (_isMovingTouch) {
+    _isMovingTouch = false; _pendingHit = null;
+    saveToStorage(); updatePlacedList(); scheduleDraw();
+    return;
+  }
+  _pendingHit = null;
+  if (wasPinching) return;
+  // In hive view, taps must not place/select/erase. Pan/pinch release was
+  // already handled above, so we can exit cleanly here.
+  if (_hvBlock()) { if (wasPanning) scheduleDraw(); return; }
+  if (e.changedTouches.length === 0) return;
+  const t = e.changedTouches[0];
+  const pos = _getTouchPos(t);
+  const cell = _snapCell(pos.x, pos.y); hoverCell = cell;
+
+  // Double-tap
+  const now = Date.now();
+  const ddx = pos.x - _lastTapX, ddy = pos.y - _lastTapY;
+  const dtap = (now - _lastTapTime) < 500 && Math.sqrt(ddx*ddx + ddy*ddy) < 50;
+  _lastTapTime = now; _lastTapX = pos.x; _lastTapY = pos.y;
+  if (dtap && tool === 'select') {
+    const hit = getBuildingAt(pos.x, pos.y);
+    if (hit && hit._canonical) { selectBuilding(hit.id); openReport(hit.id); return; }
+    if (hit && !hit._canonical) { selectBuilding(hit.id); openRenamePopup(hit, pos.x, pos.y); return; }
+  }
+
+  if (_touchMoved) return;
+  if (!cell) return;
+
+  // Banner optimizer intercept (matches the mousedown intercept)
+  if (typeof boHandleMapClick === 'function') {
+    if (boHandleMapClick(pos.x, pos.y)) return;
+  }
+
+  if (tool === 'place')      placeBuilding(cell.gx, cell.gy);
+  else if (tool === 'erase') eraseAt(cell.gx, cell.gy);
+  else if (tool === 'select') {
+    const hit = getBuildingAt(pos.x, pos.y);
+    if (hit) selectBuilding(hit.id);
+    else deselectBuilding();
+  }
+}, { passive: false });
+
+canvas.addEventListener('touchcancel', e => {
+  if (_longPressTimer) { clearTimeout(_longPressTimer); _longPressTimer = null; }
+  _isPinching = false; _isPanning = false; _isMovingTouch = false; _pendingHit = null;
+}, { passive: false });
+
+</script>
+</body>
+</html>
