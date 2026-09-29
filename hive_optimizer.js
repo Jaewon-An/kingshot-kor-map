@@ -168,10 +168,10 @@
     const sel = _el('hoAllianceSelect');
     if (!sel) return;
     const labels = _allianceLabelsWithHQ();
-    sel.innerHTML = `<option value="">— pick an alliance —</option>` +
+    sel.innerHTML = `<option value="">— 연맹 선택 —</option>` +
       labels.map(l => `<option value="${_escAttr(l)}">${_escAttr(l)}</option>`).join('');
     if (!labels.length) {
-      sel.innerHTML = `<option value="">(no alliances with HQ and a bear trap nearby)</option>`;
+      sel.innerHTML = `<option value="">(본부와 인근 곰 함정이 있는 연맹이 없습니다)</option>`;
     }
   }
 
@@ -204,16 +204,16 @@
   function hoEnterIsolated() {
     if (!_ho.alliance) return;
     if (!window.HiveView || typeof HiveView.openForArea !== 'function') {
-      alert('Hive View module not loaded.');
+      alert('하이브 보기 모듈이 로드되지 않았습니다.');
       return;
     }
     const bbox = _allianceBbox(_ho.alliance);
     if (!bbox) {
-      alert(`Alliance "${_ho.alliance}" has no HQ/banners on the map.`);
+      alert(`연맹 "${_ho.alliance}"의 본부/깃발이 지도에 없습니다.`);
       return;
     }
     if (!HiveView.openForArea(_ho.alliance, bbox)) {
-      alert('Could not enter isolated view.');
+      alert('격리 보기로 전환할 수 없습니다.');
       return;
     }
     _ho.rect = { x1: bbox.x1, y1: bbox.y1, x2: bbox.x2, y2: bbox.y2 };
@@ -224,7 +224,7 @@
   function _hoValidateAndRun() {
     const v = _hoValidate();
     if (v.ownedSlots === 0) {
-      alert(`No "${_ho.alliance}" territory found on the map.`);
+      alert(`지도에서 "${_ho.alliance}" 영토를 찾을 수 없습니다.`);
       _hoBailToConfig();
       return;
     }
@@ -232,20 +232,20 @@
     // target to optimize against. The dropdown filter should prevent this,
     // but guard anyway in case state changed between open and run.
     if (v.trapCount === 0) {
-      alert(`No bear trap is near "${_ho.alliance}" territory.`);
+      alert(`"${_ho.alliance}" 영토 근처에 곰 함정이 없습니다.`);
       _hoBailToConfig();
       return;
     }
     let targetCount = _ho.cityCount;
     if (v.candidateSlots < _ho.cityCount) {
-      if (!confirm(`Only ${v.candidateSlots} cities fit in this territory (asked for ${_ho.cityCount}). Place ${v.candidateSlots} instead?`)) {
+      if (!confirm(`이 영토에는 도시 ${v.candidateSlots}개만 들어갑니다 (요청: ${_ho.cityCount}개). 대신 ${v.candidateSlots}개를 배치할까요?`)) {
         _hoBailToConfig();
         return;
       }
       targetCount = v.candidateSlots;
     }
     if (targetCount === 0) {
-      alert('No room for any cities in this territory.');
+      alert('이 영토에는 도시를 배치할 공간이 없습니다.');
       _hoBailToConfig();
       return;
     }
@@ -487,7 +487,7 @@
       if (!improved) break;
     }
 
-    return _finalizeVariant('Closest', cities);
+    return _finalizeVariant('최단 거리', cities);
   }
 
   // Variant 2: alternates picking from B1-best and B2-best pools to keep
@@ -546,7 +546,7 @@
       // we picked it from — that pool was just for ranking).
       if (picked.viaB1) b1n++; else b2n++;
     }
-    return _finalizeVariant('Balanced', cities);
+    return _finalizeVariant('균형 배분', cities);
   }
 
   // ── Results nav ────────────────────────────────────────────────────────────
@@ -609,7 +609,7 @@
     // ✕ button is the other path out.
     const placed = sol.cities.length;
     closeHiveOpt();
-    alert(`Placed ${placed} cities for ${tag}.`);
+    alert(`${tag} 연맹에 도시 ${placed}개를 배치했습니다.`);
     draw();
   }
 
@@ -646,7 +646,7 @@
       if (split) {
         split.textContent = _ho.b2Trap
           ? `${sol.b1Count} → B1 · ${sol.b2Count} → B2`
-          : `all → single trap`;
+          : `전체 → 단일 함정`;
       }
       const nav = _el('hoSolNav');
       if (nav) nav.style.display = (_ho.solutions.length > 1) ? '' : 'none';

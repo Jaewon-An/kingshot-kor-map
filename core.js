@@ -1,29 +1,11 @@
 /**
- * KSMapper — Core Shared Module (multi-game)
+ * KSMapper — Core Shared Module (Kingshot)
  * Loaded by index.html, mobile.html, admin.html
- * Supported games: 'kingshot' (default), 'whiteout' (Whiteout Survival).
- * Game selection precedence: ?game= URL param > localStorage.activeGame > 'kingshot'.
  * Contains all shared constants, drawing, building logic, cloud share, optimizer, etc.
  */
 
-// ── Active game id ──
-// Determined at module load from URL/localStorage. Reassigned by switchGame().
-// All active per-game references (PERMANENT_BUILDINGS, _TERRAIN_B64, STORAGE_KEY, ...) are
-// initialized below using this value.
-const SUPPORTED_GAMES = ['kingshot', 'whiteout'];
-let _activeGame = (function _detectActiveGame() {
-  try {
-    const params = new URLSearchParams(location.search);
-    const g = params.get('game');
-    if (g && SUPPORTED_GAMES.includes(g)) {
-      try { localStorage.setItem('activeGame', g); } catch(e) { /* localStorage may be unavailable */ }
-      return g;
-    }
-    const stored = localStorage.getItem('activeGame');
-    if (stored && SUPPORTED_GAMES.includes(stored)) return stored;
-  } catch(e) { /* expected: location/localStorage may be unavailable in some contexts */ }
-  return 'kingshot';
-})();
+// ── Active game id (Kingshot only) ──
+const _activeGame = 'kingshot';
 function getActiveGame() { return _activeGame; }
 
 // ── Global references (set by each HTML file's init) ──
@@ -58,34 +40,18 @@ const BUILDING_DEFS = {
 };
 const RESOURCE_SUBTYPES = ['bread','woodmill','quarry','ironmine'];
 const RES_SUBTYPE_LABELS_KINGSHOT = { bread:'Bread', woodmill:'Wood', quarry:'Stone', ironmine:'Iron' };
-const RES_SUBTYPE_LABELS_WHITEOUT = { bread:'Meat',  woodmill:'Wood', quarry:'Coal',  ironmine:'Iron' };
-let RES_SUBTYPE_LABELS = (_activeGame === 'whiteout') ? RES_SUBTYPE_LABELS_WHITEOUT : RES_SUBTYPE_LABELS_KINGSHOT;
+const RES_SUBTYPE_LABELS = RES_SUBTYPE_LABELS_KINGSHOT;
 
 // ── Per-game display label overrides ──
 // Optional. Keys are building type ids (matches BUILDING_DEFS keys); values are
 // the display string to use for that game. Missing keys fall through to
 // BUILDING_DEFS[type].label / RES_SUBTYPE_LABELS[type].
 const BUILDING_LABEL_OVERRIDES_KINGSHOT = {};
-const BUILDING_LABEL_OVERRIDES_WHITEOUT = {
-  bread:  'Meat',
-  quarry: 'Coal',
-};
-let BUILDING_LABEL_OVERRIDES = (_activeGame === 'whiteout')
-  ? BUILDING_LABEL_OVERRIDES_WHITEOUT
-  : BUILDING_LABEL_OVERRIDES_KINGSHOT;
+const BUILDING_LABEL_OVERRIDES = BUILDING_LABEL_OVERRIDES_KINGSHOT;
 
 // ── Per-game default color overrides ──
 const BUILDING_COLOR_OVERRIDES_KINGSHOT = {};
-const BUILDING_COLOR_OVERRIDES_WHITEOUT = {
-  resource: '#1565C0',
-  bread:    '#BF360C',
-  woodmill: '#1B5E20',
-  quarry:   '#37474F',
-  ironmine: '#0D47A1',
-};
-let BUILDING_COLOR_OVERRIDES = (_activeGame === 'whiteout')
-  ? BUILDING_COLOR_OVERRIDES_WHITEOUT
-  : BUILDING_COLOR_OVERRIDES_KINGSHOT;
+const BUILDING_COLOR_OVERRIDES = BUILDING_COLOR_OVERRIDES_KINGSHOT;
 
 function defaultColorOf(type) {
   return BUILDING_COLOR_OVERRIDES[type] || (BUILDING_DEFS[type] && BUILDING_DEFS[type].defaultColor) || '#4a9edd';
@@ -96,6 +62,41 @@ function labelOf(type) {
   if (BUILDING_LABEL_OVERRIDES[type]) return BUILDING_LABEL_OVERRIDES[type];
   if (RES_SUBTYPE_LABELS[type])      return RES_SUBTYPE_LABELS[type];
   return (BUILDING_DEFS[type] && BUILDING_DEFS[type].label) || type;
+}
+
+// ── Korean display names (display-only; stored data/keys stay English) ──
+const KO_NAMES = {
+  // building types / default labels
+  'City':'도시', 'Bear Trap':'곰 함정', 'Banner':'깃발', 'Resource Node':'자원지',
+  'Alliance HQ':'연맹 본부', 'HQ':'본부', 'Obstacle':'장애물', 'Building':'건물',
+  'Bread':'빵', 'Wood':'목재', 'Stone':'석재', 'Iron':'철광',
+  // permanent structure categories (filter keys)
+  'Fortress':'요새', 'Sanctuary':'성소',
+  'Construction Outpost':'건설 전초기지', 'Defense Outpost':'방어 전초기지',
+  'Research Outpost':'연구 전초기지', 'Resource Production Outpost':'자원 생산 전초기지',
+  'Gathering Outpost':'채집 전초기지', 'Attack Outpost':'공격 전초기지',
+  'Training Outpost':'훈련 전초기지', 'Frontier Lodge':'개척자 오두막',
+  // permanent structure label prefixes (Kingshot)
+  "Builder's Guild":'건설', 'Armory':'방어', "Scholar's":'연구', 'Arsenal':'공격',
+  'Forager':'채집', 'Harvest':'생산', 'Drill Camp':'훈련', 'Frontier':'개척',
+  // castle
+  "King's Castle":'왕성', 'S Turret':'남쪽 포탑', 'N Turret':'북쪽 포탑', 'W Turret':'서쪽 포탑', 'E Turret':'동쪽 포탑',
+  // zones
+  'Forbidden':'금지 구역', 'Ruins':'폐허', 'Fertile':'비옥한 땅', 'Plains':'평원', 'Badlands':'황무지',
+  // facility bonus stats
+  'Construction Speed':'건설 속도', 'Gathering Speed':'채집 속도', 'Resource Production':'자원 생산량',
+  'Research Speed':'연구 속도', 'Troop Attack':'부대 공격력', 'Training Speed':'훈련 속도',
+  'Troop Defense':'부대 방어력', 'March Speed':'행군 속도',
+  // misc
+  '(Unlabeled)':'(이름 없음)',
+};
+function koName(s) {
+  if (s == null) return s;
+  const str = String(s);
+  if (KO_NAMES[str]) return KO_NAMES[str];
+  const m = /^(.*\S)\s+(\d+)$/.exec(str);
+  if (m && KO_NAMES[m[1]]) return KO_NAMES[m[1]] + ' ' + m[2];
+  return str;
 }
 
 // ─────────────────────────────────────
@@ -109,14 +110,7 @@ const ZONES_KINGSHOT = {
   plains:    { x1:300, y1:300, x2:899, y2:899, fill:'rgba(32,72,26,0.75)',   stroke:'rgba(50,100,40,0.4)' },
   badlands:  { x1:0,   y1:0,   x2:1199,y2:1199,fill:'rgba(45,85,35,0.68)',   stroke:null                  },
 };
-const ZONES_WHITEOUT = {
-  forbidden: { x1:586, y1:586, x2:613, y2:613, fill:'rgba(74,0,16,0.88)',    stroke:'rgba(120,0,25,0.6)'   },
-  ruins:     { x1:552, y1:552, x2:647, y2:647, fill:'rgba(120,125,135,0.82)', stroke:'rgba(155,160,170,0.6)' },
-  fertile:   { x1:450, y1:450, x2:749, y2:749, fill:'rgba(155,190,220,0.80)', stroke:'rgba(110,155,200,0.50)' },
-  plains:    { x1:300, y1:300, x2:899, y2:899, fill:'rgba(185,210,232,0.72)', stroke:'rgba(140,175,210,0.45)' },
-  badlands:  { x1:0,   y1:0,   x2:1199,y2:1199,fill:'rgba(210,228,242,0.65)', stroke:null                    },
-};
-let ZONES = (_activeGame === 'whiteout') ? ZONES_WHITEOUT : ZONES_KINGSHOT;
+const ZONES = ZONES_KINGSHOT;
 
 function zoneCorners(x1, y1, x2, y2) {
   return [
@@ -239,45 +233,7 @@ const PERMANENT_BUILDINGS_KINGSHOT = [
   { category:'Frontier Lodge', label:'Frontier 3', gx:867, gy:666, size:3, fzone:15, color:'#6e2c0c' },
 ];
 
-// ── Whiteout Survival permanent buildings ──
-// Same positions as Kingshot; labels remapped via _WOS_PERM_LABEL_MAP below.
-const _WOS_PERM_LABEL_MAP = {
-  'Fortress 1':        'Stronghold 1',
-  'Fortress 2':        'Stronghold 2',
-  'Fortress 3':        'Stronghold 3',
-  'Fortress 4':        'Stronghold 4',
-  'Sanctuary 1':       'Fortress 1',
-  'Sanctuary 2':       'Fortress 2',
-  'Sanctuary 3':       'Fortress 3',
-  'Sanctuary 4':       'Fortress 4',
-  'Sanctuary 5':       'Fortress 5',
-  'Sanctuary 6':       'Fortress 6',
-  'Sanctuary 7':       'Fortress 7',
-  'Sanctuary 8':       'Fortress 8',
-  'Sanctuary 9':       'Fortress 9',
-  'Sanctuary 10':      'Fortress 10',
-  'Sanctuary 11':      'Fortress 11',
-  'Sanctuary 12':      'Fortress 12',
-  "Builder's Guild 1": 'Construction 1',
-  "Builder's Guild 3": 'Construction 3',
-  'Armory 2':          'Defense 2',
-  'Armory 4':          'Defense 4',
-  "Scholar's 1":       'Tech 1',
-  "Scholar's 3":       'Tech 3',
-  'Arsenal 2':         'Weapons 2',
-  'Arsenal 4':         'Weapons 4',
-  'Forager 1':         'Gathering 1',
-  'Harvest 1':         'Production 1',
-  'Drill Camp 2':      'Training 2',
-  'Frontier 3':        'Expedition 3',
-};
-const PERMANENT_BUILDINGS_WHITEOUT = PERMANENT_BUILDINGS_KINGSHOT.map(b => ({
-  ...b,
-  label: _WOS_PERM_LABEL_MAP[b.label] ?? b.label,
-}));
-
-// Active reference — reassigned by switchGame() based on _activeGame
-let PERMANENT_BUILDINGS = (_activeGame === 'whiteout') ? PERMANENT_BUILDINGS_WHITEOUT : PERMANENT_BUILDINGS_KINGSHOT;
+const PERMANENT_BUILDINGS = PERMANENT_BUILDINGS_KINGSHOT;
 
 // ─────────────────────────────────────
 // TERRAIN: LAKES & MOUNTAINS (static)
@@ -293,22 +249,11 @@ const _MT_META_KINGSHOT =[54,10,60,18,56.8,13.3,37,80,11,87,17,83.1,13.6,36,838,
 const _LAKE_COUNT_KINGSHOT = 501;
 const _MT_COUNT_KINGSHOT = 1948;
 
-// ── Whiteout Survival terrain (placeholders — paste WoS data when available) ──
-// _TERRAIN_B64_WHITEOUT: deflate-raw + zlib-wrapped base64 of 1200×1200 (2 bits/cell)
-// _LAKE_META_WHITEOUT / _MT_META_WHITEOUT: [x1,y1,x2,y2,cx,cy,r, ...] flattened arrays
-const _TERRAIN_B64_WHITEOUT = '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'; // TODO: Replace with actual WoS terrain blob when available
-
-const _LAKE_META_WHITEOUT   = [720,1,727,8,723,3.6,33,674,2,686,13,679.3,7,71,730,3,740,10,734.4,5.8,47,838,4,846,10,841.8,6.8,32,1190,6,1198,13,1193.3,9.1,40,593,7,602,14,596.9,10.4,46,873,10,880,21,875.9,14.7,43,555,11,564,19,559.2,14.5,46,568,12,576,19,571.6,14.8,41,844,15,851,24,847.4,19.7,38,474,16,482,26,477.6,20.8,49,335,17,342,25,337.8,20.8,43,1067,17,1075,26,1070.4,21.2,41,858,18,866,26,861.4,21.3,48,262,25,271,33,266,28.9,41,550,28,556,36,552.8,30.9,37,1165,28,1173,36,1168.8,31.8,43,83,32,89,42,85.2,36.9,41,854,41,862,49,856.8,44.7,43,1131,45,1136,53,1133.1,48.4,33,928,52,935,58,930.8,54.5,31,1063,52,1072,59,1067.4,55.1,44,25,59,32,68,27.8,63,41,973,60,980,68,975.7,63,41,114,62,122,68,117.4,64.2,38,176,64,184,71,179.4,66.5,42,440,65,447,76,443.1,70,53,524,70,532,77,527.3,72.7,43,637,70,644,78,640.4,73.6,39,762,72,771,79,766,75.1,38,399,73,405,80,401.4,76,31,662,73,669,83,665.2,77.6,42,864,79,874,87,868.8,82.2,49,828,80,837,90,832.2,85,48,352,81,358,88,354.2,83.9,32,681,81,689,90,684.7,85,43,1076,82,1086,97,1080.9,88.6,80,1180,86,1187,93,1182.4,89.1,35,1138,91,1146,98,1141.8,93.9,38,720,92,729,103,724.2,97.1,48,1018,93,1026,99,1021.9,95.6,37,809,98,817,107,812.5,102.1,45,948,100,954,109,951.2,103.3,37,1089,100,1098,109,1093,104.3,46,639,101,647,110,642.7,104.4,44,693,101,699,112,695,106.4,46,712,103,720,110,715.7,106.1,44,935,103,943,111,938,107,44,58,104,65,114,61.5,108.7,42,138,104,145,112,141,107.6,37,348,104,355,110,351.1,106.2,30,962,104,967,110,963.9,106.5,28,523,109,530,115,525.5,111.4,31,480,110,487,119,483.2,114,51,553,112,561,121,557.2,115.9,46,312,113,317,122,314.1,116.9,34,981,113,987,120,983.6,116.1,29,96,116,104,121,99.7,118.1,31,788,117,795,125,790.6,120.4,36,824,117,831,125,827.4,120.8,39,91,118,96,125,92.9,121.2,29,423,121,430,128,426,123.8,36,680,121,691,128,684.9,124.4,47,1188,131,1195,137,1190.9,133.3,31,643,133,649,140,645.4,136.1,30,275,136,282,147,277.6,140.8,45,700,136,713,147,705.4,140.3,76,1021,139,1030,147,1025.2,142.1,41,1077,140,1089,148,1083,143.4,71,791,141,797,150,793.8,145.2,43,419,147,430,154,424.1,150.2,43,765,149,773,158,768.4,153,35,584,151,592,161,588.2,155.6,48,607,152,614,161,609.8,156,43,723,152,730,158,725.6,154.7,36,708,155,714,163,710.4,158.5,34,748,155,754,162,750,158.5,33,1005,155,1013,162,1009,158.2,41,487,162,497,179,490.7,169,84,1056,164,1066,171,1060.7,167.2,40,254,170,261,182,256.7,175.5,46,741,173,750,182,745.4,177.4,44,1064,174,1070,183,1066.4,178.2,47,688,176,697,184,692.2,178.9,47,1133,177,1139,185,1135.1,180.6,33,206,178,213,187,208.9,182.2,47,19,181,29,188,23.9,183.6,43,804,182,810,192,807,187.2,38,641,183,648,194,643.9,187.5,49,327,184,335,191,330.4,186.8,33,923,184,931,193,926.8,188.6,44,691,186,700,192,695.3,188.7,33,776,187,786,195,780.6,190.2,45,843,189,849,198,845.6,193.2,40,306,190,315,198,309.7,193.5,46,721,190,731,197,725.6,192.6,42,1028,190,1036,198,1031.5,192.9,40,142,198,150,205,145.7,201.2,42,615,199,624,207,618.8,202.4,36,547,200,554,208,550.5,204,42,999,200,1007,209,1003,204.2,44,831,203,840,210,835.1,206.3,43,708,204,716,212,712.2,207.7,41,921,204,929,210,924.5,206.7,31,955,204,964,213,959.4,208.3,48,294,206,303,211,297.7,208.3,31,104,209,112,214,107.4,211.1,32,780,209,789,220,784.4,213.2,48,937,213,944,223,940,217.9,43,210,221,217,227,213.1,223.7,31,1088,221,1097,229,1092.2,224.4,45,81,226,89,233,84.8,229,39,906,229,914,238,909.2,233.2,44,967,239,975,247,969.6,242.4,45,431,241,438,248,434.2,243.5,36,194,242,200,249,196.6,245.1,29,85,243,94,251,88.9,246.3,41,726,246,733,254,729.1,249.3,36,80,252,87,260,83.1,255.9,37,39,259,48,274,43.5,265.6,87,264,259,272,269,267.7,263.4,47,922,259,930,266,925.6,262.1,36,1145,263,1153,269,1148.1,265.3,36,451,265,459,272,454.8,267.8,34,871,273,877,281,873.8,276.8,37,195,281,201,289,198,284.2,33,135,283,142,290,137.9,286.2,39,229,283,237,290,232.6,286.2,40,778,283,785,290,780.8,286.1,36,987,284,995,292,990.5,287.3,49,1102,285,1110,292,1105.4,287.5,37,563,287,570,294,566,290.3,34,971,288,977,294,973.5,290.6,29,167,290,177,296,171.2,292.6,38,1115,290,1122,301,1118.1,295.3,48,306,291,316,299,310.5,293.8,45,520,293,530,299,524.5,295.7,40,1012,294,1020,304,1015.6,298.8,45,486,301,496,308,491.4,304.6,44,891,302,898,310,893.9,305.7,36,925,302,934,309,929.3,305,40,1090,302,1098,312,1093.9,307.1,51,1004,303,1011,311,1006.9,306.3,42,384,304,394,310,388.5,306.7,38,712,304,720,309,715.3,306.2,31,505,305,515,312,509.9,308.1,44,631,309,639,316,634.5,311.9,37,803,310,810,315,806.1,312.1,23,1157,319,1164,326,1159.5,322.1,35,545,321,553,331,548.2,326.2,41,661,324,669,331,664.6,326.9,35,634,332,640,341,636.4,335.8,33,404,335,409,341,406.3,337.7,23,190,337,197,346,193.1,340.7,41,1185,337,1194,344,1189.2,339.8,43,46,338,54,348,49.2,342.7,50,887,339,894,347,889.9,342.4,33,93,341,102,349,96.7,344.8,45,134,346,143,355,137.8,350.4,51,516,346,527,355,521,350,66,717,348,725,356,720.7,351.7,40,1014,349,1024,356,1018.3,351.5,45,1104,354,1111,360,1107.1,356.5,30,443,355,449,361,445.8,357.6,30,1043,357,1060,366,1051.6,360.8,85,379,358,385,364,381,360.2,26,632,359,637,364,633.9,361.1,22,923,359,930,371,926.4,364.2,51,707,360,715,366,710.3,362.3,39,871,360,878,368,873.9,363.1,34,95,365,102,373,98.1,368.7,36,481,366,487,373,483.5,368.9,25,844,372,850,377,846.4,373.9,25,738,373,744,380,740.7,375.9,28,555,377,563,382,558.4,379.1,29,839,383,847,388,842.2,385.5,30,210,387,217,395,213.1,390.7,35,1176,387,1187,397,1181.5,391.9,70,1044,388,1050,396,1047,391.7,37,801,391,808,396,804,392.8,21,1056,393,1066,401,1060,396.7,51,995,397,1003,405,998.9,400.5,46,378,401,385,407,380.9,403.1,29,441,401,449,407,444.5,403.2,32,489,401,495,409,491.2,404.6,37,1146,401,1155,408,1149.9,403.7,42,431,402,438,412,433.6,405.7,40,293,403,299,411,295.7,406.5,37,708,405,715,412,711.3,408.2,31,717,405,725,412,720.7,407.9,36,876,405,881,411,878.1,407.5,22,1095,408,1102,417,1098,411.6,44,492,412,497,418,494,414.6,22,120,414,128,421,122.9,417.1,38,1,417,7,425,3.4,420.6,35,884,421,891,427,886.5,423.1,30,5,425,13,433,8.2,428.7,43,678,429,686,436,681.3,432,37,1052,432,1060,441,1056,435.6,44,558,435,565,445,560.5,439.8,42,717,436,726,441,721.2,437.9,31,660,443,668,449,663.6,445.6,33,46,445,53,452,49.3,448.2,32,140,449,147,457,143,452.1,34,569,451,575,459,571.3,454.5,30,730,451,737,458,733.6,453.7,29,539,452,547,458,542.6,454.3,29,666,453,673,460,669.2,456.1,32,88,456,96,466,91.4,460.5,49,31,457,42,466,36.5,461,45,283,463,291,472,286.9,466.7,43,528,467,534,475,530.6,470.2,33,273,468,282,476,276.8,471.8,49,1008,469,1016,476,1011.5,472,36,702,470,709,475,704.9,472,28,465,471,472,477,468.7,473.8,30,399,474,407,481,402.2,476.6,38,656,477,662,484,658.7,479.5,31,422,479,428,485,424.3,481.3,29,716,480,725,487,719.8,483,34,219,483,227,491,222.4,486.3,42,977,484,986,491,980.8,486.4,39,312,485,318,492,314.5,488.1,31,662,489,670,496,665.8,491.7,31,1147,490,1153,498,1149.6,494.1,35,423,493,431,503,426.3,497.6,39,691,496,699,503,693.9,498.9,33,1009,496,1017,503,1012.4,499.6,35,816,498,822,504,818.3,500.5,26,623,501,631,507,626.1,503.2,32,603,502,609,509,605,504.6,28,704,502,709,509,706.1,504.7,30,575,504,581,511,577.6,507.3,30,984,504,991,512,986.9,507.4,42,543,505,548,513,545.4,508.6,29,74,510,80,520,76.5,515,39,194,510,201,516,197,512.4,30,325,516,330,525,326.7,520.6,33,744,516,749,523,745.9,519,29,431,517,436,523,432.6,519.1,24,240,519,248,528,243.9,522.9,50,309,519,316,523,311.6,520.9,20,581,524,587,531,583.4,526.9,27,380,525,386,532,382.4,528,27,482,529,488,537,484.2,532.8,30,666,531,672,537,668.6,533.5,27,16,533,24,542,19.4,537.1,46,1169,535,1178,544,1172.8,538.5,36,752,537,758,542,754.5,538.6,23,755,543,763,550,758.5,545.4,40,301,544,307,552,303.3,547.2,32,526,544,533,550,528.6,546.8,32,143,551,152,559,147.3,554.4,50,1183,559,1190,568,1186,562.7,43,475,560,481,568,477.5,563.2,35,883,561,889,568,885.4,564.4,27,765,563,772,571,768.4,566.4,33,411,565,419,569,414.5,566.7,26,952,565,959,573,955.5,568.8,35,649,569,657,583,652.2,575.5,59,524,570,530,578,526.3,573.3,30,465,573,470,579,467,575.5,26,652,583,663,596,656.7,588.8,59,853,583,860,589,856.2,585.5,26,872,584,879,591,875,587.2,37,541,585,547,591,543,587.5,28,993,585,999,593,995,588.3,35,352,586,359,592,355,588.3,27,472,595,477,602,474.1,597.8,29,686,597,694,603,689.4,599.4,31,137,602,145,610,140.4,605.1,40,1051,602,1058,612,1054.2,606.3,44,658,604,664,612,660.5,607,34,713,607,719,612,716,608.7,24,759,608,765,614,761.3,610.4,23,1033,613,1040,622,1035.6,616.8,40,79,615,90,623,83.6,618.5,50,337,616,343,621,339.1,618.1,23,527,618,533,625,529.3,620.5,30,674,618,681,626,676.6,621.2,34,452,619,457,626,454.4,622,28,904,621,914,627,908.5,623.7,39,197,624,203,631,199.4,627,36,1022,626,1030,632,1025.5,628.2,33,84,627,96,644,89.5,634.7,86,753,628,761,637,757.4,631.3,39,729,631,736,637,731.9,633.3,34,678,635,684,641,680.5,637.4,30,1081,638,1088,646,1084.2,641.7,43,42,639,50,649,45.9,642.5,51,743,640,749,648,745.6,643.2,32,387,641,395,646,390.2,643.5,30,187,642,193,649,189.5,644.6,30,1128,644,1135,650,1131,646.5,32,469,645,476,650,472,647,27,915,647,923,656,918.6,651.2,51,265,649,270,657,266.8,652.5,32,607,652,613,660,609.4,655.3,29,63,655,71,663,66.4,658.1,38,397,657,403,665,399.3,660.2,35,148,660,155,667,151,662.9,35,163,660,179,667,170.1,662.9,77,461,660,467,668,463.3,663.6,30,363,661,372,669,366.8,664.1,45,444,661,449,670,446.2,665.2,33,538,664,545,671,541,666.6,34,466,666,471,673,467.9,669.1,28,9,667,17,675,12.7,670.9,40,806,667,812,675,808.8,670.3,36,491,668,497,674,493.7,670.6,30,977,668,987,676,982.3,672.1,49,288,672,296,682,291.4,676.4,50,737,674,742,681,739.1,677,26,777,675,785,681,780.8,677.5,33,917,676,924,682,919.6,678.8,31,59,677,68,684,62.5,680.1,42,497,679,505,684,500.3,681.1,28,440,680,445,688,441.8,683.1,26,800,680,805,686,801.6,682.8,21,106,681,116,694,110.9,686.6,77,667,681,675,689,670.5,684.2,34,363,682,369,688,365.3,684.6,29,209,683,216,690,212.5,685.9,36,1128,683,1134,692,1130.3,686.7,38,455,684,462,691,457.9,686.5,33,692,684,698,690,694.4,686.7,28,426,686,431,693,428,688.8,28,284,687,293,697,288,691.9,51,797,688,803,696,799.8,691.2,33,23,695,32,703,26.4,698.8,47,329,696,335,707,331.6,701.2,40,247,700,255,708,250.7,703.3,43,783,700,788,706,785.4,702.4,23,821,700,827,707,823.9,703.4,29,675,701,681,708,677.4,703.8,29,413,702,419,711,415.8,705.8,36,441,703,445,709,442.4,705.6,21,15,708,22,714,17.6,710.4,34,332,708,341,713,336,710.2,30,735,711,743,718,737.9,713.8,34,971,711,979,718,974.5,713.8,45,828,712,832,718,829.7,714.4,19,709,713,714,719,711,715.5,26,640,715,647,721,643.5,717.1,32,424,716,433,723,428.5,719.1,33,852,717,859,723,854.9,719.9,23,603,719,610,727,606,722.6,31,706,724,712,731,708.6,727.2,27,668,725,674,732,670.4,728,32,877,725,881,731,878.5,727.5,18,251,732,258,740,253.9,736.1,37,523,738,530,745,525.7,741.1,33,1048,738,1056,745,1050.9,741.5,39,654,739,660,746,656.4,742.1,29,269,745,278,753,272.8,748.4,44,1130,752,1138,759,1133.5,755,35,645,754,651,760,647.6,756.2,25,1103,756,1112,767,1106.8,761.3,48,754,760,762,769,757.1,763.7,40,424,761,433,768,428,764.1,42,1148,764,1156,771,1151.7,767.8,38,557,766,564,773,560.7,769.2,32,331,767,340,771,335.3,768.5,31,966,767,975,775,969.8,770.3,46,1115,772,1123,778,1118.2,773.9,34,252,773,260,782,255.9,777.3,45,973,774,983,781,977,776.8,44,657,775,664,780,659.9,777.2,25,801,777,806,782,802.9,778.9,20,786,780,792,785,788.6,782,20,1043,780,1049,787,1045.4,783.2,32,13,784,20,791,15.7,787.2,36,820,786,827,792,822.7,788.4,34,508,788,513,794,510.3,790.6,23,554,789,563,797,557.9,792.6,38,241,791,247,799,243.6,794.4,34,129,794,136,804,132.3,798.4,44,21,795,28,803,23.8,798.6,38,148,795,158,804,152.5,798.5,50,990,797,998,805,993.4,800.8,37,1003,797,1013,803,1007.8,799.4,41,799,809,804,817,801,812.9,30,456,812,463,821,458.8,816,38,1107,814,1118,826,1111.4,818.9,71,114,815,122,825,117.9,819.4,45,632,823,638,829,634.6,825.6,25,728,825,741,839,734.3,830.6,99,287,831,293,838,289.4,833.9,36,447,834,454,841,450.1,837.7,35,462,834,467,840,463.8,837,22,1010,834,1020,841,1014.5,837,49,1121,842,1128,850,1124.1,845.5,37,1083,843,1092,849,1087.4,845.8,40,106,850,113,859,108.6,855,39,776,851,782,856,778.5,853,23,275,855,284,863,278.8,858.7,45,717,856,725,864,720.3,858.8,39,312,857,319,866,315.1,861.4,35,906,859,914,866,909.5,861.7,37,725,860,731,868,727.5,863.7,30,1172,863,1179,869,1175.1,865.3,31,218,865,226,871,221.6,867.6,30,280,868,288,875,283.4,871.3,41,853,869,861,876,856.2,872,35,799,871,803,877,800.5,873.3,18,1082,871,1089,881,1084.9,875.1,40,525,872,532,878,528.1,874.6,30,173,877,179,887,175.4,881.5,49,515,877,522,887,518.3,881,41,679,877,685,881,681.6,878.4,19,588,878,598,885,592.9,881.1,42,499,879,510,888,503.9,883.2,71,393,880,401,890,396.3,884.2,40,233,881,242,888,236.9,883.2,41,355,886,360,890,356.7,887.8,16,1136,889,1142,898,1138.3,892.6,34,134,892,140,902,136.4,896.8,39,451,892,460,897,454.9,893.5,32,1171,892,1179,900,1174.2,895.8,45,656,905,664,914,659.6,908.3,42,303,906,312,913,307.4,909.2,44,800,907,809,916,804.2,911.3,49,128,915,137,925,132.4,919.1,52,201,915,211,923,205.5,918.1,42,624,915,635,922,628.5,918,44,694,916,700,924,696.7,919.5,33,243,917,252,924,246.4,919.8,44,1080,917,1092,924,1085.2,919.8,40,645,919,653,929,648.8,923.2,45,120,921,128,929,123.7,924.4,38,277,928,285,937,281,931.9,44,36,931,42,939,38.4,934.6,34,215,931,220,938,217.3,933.9,30,930,935,938,944,933.3,938.5,47,190,937,196,946,192.6,941,34,1109,944,1116,951,1112.1,946.9,32,152,945,160,952,155.5,948.2,44,287,949,295,956,290.3,952.3,34,191,950,199,958,194.5,953.6,45,165,952,173,959,168.3,955.2,34,1091,955,1098,965,1094,959.5,51,272,963,278,971,274.7,966.5,35,533,973,546,985,539,978.5,80,518,977,526,984,521.6,980.2,38,894,980,903,989,898,983.9,46,1165,985,1173,994,1168.3,988.9,48,767,988,776,993,771.1,990.4,34,570,989,579,997,574.6,993,45,153,993,162,1003,157.2,996.9,49,387,993,394,1001,390.7,997.1,39,304,994,309,1002,306.2,997.3,31,864,995,872,1002,867.6,998.3,37,204,997,210,1007,206.6,1001.3,43,458,999,465,1009,461,1002.6,50,340,1001,349,1009,343.8,1004.2,51,514,1002,523,1011,518,1005.5,51,279,1010,287,1020,282.4,1013.8,47,991,1013,997,1022,993.4,1017.1,39,223,1031,231,1040,226.5,1034.8,42,695,1032,701,1039,697.3,1034.7,33,548,1033,554,1042,550.4,1037.2,39,283,1034,289,1045,285.4,1038.7,43,665,1037,672,1045,668.1,1040.8,38,895,1037,900,1046,897.1,1041.3,39,998,1046,1006,1053,1001.1,1049.6,38,934,1047,939,1056,936.3,1051.2,33,134,1048,142,1055,137.4,1050.3,37,367,1051,375,1058,370.7,1053.4,36,597,1051,606,1059,600.8,1055.1,38,117,1052,135,1062,125.3,1057.1,110,944,1052,950,1060,946.6,1055.5,34,161,1056,171,1064,165.3,1059,47,159,1068,167,1076,163.1,1072.2,37,566,1072,577,1080,571.7,1075,48,376,1078,383,1085,378.7,1080.9,40,909,1080,915,1087,911.6,1083.2,37,1038,1080,1044,1088,1040.3,1083,35,351,1086,359,1095,354.5,1089.9,47,163,1092,172,1098,167.6,1095,33,368,1092,378,1100,372.9,1095.4,37,748,1093,758,1101,753,1096.4,47,186,1095,198,1111,190.6,1102.9,93,764,1097,776,1110,769.5,1103.6,76,112,1099,119,1109,114.8,1103.5,51,302,1102,309,1110,304.8,1105.7,33,929,1102,944,1114,936.3,1107.8,84,1119,1103,1127,1111,1122.4,1106.4,51,1064,1106,1075,1111,1069.4,1108,40,236,1107,244,1113,239.4,1109.7,38,839,1109,849,1120,843.6,1114.1,52,329,1113,337,1122,332.3,1117.5,46,347,1113,356,1121,350.5,1116.7,47,972,1113,980,1122,976.1,1116.6,45,911,1114,918,1119,913.8,1115.8,32,23,1115,30,1123,26.1,1118.2,36,209,1115,216,1124,212.5,1118.6,46,802,1115,808,1121,805,1117.4,29,363,1117,378,1125,370.3,1121,69,171,1118,179,1124,174.1,1120.3,33,524,1118,532,1128,527.3,1122.9,48,1173,1118,1181,1129,1177.1,1123.5,42,280,1120,288,1127,283.4,1123.2,35,703,1120,711,1126,706.8,1122.3,31,689,1121,696,1132,692.4,1126.1,41,1055,1124,1064,1133,1058,1128.1,49,568,1125,575,1133,570.9,1128.4,35,847,1131,856,1140,851.4,1135,50,1139,1133,1149,1142,1143,1137.2,53,97,1137,108,1145,101.5,1140.3,46,153,1137,160,1147,155.7,1141.7,51,504,1137,511,1144,507.1,1140.1,31,459,1139,467,1148,461.7,1142.8,41,661,1144,669,1153,665,1147.9,43,1177,1144,1185,1150,1180.5,1146.6,38,384,1149,392,1157,388,1152.5,46,537,1152,543,1161,539.4,1156,45,450,1153,459,1161,454.1,1156.7,46,756,1153,765,1160,759.6,1156.2,46,1053,1154,1062,1162,1056.8,1158.3,44,516,1158,524,1167,519.5,1162.1,46,258,1159,266,1167,261.6,1162.4,44,327,1163,336,1171,331.1,1166.9,39,830,1163,838,1169,833.2,1165.7,42,713,1164,721,1175,716.8,1168.5,51,746,1165,752,1174,748.8,1168.9,40,77,1166,87,1172,81.3,1168.5,41,681,1174,694,1180,687.5,1176.3,53,393,1175,403,1182,397.7,1177.8,43,611,1178,619,1188,614.4,1182.6,54,1157,1179,1165,1188,1160.7,1183,48,111,1180,117,1188,113.4,1183.4,34,709,1180,720,1186,713.8,1182.8,48,638,1184,646,1191,641.6,1186.9,43,1108,1185,1115,1195,1110.8,1189.3,48,339,1186,346,1195,342.3,1190.3,40,150,1187,158,1196,153.5,1191.3,45,1077,1191,1085,1198,1080.1,1194,38,425,1193,433,1199,428.9,1195.1,37];
-const _MT_META_WHITEOUT     = [281,10,285,16,282.5,12.5,24,657,10,663,16,659.5,12.5,36,967,10,975,18,970.5,13.5,64,1119,10,1127,18,1122.5,13.5,64,157,11,163,17,159.5,13.5,36,252,11,258,17,254.5,13.5,36,550,11,555,14,552,12,15,935,11,941,17,937.5,13.5,36,1056,11,1064,19,1059.5,14.5,64,180,12,186,18,182.5,14.5,36,429,12,437,20,432.5,15.5,64,634,13,638,19,635.5,15.5,24,770,13,776,19,772.5,15.5,36,866,13,870,19,867.5,15.5,24,954,13,959,16,956,14,15,141,15,149,23,144.5,18.5,64,708,15,716,23,711.5,18.5,64,729,15,733,21,730.5,17.5,24,922,15,927,18,924,16,15,517,16,521,22,518.5,18.5,24,823,17,831,25,826.5,20.5,64,93,18,101,26,96.5,21.5,64,52,19,56,25,53.5,21.5,24,127,20,135,28,130.5,23.5,64,237,20,241,26,238.5,22.5,24,679,20,685,26,681.5,22.5,36,885,20,890,23,887,21,15,201,21,206,24,203,22,15,904,21,909,24,906,22,15,1007,21,1011,27,1008.5,23.5,24,660,23,666,29,662.5,25.5,36,1022,23,1028,29,1024.5,25.5,36,108,24,112,30,109.5,26.5,24,992,24,1000,32,995.5,27.5,64,343,26,351,34,346.5,29.5,64,408,26,412,32,409.5,28.5,24,18,27,23,30,20,28,15,746,27,754,35,749.5,30.5,64,791,27,795,33,792.5,29.5,24,330,29,336,35,332.5,31.5,36,469,29,473,35,470.5,31.5,24,539,29,544,32,541,30,15,1036,29,1041,32,1038,30,15,709,31,715,37,711.5,33.5,36,772,31,776,37,773.5,33.5,24,1113,31,1121,39,1116.5,34.5,64,395,32,400,35,397,33,15,893,32,899,38,895.5,34.5,36,1049,32,1053,38,1050.5,34.5,24,861,33,869,41,864.5,36.5,64,914,33,920,39,916.5,35.5,36,418,34,423,37,420,35,15,847,34,855,42,850.5,37.5,64,821,35,829,43,824.5,38.5,64,236,36,240,42,237.5,38.5,24,600,36,604,42,601.5,38.5,24,381,37,389,45,384.5,40.5,64,503,37,511,45,506.5,40.5,64,576,37,582,43,578.5,39.5,36,964,41,972,49,967.5,44.5,64,1179,41,1185,47,1181.5,43.5,36,657,42,662,45,659,43,15,837,42,841,48,838.5,44.5,24,883,42,887,48,884.5,44.5,24,30,43,36,49,32.5,45.5,36,1006,43,1010,49,1007.5,45.5,24,1142,43,1147,46,1144,44,15,195,45,199,51,196.5,47.5,24,406,45,411,48,408,46,15,554,45,559,48,556,46,15,757,46,761,52,758.5,48.5,24,940,46,946,52,942.5,48.5,36,1100,46,1105,49,1102,47,15,488,47,496,55,491.5,50.5,64,537,47,542,50,539,48,15,798,47,806,55,801.5,50.5,64,902,47,910,55,905.5,50.5,64,1031,47,1039,55,1034.5,50.5,64,142,48,147,51,144,49,15,337,48,341,54,338.5,50.5,24,929,49,934,52,931,50,15,638,52,643,55,640,53,15,99,54,107,62,102.5,57.5,64,117,55,121,61,118.5,57.5,24,306,55,312,61,308.5,57.5,36,282,56,287,59,284,57,15,470,56,476,62,472.5,58.5,36,700,56,704,62,701.5,58.5,24,953,56,959,62,955.5,58.5,36,1143,56,1147,62,1144.5,58.5,24,381,57,385,63,382.5,59.5,24,508,58,514,64,510.5,60.5,36,666,58,674,66,669.5,61.5,64,826,58,834,66,829.5,61.5,64,991,58,996,61,993,59,15,232,59,237,62,234,60,15,419,59,423,65,420.5,61.5,24,847,59,851,65,848.5,61.5,24,1020,59,1025,62,1022,60,15,263,60,271,68,266.5,63.5,64,326,60,330,66,327.5,62.5,24,1181,61,1185,67,1182.5,63.5,24,51,62,59,70,54.5,65.5,64,522,63,526,69,523.5,65.5,24,731,63,737,69,733.5,65.5,36,391,64,396,67,393,65,15,487,64,495,72,490.5,67.5,64,580,64,588,72,583.5,67.5,64,1044,64,1048,70,1045.5,66.5,24,131,65,137,71,133.5,67.5,36,767,65,771,71,768.5,67.5,24,645,66,651,72,647.5,68.5,36,719,66,725,72,721.5,68.5,36,1164,67,1169,70,1166,68,15,145,68,153,76,148.5,71.5,64,558,68,562,74,559.5,70.5,24,806,68,810,74,807.5,70.5,24,229,69,237,77,232.5,72.5,64,1085,69,1089,75,1086.5,71.5,24,282,72,288,78,284.5,74.5,36,788,72,796,80,791.5,75.5,64,1118,72,1123,75,1120,73,15,907,73,912,76,909,74,15,1022,73,1026,79,1023.5,75.5,24,97,74,102,77,99,75,15,953,74,957,80,954.5,76.5,24,186,75,190,81,187.5,77.5,24,597,76,602,79,599,77,15,1048,76,1053,79,1050,77,15,262,77,268,83,264.5,79.5,36,164,78,168,84,165.5,80.5,24,217,78,222,81,219,79,15,501,78,505,84,502.5,80.5,24,297,79,305,87,300.5,82.5,64,121,81,126,84,123,82,15,32,82,38,88,34.5,84.5,36,1091,82,1096,85,1093,83,15,47,83,52,86,49,84,15,359,83,365,89,361.5,85.5,36,553,83,558,86,555,84,15,989,83,995,89,991.5,85.5,36,520,85,528,93,523.5,88.5,64,69,86,73,92,70.5,88.5,24,459,86,465,92,461.5,88.5,36,472,86,477,89,474,87,15,714,86,722,94,717.5,89.5,64,955,86,963,94,958.5,89.5,64,410,87,415,90,412,88,15,771,87,777,93,773.5,89.5,36,843,87,847,93,844.5,89.5,24,80,88,84,94,81.5,90.5,24,942,88,947,91,944,89,15,1025,88,1030,91,1027,89,15,1056,88,1060,94,1057.5,90.5,24,488,89,494,95,490.5,91.5,36,648,89,656,97,651.5,92.5,64,1129,89,1135,95,1131.5,91.5,36,1168,90,1172,96,1169.5,92.5,24,1115,91,1120,94,1117,92,15,612,92,617,95,614,93,15,228,93,236,101,231.5,96.5,64,592,93,596,99,593.5,95.5,24,924,93,929,96,926,94,15,90,94,96,100,92.5,96.5,36,114,95,118,101,115.5,97.5,24,1067,96,1071,102,1068.5,98.5,24,180,97,184,103,181.5,99.5,24,193,97,197,103,194.5,99.5,24,570,97,576,103,572.5,99.5,36,386,98,391,101,388,99,15,447,98,452,101,449,99,15,269,99,277,107,272.5,102.5,64,435,99,439,105,436.5,101.5,24,555,99,560,102,557,100,15,624,100,629,103,626,101,15,900,100,905,103,902,101,15,785,101,789,107,786.5,103.5,24,705,102,710,105,707,103,15,764,102,772,110,767.5,105.5,64,1001,102,1007,108,1003.5,104.5,36,1014,102,1020,108,1016.5,104.5,36,326,103,331,106,328,104,15,1127,103,1135,111,1130.5,106.5,64,211,104,217,110,213.5,106.5,36,1083,104,1089,110,1085.5,106.5,36,1148,105,1152,111,1149.5,107.5,24,414,106,418,112,415.5,108.5,24,95,108,99,114,96.5,110.5,24,73,109,79,115,75.5,111.5,36,533,109,537,115,534.5,111.5,24,679,109,685,115,681.5,111.5,36,1046,109,1051,112,1048,110,15,397,110,405,118,400.5,113.5,64,647,110,652,113,649,111,15,249,111,257,119,252.5,114.5,64,287,111,293,117,289.5,113.5,36,883,111,889,117,885.5,113.5,36,814,112,822,120,817.5,115.5,64,603,113,608,116,605,114,15,630,113,638,121,633.5,116.5,64,750,114,754,120,751.5,116.5,24,1173,114,1177,120,1174.5,116.5,24,134,115,140,121,136.5,117.5,36,365,115,370,118,367,116,15,455,115,461,121,457.5,117.5,36,987,115,991,121,988.5,117.5,24,1012,115,1017,118,1014,116,15,942,116,948,122,944.5,118.5,36,954,116,960,122,956.5,118.5,36,803,117,808,120,805,118,15,148,118,152,124,149.5,120.5,24,579,118,587,126,582.5,121.5,64,28,119,36,127,31.5,122.5,64,219,120,227,128,222.5,123.5,64,545,120,551,126,547.5,122.5,36,846,120,851,123,848,121,15,51,121,59,129,54.5,124.5,64,505,121,513,129,508.5,124.5,64,559,121,564,124,561,122,15,968,121,972,127,969.5,123.5,24,70,122,75,125,72,123,15,300,122,308,130,303.5,125.5,64,920,123,926,129,922.5,125.5,36,765,124,771,130,767.5,126.5,36,1145,124,1149,130,1146.5,126.5,24,651,125,655,131,652.5,127.5,24,1023,125,1031,133,1026.5,128.5,64,1177,126,1185,134,1180.5,129.5,64,1050,127,1056,133,1052.5,129.5,36,447,128,451,134,448.5,130.5,24,82,129,88,135,84.5,131.5,36,287,129,292,132,289,130,15,634,129,642,137,637.5,132.5,64,424,131,432,139,427.5,134.5,64,898,132,903,135,900,133,15,265,135,269,141,266.5,137.5,24,505,135,509,141,506.5,137.5,24,942,135,946,141,943.5,137.5,24,557,138,561,144,558.5,140.5,24,45,139,51,145,47.5,141.5,36,735,139,739,145,736.5,141.5,24,1042,139,1048,145,1044.5,141.5,36,1151,139,1156,142,1153,140,15,92,141,96,147,93.5,143.5,24,520,141,528,149,523.5,144.5,64,675,141,680,144,677,142,15,21,142,25,148,22.5,144.5,24,309,142,315,148,311.5,144.5,36,1120,142,1124,148,1121.5,144.5,24,581,143,589,151,584.5,146.5,64,808,143,814,149,810.5,145.5,36,1177,143,1181,149,1178.5,145.5,24,346,144,350,150,347.5,146.5,24,904,144,910,150,906.5,146.5,36,648,145,654,151,650.5,147.5,36,889,145,893,151,890.5,147.5,24,73,146,79,152,75.5,148.5,36,708,146,712,152,709.5,148.5,24,398,147,406,155,401.5,150.5,64,438,147,442,153,439.5,149.5,24,776,147,780,153,777.5,149.5,24,262,149,270,157,265.5,152.5,64,494,149,498,155,495.5,151.5,24,1158,149,1163,152,1160,150,15,129,150,135,156,131.5,152.5,36,225,150,230,153,227,151,15,679,150,687,158,682.5,153.5,64,361,151,366,154,363,152,15,465,151,471,157,467.5,153.5,36,567,151,572,154,569,152,15,979,151,983,157,980.5,153.5,24,451,155,455,161,452.5,157.5,24,1060,156,1064,162,1061.5,158.5,24,627,157,635,165,630.5,160.5,64,153,158,157,164,154.5,160.5,24,888,158,896,166,891.5,161.5,64,929,158,935,164,931.5,160.5,36,1132,158,1140,166,1135.5,161.5,64,1165,158,1171,164,1167.5,160.5,36,89,159,95,165,91.5,161.5,36,1178,159,1182,165,1179.5,161.5,24,425,160,430,163,427,161,15,715,160,723,168,718.5,163.5,64,991,160,997,166,993.5,162.5,36,322,161,326,167,323.5,163.5,24,61,162,67,168,63.5,164.5,36,288,162,292,168,289.5,164.5,24,308,162,316,170,311.5,165.5,64,737,162,745,170,740.5,165.5,64,336,164,341,167,338,165,15,759,164,767,172,762.5,167.5,64,114,165,119,168,116,166,15,439,165,445,171,441.5,167.5,36,543,165,548,168,545,166,15,967,165,971,171,968.5,167.5,24,834,166,839,169,836,167,15,12,167,20,175,15.5,170.5,64,562,167,570,175,565.5,170.5,64,579,167,583,173,580.5,169.5,24,1017,168,1023,174,1019.5,170.5,36,407,169,411,175,408.5,171.5,24,209,170,217,178,212.5,173.5,64,370,171,378,179,373.5,174.5,64,778,172,784,178,780.5,174.5,36,955,172,959,178,956.5,174.5,24,181,173,185,179,182.5,175.5,24,669,174,673,180,670.5,176.5,24,896,174,902,180,898.5,176.5,36,276,175,282,181,278.5,177.5,36,465,176,473,184,468.5,179.5,64,42,177,47,180,44,178,15,597,177,602,180,599,178,15,917,178,923,184,919.5,180.5,36,938,178,943,181,940,179,15,1155,178,1161,184,1157.5,180.5,36,449,179,455,185,451.5,181.5,36,517,179,525,187,520.5,182.5,64,334,180,339,183,336,181,15,1011,180,1015,186,1012.5,182.5,24,1179,182,1187,190,1182.5,185.5,64,503,183,511,191,506.5,186.5,64,724,183,729,186,726,184,15,193,184,198,187,195,185,15,298,184,303,187,300,185,15,1047,185,1052,188,1049,186,15,164,186,168,192,165.5,188.5,24,429,186,433,192,430.5,188.5,24,707,186,713,192,709.5,188.5,36,967,186,971,192,968.5,188.5,24,391,187,396,190,393,188,15,583,187,591,195,586.5,190.5,64,118,188,122,194,119.5,190.5,24,825,188,833,196,828.5,191.5,64,87,190,95,198,90.5,193.5,64,234,190,238,196,235.5,192.5,24,336,190,340,196,337.5,192.5,24,558,190,562,196,559.5,192.5,24,884,192,888,198,885.5,194.5,24,897,193,903,199,899.5,195.5,36,192,194,200,202,195.5,197.5,64,283,195,287,201,284.5,197.5,24,679,195,683,201,680.5,197.5,24,1063,195,1068,198,1065,196,15,811,196,819,204,814.5,199.5,64,354,197,358,203,355.5,199.5,24,398,197,403,200,400,198,15,643,198,649,204,645.5,200.5,36,782,198,790,206,785.5,201.5,64,949,198,957,206,952.5,201.5,64,1023,198,1027,204,1024.5,200.5,24,628,199,634,205,630.5,201.5,36,131,200,136,203,133,201,15,471,200,475,206,472.5,202.5,24,273,201,277,207,274.5,203.5,24,594,201,602,209,597.5,204.5,64,49,202,54,205,51,203,15,541,202,547,208,543.5,204.5,36,227,203,233,209,229.5,205.5,36,910,203,914,209,911.5,205.5,24,92,205,96,211,93.5,207.5,24,508,206,513,209,510,207,15,746,207,752,213,748.5,209.5,36,758,207,762,213,759.5,209.5,24,1080,207,1086,213,1082.5,209.5,36,32,208,40,216,35.5,211.5,64,971,208,975,214,972.5,210.5,24,286,209,294,217,289.5,212.5,64,459,209,463,215,460.5,211.5,24,1052,209,1060,217,1055.5,212.5,64,1178,209,1186,217,1181.5,212.5,64,406,210,412,216,408.5,212.5,36,440,211,444,217,441.5,213.5,24,731,211,737,217,733.5,213.5,36,683,213,687,219,684.5,215.5,24,329,214,337,222,332.5,217.5,64,954,214,962,222,957.5,217.5,64,509,215,517,223,512.5,218.5,64,533,215,541,223,536.5,218.5,64,989,215,995,221,991.5,217.5,36,1106,215,1112,221,1108.5,217.5,36,550,216,558,224,553.5,219.5,64,790,216,796,222,792.5,218.5,36,202,217,210,225,205.5,220.5,64,225,217,230,220,227,218,15,1001,217,1009,225,1004.5,220.5,64,918,218,922,224,919.5,220.5,24,154,219,159,222,156,220,15,492,219,496,225,493.5,221.5,24,643,219,649,225,645.5,221.5,36,1070,220,1076,226,1072.5,222.5,36,268,221,273,224,270,222,15,1158,221,1163,224,1160,222,15,898,222,903,225,900,223,15,677,226,681,232,678.5,228.5,24,970,226,975,229,972,227,15,91,227,96,230,93,228,15,285,228,293,236,288.5,231.5,64,167,230,173,236,169.5,232.5,36,476,231,480,237,477.5,233.5,24,498,231,502,237,499.5,233.5,24,1145,231,1151,237,1147.5,233.5,36,726,233,734,241,729.5,236.5,64,1110,233,1116,239,1112.5,235.5,36,626,234,634,242,629.5,237.5,64,10,235,14,241,11.5,237.5,24,150,235,155,238,152,236,15,402,235,406,241,403.5,237.5,24,455,235,461,241,457.5,237.5,36,552,235,558,241,554.5,237.5,36,1169,235,1177,243,1172.5,238.5,64,414,236,419,239,416,237,15,656,237,664,245,659.5,240.5,64,226,238,231,241,228,239,15,318,238,322,244,319.5,240.5,24,53,240,57,246,54.5,242.5,24,94,240,102,248,97.5,243.5,64,445,240,449,246,446.5,242.5,24,742,240,748,246,744.5,242.5,36,988,240,996,248,991.5,243.5,64,1085,240,1089,246,1086.5,242.5,24,926,241,934,249,929.5,244.5,64,1096,241,1104,249,1099.5,244.5,64,186,242,192,248,188.5,244.5,36,468,243,472,249,469.5,245.5,24,977,243,981,249,978.5,245.5,24,1058,243,1062,249,1059.5,245.5,24,209,244,214,247,211,245,15,784,244,789,247,786,245,15,905,244,910,247,907,245,15,119,245,125,251,121.5,247.5,36,1144,245,1148,251,1145.5,247.5,24,456,247,462,253,458.5,249.5,36,483,247,489,253,485.5,249.5,36,756,247,762,253,758.5,249.5,36,1027,249,1035,257,1030.5,252.5,64,1041,249,1047,255,1043.5,251.5,36,1110,249,1114,255,1111.5,251.5,24,36,250,41,253,38,251,15,251,250,257,256,253.5,252.5,36,295,252,299,258,296.5,254.5,24,319,252,325,258,321.5,254.5,36,946,252,954,260,949.5,255.5,64,993,254,998,257,995,255,15,62,256,68,262,64.5,258.5,36,407,256,411,262,408.5,258.5,24,203,257,209,263,205.5,259.5,36,738,257,743,260,740,258,15,1094,257,1099,260,1096,258,15,280,259,286,265,282.5,261.5,36,1164,259,1172,267,1167.5,262.5,64,782,261,788,267,784.5,263.5,36,678,262,684,268,680.5,264.5,36,879,262,887,270,882.5,265.5,64,1056,262,1060,268,1057.5,264.5,24,698,263,706,271,701.5,266.5,64,769,263,774,266,771,264,15,310,264,315,267,312,265,15,468,264,473,267,470,265,15,749,264,757,272,752.5,267.5,64,26,265,34,273,29.5,268.5,64,106,265,112,271,108.5,267.5,36,1017,265,1022,268,1019,266,15,1070,265,1075,268,1072,266,15,623,266,629,272,625.5,268.5,36,507,267,515,275,510.5,270.5,64,724,267,732,275,727.5,270.5,64,224,268,229,271,226,269,15,171,269,177,275,173.5,271.5,36,480,270,486,276,482.5,272.5,36,49,272,57,280,52.5,275.5,64,975,272,979,278,976.5,274.5,24,195,273,201,279,197.5,275.5,36,308,273,316,281,311.5,276.5,64,391,273,399,281,394.5,276.5,64,571,273,577,279,573.5,275.5,36,1120,273,1126,279,1122.5,275.5,36,128,274,133,277,130,275,15,644,274,652,282,647.5,277.5,64,687,274,691,280,688.5,276.5,24,787,274,795,282,790.5,277.5,64,830,274,836,280,832.5,276.5,36,1040,275,1046,281,1042.5,277.5,36,10,276,14,282,11.5,278.5,24,249,276,255,282,251.5,278.5,36,140,277,144,283,141.5,279.5,24,815,277,819,283,816.5,279.5,24,1103,277,1107,283,1104.5,279.5,24,585,278,589,284,586.5,280.5,24,943,278,947,284,944.5,280.5,24,73,279,78,282,75,280,15,629,279,634,282,631,280,15,768,280,773,283,770,281,15,173,281,178,284,175,282,15,335,281,341,287,337.5,283.5,36,537,283,541,289,538.5,285.5,24,551,283,557,289,553.5,285.5,36,94,284,99,287,96,285,15,740,284,745,287,742,285,15,286,286,291,289,288,287,15,429,286,434,289,431,287,15,918,287,926,295,921.5,290.5,64,1051,287,1056,290,1053,288,15,120,289,125,292,122,290,15,1137,290,1142,293,1139,291,15,1066,291,1070,297,1067.5,293.5,24,31,294,37,300,33.5,296.5,36,951,294,957,300,953.5,296.5,36,222,295,228,301,224.5,297.5,36,1039,295,1045,301,1041.5,297.5,36,108,296,112,302,109.5,298.5,24,996,296,1004,304,999.5,299.5,64,1020,296,1026,302,1022.5,298.5,36,1122,296,1128,302,1124.5,298.5,36,210,298,214,304,211.5,300.5,24,1162,299,1166,305,1163.5,301.5,24,66,300,72,306,68.5,302.5,36,127,300,131,306,128.5,302.5,24,160,300,166,306,162.5,302.5,36,184,301,192,309,187.5,304.5,64,47,303,52,306,49,304,15,242,304,250,312,245.5,307.5,64,910,304,916,310,912.5,306.5,36,982,304,988,310,984.5,306.5,36,1150,304,1156,310,1152.5,306.5,36,1184,304,1189,307,1186,305,15,264,306,269,309,266,307,15,1061,306,1069,314,1064.5,309.5,64,744,310,749,313,746,311,15,946,310,950,316,947.5,312.5,24,996,310,1004,318,999.5,313.5,64,930,311,935,314,932,312,15,161,312,169,320,164.5,315.5,64,1091,312,1097,318,1093.5,314.5,36,68,313,76,321,71.5,316.5,64,230,314,234,320,231.5,316.5,24,1137,314,1142,317,1139,315,15,183,315,189,321,185.5,317.5,36,455,315,463,323,458.5,318.5,64,672,315,678,321,674.5,317.5,36,1162,315,1168,321,1164.5,317.5,36,631,317,635,323,632.5,319.5,24,821,317,827,323,823.5,319.5,36,82,318,86,324,83.5,320.5,24,566,318,570,324,567.5,320.5,24,508,319,513,322,510,320,15,527,319,533,325,529.5,321.5,36,790,319,794,325,791.5,321.5,24,1042,319,1050,327,1045.5,322.5,64,29,322,33,328,30.5,324.5,24,804,322,812,330,807.5,325.5,64,688,323,693,326,690,324,15,607,324,611,330,608.5,326.5,24,123,325,129,331,125.5,327.5,36,540,325,544,331,541.5,327.5,24,282,327,290,335,285.5,330.5,64,44,328,48,334,45.5,330.5,24,1177,329,1181,335,1178.5,331.5,24,149,330,153,336,150.5,332.5,24,655,330,661,336,657.5,332.5,36,1009,330,1015,336,1011.5,332.5,36,627,331,633,337,629.5,333.5,36,351,334,356,337,353,335,15,522,334,526,340,523.5,336.5,24,912,334,920,342,915.5,337.5,64,1134,334,1142,342,1137.5,337.5,64,104,335,108,341,105.5,337.5,24,823,335,831,343,826.5,338.5,64,92,336,97,339,94,337,15,476,337,480,343,477.5,339.5,24,796,337,802,343,798.5,339.5,36,1025,338,1033,346,1028.5,341.5,64,21,339,29,347,24.5,342.5,64,680,340,686,346,682.5,342.5,36,781,340,787,346,783.5,342.5,36,79,341,85,347,81.5,343.5,36,1052,341,1056,347,1053.5,343.5,24,1100,341,1104,347,1101.5,343.5,24,206,343,210,349,207.5,345.5,24,534,343,542,351,537.5,346.5,64,446,344,452,350,448.5,346.5,36,1154,344,1162,352,1157.5,347.5,64,616,346,624,354,619.5,349.5,64,125,347,129,353,126.5,349.5,24,459,347,464,350,461,348,15,496,349,504,357,499.5,352.5,64,919,349,923,355,920.5,351.5,24,1085,349,1089,355,1086.5,351.5,24,402,352,406,358,403.5,354.5,24,147,353,151,359,148.5,355.5,24,75,356,83,364,78.5,359.5,64,108,356,113,359,110,357,15,567,358,572,361,569,359,15,808,358,814,364,810.5,360.5,36,1010,358,1016,364,1012.5,360.5,36,1128,358,1132,364,1129.5,360.5,24,419,359,427,367,422.5,362.5,64,30,361,35,364,32,362,15,324,361,332,369,327.5,364.5,64,370,361,375,364,372,362,15,196,362,200,368,197.5,364.5,24,640,363,644,369,641.5,365.5,24,502,364,510,372,505.5,367.5,64,825,364,831,370,827.5,366.5,36,1175,364,1180,367,1177,365,15,885,365,890,368,887,366,15,274,367,278,373,275.5,369.5,24,734,367,738,373,735.5,369.5,24,12,368,18,374,14.5,370.5,36,62,369,67,372,64,370,15,1082,369,1086,375,1083.5,371.5,24,1129,370,1134,373,1131,371,15,27,371,32,374,29,372,15,110,371,118,379,113.5,374.5,64,126,371,134,379,129.5,374.5,64,374,375,380,381,376.5,377.5,36,661,375,665,381,662.5,377.5,24,671,375,676,378,673,376,15,80,376,88,384,83.5,379.5,64,774,376,780,382,776.5,378.5,36,1016,376,1024,384,1019.5,379.5,64,1114,376,1122,384,1117.5,379.5,64,533,378,541,386,536.5,381.5,64,746,378,751,381,748,379,15,460,379,464,385,461.5,381.5,24,191,380,197,386,193.5,382.5,36,547,380,555,388,550.5,383.5,64,1038,381,1043,384,1040,382,15,249,382,257,390,252.5,385.5,64,924,382,930,388,926.5,384.5,36,27,383,32,386,29,384,15,708,386,716,394,711.5,389.5,64,863,386,869,392,865.5,388.5,36,839,388,844,391,841,389,15,1068,388,1073,391,1070,389,15,1008,390,1012,396,1009.5,392.5,24,476,391,482,397,478.5,393.5,36,757,391,765,399,760.5,394.5,64,436,392,441,395,438,393,15,344,393,352,401,347.5,396.5,64,662,394,668,400,664.5,396.5,36,1093,394,1098,397,1095,395,15,1124,394,1128,400,1125.5,396.5,24,52,395,58,401,54.5,397.5,36,329,396,333,402,330.5,398.5,24,1022,396,1026,402,1023.5,398.5,24,242,397,247,400,244,398,15,457,397,465,405,460.5,400.5,64,27,398,33,404,29.5,400.5,36,516,398,522,404,518.5,400.5,36,362,400,370,408,365.5,403.5,64,706,400,710,406,707.5,402.5,24,780,401,785,404,782,402,15,144,402,149,405,146,403,15,918,403,924,409,920.5,405.5,36,128,405,136,413,131.5,408.5,64,313,405,317,411,314.5,407.5,24,957,405,962,408,959,406,15,70,406,76,412,72.5,408.5,36,935,406,941,412,937.5,408.5,36,254,407,259,410,256,408,15,862,407,870,415,865.5,410.5,64,555,408,560,411,557,409,15,438,409,443,412,440,410,15,1151,409,1159,417,1154.5,412.5,64,413,410,419,416,415.5,412.5,36,14,411,20,417,16.5,413.5,36,207,411,215,419,210.5,414.5,64,510,411,518,419,513.5,414.5,64,968,411,973,414,970,412,15,55,412,59,418,56.5,414.5,24,785,412,793,420,788.5,415.5,64,98,413,106,421,101.5,416.5,64,180,413,184,419,181.5,415.5,24,647,413,652,416,649,414,15,806,413,811,416,808,414,15,1166,413,1171,416,1168,414,15,673,414,677,420,674.5,416.5,24,913,416,918,419,915,417,15,1001,416,1009,424,1004.5,419.5,64,1071,416,1079,424,1074.5,419.5,64,1035,419,1039,425,1036.5,421.5,24,1116,419,1124,427,1119.5,422.5,64,237,420,242,423,239,421,15,344,421,348,427,345.5,423.5,24,724,421,728,427,725.5,423.5,24,648,422,653,425,650,423,15,822,422,828,428,824.5,424.5,36,876,422,882,428,878.5,424.5,36,1058,422,1062,428,1059.5,424.5,24,39,423,44,426,41,424,15,192,423,200,431,195.5,426.5,64,1131,423,1139,431,1134.5,426.5,64,356,424,364,432,359.5,427.5,64,974,424,982,432,977.5,427.5,64,1184,424,1190,430,1186.5,426.5,36,250,425,256,431,252.5,427.5,36,438,425,443,428,440,426,15,525,425,531,431,527.5,427.5,36,16,426,22,432,18.5,428.5,36,66,427,71,430,68,428,15,837,427,841,433,838.5,429.5,24,459,428,467,436,462.5,431.5,64,565,428,570,431,567,429,15,98,430,103,433,100,431,15,1172,430,1176,436,1173.5,432.5,24,174,431,179,434,176,432,15,946,431,951,434,948,432,15,988,431,996,439,991.5,434.5,64,746,432,751,435,748,433,15,1076,433,1081,436,1078,434,15,1149,433,1157,441,1152.5,436.5,64,806,434,814,442,809.5,437.5,64,80,435,88,443,83.5,438.5,64,159,435,167,443,162.5,438.5,64,882,436,890,444,885.5,439.5,64,274,437,282,445,277.5,440.5,64,379,437,385,443,381.5,439.5,36,1024,438,1032,446,1027.5,441.5,64,350,439,354,445,351.5,441.5,24,407,439,412,442,409,440,15,918,439,926,447,921.5,442.5,64,209,441,214,444,211,442,15,831,441,837,447,833.5,443.5,36,938,443,946,451,941.5,446.5,64,220,444,226,450,222.5,446.5,36,16,445,21,448,18,446,15,980,446,984,452,981.5,448.5,24,164,450,170,456,166.5,452.5,36,416,451,421,454,418,452,15,856,451,860,457,857.5,453.5,24,961,451,965,457,962.5,453.5,24,182,453,188,459,184.5,455.5,36,808,454,816,462,811.5,457.5,64,334,455,338,461,335.5,457.5,24,775,455,781,461,777.5,457.5,36,872,455,880,463,875.5,458.5,64,1089,455,1093,461,1090.5,457.5,24,138,457,142,463,139.5,459.5,24,220,457,228,465,223.5,460.5,64,394,458,400,464,396.5,460.5,36,986,458,992,464,988.5,460.5,36,938,459,942,465,939.5,461.5,24,926,460,931,463,928,461,15,1078,461,1082,467,1079.5,463.5,24,378,462,384,468,380.5,464.5,36,1109,462,1117,470,1112.5,465.5,64,111,463,119,471,114.5,466.5,64,156,463,161,466,158,464,15,696,463,701,466,698,464,15,1019,463,1024,466,1021,464,15,1057,463,1062,466,1059,464,15,475,464,480,467,477,465,15,541,464,547,470,543.5,466.5,36,851,464,859,472,854.5,467.5,64,1040,466,1045,469,1042,467,15,68,467,76,475,71.5,470.5,64,1142,468,1147,471,1144,469,15,497,469,505,477,500.5,472.5,64,1090,469,1095,472,1092,470,15,557,471,562,474,559,472,15,23,472,27,478,24.5,474.5,24,611,472,617,478,613.5,474.5,36,593,473,601,481,596.5,476.5,64,1003,473,1008,476,1005,474,15,1024,473,1030,479,1026.5,475.5,36,84,474,89,477,86,475,15,410,475,416,481,412.5,477.5,36,952,475,957,478,954,476,15,966,475,974,483,969.5,478.5,64,317,476,325,484,320.5,479.5,64,1047,476,1051,482,1048.5,478.5,24,341,477,347,483,343.5,479.5,36,932,477,937,480,934,478,15,1181,477,1187,483,1183.5,479.5,36,365,479,373,487,368.5,482.5,64,991,480,995,486,992.5,482.5,24,877,481,882,484,879,482,15,160,482,168,490,163.5,485.5,64,772,482,780,490,775.5,485.5,64,207,483,213,489,209.5,485.5,36,246,483,254,491,249.5,486.5,64,856,483,862,489,858.5,485.5,36,1154,483,1159,486,1156,484,15,1123,484,1129,490,1125.5,486.5,36,45,485,51,491,47.5,487.5,36,802,487,808,493,804.5,489.5,36,1141,487,1146,490,1143,488,15,62,488,66,494,63.5,490.5,24,631,488,639,496,634.5,491.5,64,837,489,841,495,838.5,491.5,24,1013,489,1021,497,1016.5,492.5,64,1110,489,1115,492,1112,490,15,191,490,199,498,194.5,493.5,64,269,490,275,496,271.5,492.5,36,930,490,936,496,932.5,492.5,36,957,490,961,496,958.5,492.5,24,480,491,484,497,481.5,493.5,24,680,491,686,497,682.5,493.5,36,526,492,531,495,528,493,15,978,492,984,498,980.5,494.5,36,1155,492,1161,498,1157.5,494.5,36,591,493,599,501,594.5,496.5,64,1053,493,1059,499,1055.5,495.5,36,148,495,154,501,150.5,497.5,36,412,495,420,503,415.5,498.5,64,824,496,829,499,826,497,15,165,497,173,505,168.5,500.5,64,781,497,787,503,783.5,499.5,36,383,498,389,504,385.5,500.5,36,12,500,18,506,14.5,502.5,36,1034,500,1042,508,1037.5,503.5,64,53,501,57,507,54.5,503.5,24,1179,503,1187,511,1182.5,506.5,64,969,505,974,508,971,506,15,1159,505,1163,511,1160.5,507.5,24,100,506,105,509,102,507,15,1077,506,1083,512,1079.5,508.5,36,224,507,232,515,227.5,510.5,64,273,508,281,516,276.5,511.5,64,602,509,607,512,604,510,15,672,509,678,515,674.5,511.5,36,813,509,819,515,815.5,511.5,36,948,509,953,512,950,510,15,881,511,885,517,882.5,513.5,24,33,513,39,519,35.5,515.5,36,414,513,422,521,417.5,516.5,64,1103,513,1111,521,1106.5,516.5,64,391,514,396,517,393,515,15,1091,514,1096,517,1093,515,15,975,515,979,521,976.5,517.5,24,317,516,323,522,319.5,518.5,36,859,517,865,523,861.5,519.5,36,17,518,25,526,20.5,521.5,64,46,518,52,524,48.5,520.5,36,96,518,100,524,97.5,520.5,24,180,518,188,526,183.5,521.5,64,1054,518,1062,526,1057.5,521.5,64,935,519,943,527,938.5,522.5,64,121,520,125,526,122.5,522.5,24,990,520,995,523,992,521,15,1168,520,1172,526,1169.5,522.5,24,148,521,153,524,150,522,15,357,521,362,524,359,522,15,436,521,440,527,437.5,523.5,24,523,521,529,527,525.5,523.5,36,196,522,204,530,199.5,525.5,64,612,522,616,528,613.5,524.5,24,1155,523,1159,529,1156.5,525.5,24,108,525,114,531,110.5,527.5,36,690,525,694,531,691.5,527.5,24,160,526,166,532,162.5,528.5,36,1032,526,1038,532,1034.5,528.5,36,61,527,67,533,63.5,529.5,36,333,527,339,533,335.5,529.5,36,771,527,779,535,774.5,530.5,64,388,528,396,536,391.5,531.5,64,1050,533,1056,539,1052.5,535.5,36,1112,533,1116,539,1113.5,535.5,24,240,534,245,537,242,535,15,278,534,282,540,279.5,536.5,24,310,534,318,542,313.5,537.5,64,533,534,541,542,536.5,537.5,64,676,535,684,543,679.5,538.5,64,853,535,859,541,855.5,537.5,36,791,536,797,542,793.5,538.5,36,654,538,658,544,655.5,540.5,24,1018,538,1026,546,1021.5,541.5,64,1064,540,1068,546,1065.5,542.5,24,350,541,354,547,351.5,543.5,24,56,542,61,545,58,543,15,401,542,409,550,404.5,545.5,64,185,543,190,546,187,544,15,74,544,78,550,75.5,546.5,24,715,544,723,552,718.5,547.5,64,973,544,979,550,975.5,546.5,36,119,545,123,551,120.5,547.5,24,268,546,274,552,270.5,548.5,36,327,546,333,552,329.5,548.5,36,424,546,430,552,426.5,548.5,36,841,546,846,549,843,547,15,927,546,935,554,930.5,549.5,64,153,548,159,554,155.5,550.5,36,787,548,793,554,789.5,550.5,36,672,549,678,555,674.5,551.5,36,1098,549,1106,557,1101.5,552.5,64,372,550,377,553,374,551,15,496,550,501,553,498,551,15,659,550,663,556,660.5,552.5,24,1039,550,1045,556,1041.5,552.5,36,469,552,473,558,470.5,554.5,24,521,552,527,558,523.5,554.5,36,234,553,240,559,236.5,555.5,36,11,555,15,561,12.5,557.5,24,223,555,228,558,225,556,15,815,555,823,563,818.5,558.5,64,1078,555,1084,561,1080.5,557.5,36,52,557,58,563,54.5,559.5,36,351,557,355,563,352.5,559.5,24,278,558,284,564,280.5,560.5,36,252,559,260,567,255.5,562.5,64,92,560,100,568,95.5,563.5,64,113,560,119,566,115.5,562.5,36,932,560,940,568,935.5,563.5,64,1119,560,1124,563,1121,561,15,709,561,717,569,712.5,564.5,64,1055,561,1061,567,1057.5,563.5,36,181,562,187,568,183.5,564.5,36,375,562,383,570,378.5,565.5,64,622,562,626,566,623.5,563.5,16,695,562,701,568,697.5,564.5,36,853,563,857,569,854.5,565.5,24,986,563,992,569,988.5,565.5,36,842,564,847,567,844,565,15,1176,564,1184,572,1179.5,567.5,64,132,566,140,574,135.5,569.5,64,151,566,155,572,152.5,568.5,24,563,567,568,572,565,569,25,604,567,609,572,606,569,25,633,567,638,572,635,569,25,975,567,980,570,977,568,15,71,568,75,574,72.5,570.5,24,516,569,522,575,518.5,571.5,36,1108,569,1112,575,1109.5,571.5,24,584,571,589,576,586,573,25,30,573,38,581,33.5,576.5,64,1086,573,1094,581,1089.5,576.5,64,165,574,173,582,168.5,577.5,64,1163,574,1168,577,1165,575,15,913,575,917,581,914.5,577.5,24,865,577,869,583,866.5,579.5,24,570,579,576,585,572.5,581.5,36,616,580,621,585,618,582,25,112,581,116,587,113.5,583.5,24,338,581,342,587,339.5,583.5,24,717,581,721,587,718.5,583.5,24,762,584,766,590,763.5,586.5,24,1115,585,1119,591,1116.5,587.5,24,277,586,285,594,280.5,589.5,64,138,587,143,590,140,588,15,735,587,740,590,737,588,15,96,588,101,591,98,589,15,1039,588,1043,594,1040.5,590.5,24,1074,588,1078,594,1075.5,590.5,24,10,589,16,595,12.5,591.5,36,854,589,859,592,856,590,15,1019,589,1023,595,1020.5,591.5,24,124,590,129,593,126,591,15,198,590,206,598,201.5,593.5,64,1182,590,1186,596,1183.5,592.5,24,659,591,665,597,661.5,593.5,36,574,593,579,598,576,595,25,178,595,182,601,179.5,597.5,24,621,595,627,601,623.5,597.5,36,496,596,502,602,498.5,598.5,36,1096,596,1102,602,1098.5,598.5,36,363,598,371,606,366.5,601.5,64,761,598,769,606,764.5,601.5,64,1029,598,1033,604,1030.5,600.5,24,59,599,64,602,61,600,15,882,599,888,605,884.5,601.5,36,1142,600,1146,606,1143.5,602.5,24,843,602,848,605,845,603,15,15,603,21,609,17.5,605.5,36,1014,603,1018,609,1015.5,605.5,24,1162,603,1166,609,1163.5,605.5,24,1184,606,1188,612,1185.5,608.5,24,92,607,96,613,93.5,609.5,24,334,607,339,610,336,608,15,533,607,539,613,535.5,609.5,36,202,611,208,617,204.5,613.5,36,119,612,125,618,121.5,614.5,36,148,612,152,618,149.5,614.5,24,570,614,575,619,572,616,25,185,615,193,623,188.5,618.5,64,582,615,587,620,584,617,25,1101,615,1107,621,1103.5,617.5,36,1123,615,1131,623,1126.5,618.5,64,695,618,699,624,696.5,620.5,24,352,619,357,622,354,620,15,616,619,621,624,618,621,25,840,619,846,625,842.5,621.5,36,65,621,70,624,67,622,15,472,621,477,624,474,622,15,999,624,1003,630,1000.5,626.5,24,662,625,667,628,664,626,15,765,625,773,633,768.5,628.5,64,857,625,863,631,859.5,627.5,36,1009,625,1015,631,1011.5,627.5,36,1156,626,1162,632,1158.5,628.5,36,275,627,283,635,278.5,630.5,64,99,628,104,631,101,629,15,583,628,587,632,584.5,629.5,16,716,628,722,634,718.5,630.5,36,916,628,920,634,917.5,630.5,24,1060,629,1066,635,1062.5,631.5,36,36,630,40,636,37.5,632.5,24,563,630,568,635,565,632,25,484,631,488,637,485.5,633.5,24,596,631,601,636,598,633,25,633,632,637,636,634.5,633.5,16,373,633,377,639,374.5,635.5,24,617,633,622,638,619,635,25,78,634,84,640,80.5,636.5,36,531,634,536,637,533,635,15,874,635,879,638,876,636,15,327,636,335,644,330.5,639.5,64,824,636,832,644,827.5,639.5,64,14,638,22,646,17.5,641.5,64,792,638,798,644,794.5,640.5,36,1091,638,1099,646,1094.5,641.5,64,1031,639,1039,647,1034.5,642.5,64,1169,640,1177,648,1172.5,643.5,64,109,641,114,644,111,642,15,978,641,982,647,979.5,643.5,24,178,642,186,650,181.5,645.5,64,923,642,927,648,924.5,644.5,24,93,643,97,649,94.5,645.5,24,811,643,815,649,812.5,645.5,24,1051,643,1059,651,1054.5,646.5,64,278,644,283,647,280,645,15,398,646,402,652,399.5,648.5,24,123,648,127,654,124.5,650.5,24,1146,650,1150,656,1147.5,652.5,24,941,652,947,658,943.5,654.5,36,993,652,999,658,995.5,654.5,36,1126,652,1134,660,1129.5,655.5,64,57,653,63,659,59.5,655.5,36,380,654,384,660,381.5,656.5,24,249,656,257,664,252.5,659.5,64,342,656,346,662,343.5,658.5,24,195,657,200,660,197,658,15,833,658,841,666,836.5,661.5,64,1048,658,1053,661,1050,659,15,715,659,720,662,717,660,15,820,659,825,662,822,660,15,979,659,983,665,980.5,661.5,24,557,660,563,666,559.5,662.5,36,673,661,678,664,675,662,15,1101,661,1109,669,1104.5,664.5,64,20,662,26,668,22.5,664.5,36,498,662,502,668,499.5,664.5,24,282,663,287,666,284,664,15,406,663,411,666,408,664,15,701,663,709,671,704.5,666.5,64,911,663,917,669,913.5,665.5,36,102,666,110,674,105.5,669.5,64,421,666,429,674,424.5,669.5,64,523,666,528,669,525,667,15,169,668,173,674,170.5,670.5,24,60,669,66,675,62.5,671.5,36,264,669,272,677,267.5,672.5,64,763,669,771,677,766.5,672.5,64,1024,671,1032,679,1027.5,674.5,64,1118,671,1126,679,1121.5,674.5,64,684,672,688,678,685.5,674.5,24,798,672,803,675,800,673,15,1158,672,1166,680,1161.5,675.5,64,224,673,228,679,225.5,675.5,24,812,673,820,681,815.5,676.5,64,1013,673,1017,679,1014.5,675.5,24,199,675,207,683,202.5,678.5,64,73,678,78,681,75,679,15,709,678,715,684,711.5,680.5,36,1046,678,1051,681,1048,679,15,1072,679,1080,687,1075.5,682.5,64,1095,679,1099,685,1096.5,681.5,24,1178,680,1186,688,1181.5,683.5,64,828,681,834,687,830.5,683.5,36,880,682,888,690,883.5,685.5,64,129,683,134,686,131,684,15,371,683,375,689,372.5,685.5,24,188,684,192,690,189.5,686.5,24,488,685,493,688,490,686,15,634,685,639,688,636,686,15,930,685,935,688,932,686,15,785,687,793,695,788.5,690.5,64,117,688,122,691,119,689,15,229,688,234,691,231,689,15,398,688,403,691,400,689,15,512,688,520,696,515.5,691.5,64,867,688,872,691,869,689,15,334,689,340,695,336.5,691.5,36,434,689,439,692,436,690,15,573,689,578,692,575,690,15,321,690,325,696,322.5,692.5,24,962,690,970,698,965.5,693.5,64,1023,690,1029,696,1025.5,692.5,36,360,691,365,694,362,692,15,814,692,820,698,816.5,694.5,36,945,692,951,698,947.5,694.5,36,154,693,160,699,156.5,695.5,36,243,693,249,699,245.5,695.5,36,838,693,846,701,841.5,696.5,64,530,694,538,702,533.5,697.5,64,694,696,702,704,697.5,699.5,64,719,696,727,704,722.5,699.5,64,1074,696,1079,699,1076,697,15,1147,698,1152,701,1149,699,15,110,701,115,704,112,702,15,228,701,234,707,230.5,703.5,36,335,701,339,707,336.5,703.5,24,916,702,920,708,917.5,704.5,24,197,703,203,709,199.5,705.5,36,433,703,438,706,435,704,15,1059,703,1067,711,1062.5,706.5,64,263,704,271,712,266.5,707.5,64,649,704,655,710,651.5,706.5,36,479,705,487,713,482.5,708.5,64,603,705,609,711,605.5,707.5,36,960,706,966,712,962.5,708.5,36,1038,706,1046,714,1041.5,709.5,64,1093,706,1101,714,1096.5,709.5,64,401,707,405,713,402.5,709.5,24,852,707,856,713,853.5,709.5,24,1131,707,1139,715,1134.5,710.5,64,43,711,51,719,46.5,714.5,64,71,712,77,718,73.5,714.5,36,943,712,947,718,944.5,714.5,24,1166,713,1172,719,1168.5,715.5,36,836,714,841,717,838,715,15,1113,715,1119,721,1115.5,717.5,36,198,716,204,722,200.5,718.5,36,538,716,544,722,540.5,718.5,36,700,717,708,725,703.5,720.5,64,1178,717,1183,720,1180,718,15,655,719,660,722,657,720,15,1017,719,1021,725,1018.5,721.5,24,28,720,34,726,30.5,722.5,36,165,720,170,723,167,721,15,367,721,371,727,368.5,723.5,24,866,721,870,727,867.5,723.5,24,915,722,921,728,917.5,724.5,36,959,723,967,731,962.5,726.5,64,884,724,889,727,886,725,15,596,725,604,733,599.5,728.5,64,681,725,689,733,684.5,728.5,64,727,725,733,731,729.5,727.5,36,464,726,468,732,465.5,728.5,24,480,726,485,729,482,727,15,269,727,274,730,271,728,15,1068,727,1073,730,1070,728,15,630,728,636,734,632.5,730.5,36,1143,728,1149,734,1145.5,730.5,36,48,729,52,735,49.5,731.5,24,107,729,112,732,109,730,15,257,729,261,735,258.5,731.5,24,542,729,547,732,544,730,15,405,731,411,737,407.5,733.5,36,506,731,512,737,508.5,733.5,36,82,732,86,738,83.5,734.5,24,148,732,152,738,149.5,734.5,24,186,732,191,735,188,733,15,932,732,936,738,933.5,734.5,24,809,733,817,741,812.5,736.5,64,62,734,66,740,63.5,736.5,24,377,734,383,740,379.5,736.5,36,493,734,499,740,495.5,736.5,36,999,734,1004,737,1001,735,15,1089,734,1095,740,1091.5,736.5,36,876,735,881,738,878,736,15,1077,736,1083,742,1079.5,738.5,36,1160,736,1168,744,1163.5,739.5,64,324,737,332,745,327.5,740.5,64,982,737,990,745,985.5,740.5,64,1122,740,1126,746,1123.5,742.5,24,1018,741,1022,747,1019.5,743.5,24,22,742,30,750,25.5,745.5,64,783,742,787,748,784.5,744.5,24,353,743,357,749,354.5,745.5,24,50,744,56,750,52.5,746.5,36,280,746,284,752,281.5,748.5,24,868,747,876,755,871.5,750.5,64,1108,747,1113,750,1110,748,15,187,748,193,754,189.5,750.5,36,826,748,830,754,827.5,750.5,24,853,748,859,754,855.5,750.5,36,418,749,424,755,420.5,751.5,36,966,750,974,758,969.5,753.5,64,1163,750,1168,753,1165,751,15,1047,751,1055,759,1050.5,754.5,64,1143,751,1151,759,1146.5,754.5,64,170,752,178,760,173.5,755.5,64,245,752,249,758,246.5,754.5,24,927,752,933,758,929.5,754.5,36,941,752,949,760,944.5,755.5,64,202,753,207,756,204,754,15,322,753,328,759,324.5,755.5,36,340,753,344,759,341.5,755.5,24,365,756,370,759,367,757,15,214,757,222,765,217.5,760.5,64,780,757,785,760,782,758,15,406,758,411,761,408,759,15,137,760,142,763,139,761,15,577,760,581,766,578.5,762.5,24,999,760,1005,766,1001.5,762.5,36,112,761,118,767,114.5,763.5,36,851,761,859,769,854.5,764.5,64,1076,762,1082,768,1078.5,764.5,36,34,763,42,771,37.5,766.5,64,92,763,98,769,94.5,765.5,36,471,763,475,769,472.5,765.5,24,484,763,490,769,486.5,765.5,36,624,763,629,766,626,764,15,17,764,23,770,19.5,766.5,36,149,766,153,772,150.5,768.5,24,159,766,165,772,161.5,768.5,36,1066,767,1070,773,1067.5,769.5,24,1128,767,1136,775,1131.5,770.5,64,773,768,778,771,775,769,15,819,769,823,775,820.5,771.5,24,1025,769,1033,777,1028.5,772.5,64,664,770,672,778,667.5,773.5,64,511,771,517,777,513.5,773.5,36,838,772,843,775,840,773,15,114,773,120,779,116.5,775.5,36,126,775,132,781,128.5,777.5,36,89,776,94,779,91,777,15,389,777,397,785,392.5,780.5,64,543,777,549,783,545.5,779.5,36,559,777,565,783,561.5,779.5,36,962,777,966,783,963.5,779.5,24,440,778,446,784,442.5,780.5,36,473,778,478,781,475,779,15,753,778,757,784,754.5,780.5,24,1165,778,1171,784,1167.5,780.5,36,735,779,743,787,738.5,782.5,64,772,779,777,782,774,780,15,863,779,869,785,865.5,781.5,36,1053,779,1058,782,1055,780,15,40,780,46,786,42.5,782.5,36,405,780,413,788,408.5,783.5,64,176,781,184,789,179.5,784.5,64,1066,782,1071,785,1068,783,15,274,783,279,786,276,784,15,462,783,467,786,464,784,15,806,783,812,789,808.5,785.5,36,1137,784,1145,792,1140.5,787.5,64,498,785,503,788,500,786,15,699,785,703,791,700.5,787.5,24,518,786,522,792,519.5,788.5,24,830,786,834,792,831.5,788.5,24,360,789,365,792,362,790,15,207,790,211,796,208.5,792.5,24,631,790,637,796,633.5,792.5,36,1045,790,1049,796,1046.5,792.5,24,233,791,241,799,236.5,794.5,64,979,792,983,798,980.5,794.5,24,89,793,95,799,91.5,795.5,36,461,793,465,799,462.5,795.5,24,752,793,760,801,755.5,796.5,64,310,794,316,800,312.5,796.5,36,874,794,879,797,876,795,15,506,796,511,799,508,797,15,845,796,851,802,847.5,798.5,36,273,797,278,800,275,798,15,431,797,437,803,433.5,799.5,36,727,797,733,803,729.5,799.5,36,961,797,966,800,963,798,15,643,798,649,804,645.5,800.5,36,1017,798,1022,801,1019,799,15,15,799,21,805,17.5,801.5,36,447,799,451,805,448.5,801.5,24,481,799,486,802,483,800,15,667,799,673,805,669.5,801.5,36,110,800,118,808,113.5,803.5,64,916,801,921,804,918,802,15,155,802,160,805,157,803,15,1135,802,1143,810,1138.5,805.5,64,191,803,196,806,193,804,15,329,803,335,809,331.5,805.5,36,522,803,530,811,525.5,806.5,64,64,804,72,812,67.5,807.5,64,380,804,384,810,381.5,806.5,24,416,804,421,807,418,805,15,1007,804,1011,810,1008.5,806.5,24,1153,804,1158,807,1155,805,15,175,805,181,811,177.5,807.5,36,462,805,467,808,464,806,15,545,806,551,812,547.5,808.5,36,760,807,766,813,762.5,809.5,36,860,808,865,811,862,809,15,642,810,647,813,644,811,15,880,811,886,817,882.5,813.5,36,87,812,93,818,89.5,814.5,36,502,812,506,818,503.5,814.5,24,313,813,317,819,314.5,815.5,24,344,813,349,816,346,814,15,1018,813,1024,819,1020.5,815.5,36,48,814,54,820,50.5,816.5,36,284,814,288,820,285.5,816.5,24,396,814,401,817,398,815,15,1038,814,1043,817,1040,815,15,701,815,709,823,704.5,818.5,64,834,815,838,821,835.5,817.5,24,1093,815,1099,821,1095.5,817.5,36,380,816,384,822,381.5,818.5,24,102,817,107,820,104,818,15,1135,817,1140,820,1137,818,15,730,819,736,825,732.5,821.5,36,683,820,691,828,686.5,823.5,64,481,821,487,827,483.5,823.5,36,143,822,147,828,144.5,824.5,24,330,822,335,825,332,823,15,765,822,773,830,768.5,825.5,64,860,822,865,825,862,823,15,670,825,676,831,672.5,827.5,36,1168,825,1174,831,1170.5,827.5,36,880,827,886,833,882.5,829.5,36,366,828,374,836,369.5,831.5,64,833,828,841,836,836.5,831.5,64,204,829,208,835,205.5,831.5,24,1117,829,1122,832,1119,830,15,53,830,58,833,55,831,15,99,831,104,834,101,832,15,646,831,651,834,648,832,15,816,831,824,839,819.5,834.5,64,1090,831,1095,834,1092,832,15,754,832,758,838,755.5,834.5,24,796,832,800,838,797.5,834.5,24,628,833,633,836,630,834,15,598,834,606,842,601.5,837.5,64,166,835,172,841,168.5,837.5,36,1153,835,1159,841,1155.5,837.5,36,519,836,524,839,521,837,15,113,838,117,844,114.5,840.5,24,69,839,77,847,72.5,842.5,64,272,839,280,847,275.5,842.5,64,572,839,577,842,574,840,15,1026,839,1032,845,1028.5,841.5,36,34,840,38,846,35.5,842.5,24,720,840,728,848,723.5,843.5,64,1111,840,1119,848,1114.5,843.5,64,133,841,137,847,134.5,843.5,24,783,842,788,845,785,843,15,455,843,463,851,458.5,846.5,64,314,845,318,851,315.5,847.5,24,863,845,869,851,865.5,847.5,36,990,845,996,851,992.5,847.5,36,1130,846,1135,849,1132,847,15,693,847,697,853,694.5,849.5,24,823,847,827,853,824.5,849.5,24,875,847,881,853,877.5,849.5,36,91,848,99,856,94.5,851.5,64,360,848,368,856,363.5,851.5,64,563,848,568,851,565,849,15,708,848,714,854,710.5,850.5,36,481,849,489,857,484.5,852.5,64,391,850,396,853,393,851,15,1089,851,1094,854,1091,852,15,1145,851,1150,854,1147,852,15,19,852,24,855,21,853,15,379,852,385,858,381.5,854.5,36,421,852,425,858,422.5,854.5,24,518,852,524,858,520.5,854.5,36,170,853,178,861,173.5,856.5,64,1156,853,1160,859,1157.5,855.5,24,773,856,778,859,775,857,15,1008,856,1013,859,1010,857,15,150,858,156,864,152.5,860.5,36,737,858,743,864,739.5,860.5,36,1123,858,1128,861,1125,859,15,438,859,446,867,441.5,862.5,64,1044,859,1049,862,1046,860,15,203,860,207,866,204.5,862.5,24,38,862,42,868,39.5,864.5,24,13,863,18,866,15,864,15,52,863,57,866,54,864,15,76,863,80,869,77.5,865.5,24,91,863,97,869,93.5,865.5,36,637,863,645,871,640.5,866.5,64,245,864,253,872,248.5,867.5,64,516,864,521,867,518,865,15,107,866,115,874,110.5,869.5,64,981,866,986,869,983,867,15,424,867,430,873,426.5,869.5,36,880,867,885,870,882,868,15,1021,867,1027,873,1023.5,869.5,36,264,868,268,874,265.5,870.5,24,1112,868,1120,876,1115.5,871.5,64,168,869,176,877,171.5,872.5,64,724,871,728,877,725.5,873.5,24,569,872,575,878,571.5,874.5,36,540,874,545,877,542,875,15,611,874,615,880,612.5,876.5,24,230,875,236,881,232.5,877.5,36,69,876,74,879,71,877,15,95,876,99,882,96.5,878.5,24,413,876,418,879,415,877,15,46,877,51,880,48,878,15,367,877,375,885,370.5,880.5,64,21,878,29,886,24.5,881.5,64,328,878,336,886,331.5,881.5,64,439,878,447,886,442.5,881.5,64,787,878,793,884,789.5,880.5,36,527,879,532,882,529,880,15,753,881,761,889,756.5,884.5,64,484,882,488,888,485.5,884.5,24,1146,882,1152,888,1148.5,884.5,36,805,884,811,890,807.5,886.5,36,187,885,192,888,189,886,15,57,886,62,889,59,887,15,237,888,242,891,239,889,15,1044,888,1052,896,1047.5,891.5,64,967,889,973,895,969.5,891.5,36,953,890,959,896,955.5,892.5,36,113,891,119,897,115.5,893.5,36,925,891,933,899,928.5,894.5,64,1011,891,1017,897,1013.5,893.5,36,1028,891,1036,899,1031.5,894.5,64,1058,892,1062,898,1059.5,894.5,24,14,894,20,900,16.5,896.5,36,1147,894,1151,900,1148.5,896.5,24,180,897,188,905,183.5,900.5,64,233,898,239,904,235.5,900.5,36,1116,898,1122,904,1118.5,900.5,36,986,899,990,905,987.5,901.5,24,282,902,290,910,285.5,905.5,64,62,903,67,906,64,904,15,270,904,274,910,271.5,906.5,24,94,908,102,916,97.5,911.5,64,322,910,326,916,323.5,912.5,24,366,910,372,916,368.5,912.5,36,610,910,616,916,612.5,912.5,36,904,911,908,917,905.5,913.5,24,920,912,926,918,922.5,914.5,36,1136,912,1142,918,1138.5,914.5,36,145,913,151,919,147.5,915.5,36,491,913,499,921,494.5,916.5,64,938,913,943,916,940,914,15,973,914,977,920,974.5,916.5,24,1093,914,1097,920,1094.5,916.5,24,506,915,512,921,508.5,917.5,36,24,916,32,924,27.5,919.5,64,123,916,128,919,125,917,15,211,916,219,924,214.5,919.5,64,807,916,815,924,810.5,919.5,64,856,916,861,919,858,917,15,1121,916,1129,924,1124.5,919.5,64,563,917,568,920,565,918,15,752,917,760,925,755.5,920.5,64,793,917,799,923,795.5,919.5,36,581,918,589,926,584.5,921.5,64,1000,918,1005,921,1002,919,15,775,919,779,925,776.5,921.5,24,304,920,312,928,307.5,923.5,64,439,920,444,923,441,921,15,549,921,557,929,552.5,924.5,64,703,921,711,929,706.5,924.5,64,627,922,631,928,628.5,924.5,24,1052,922,1058,928,1054.5,924.5,36,262,923,266,929,263.5,925.5,24,293,923,298,926,295,924,15,523,923,528,926,525,924,15,1141,924,1147,930,1143.5,926.5,36,10,925,18,933,13.5,928.5,64,325,925,330,928,327,926,15,226,927,231,930,228,928,15,421,927,426,930,423,928,15,692,927,696,933,693.5,929.5,24,945,927,949,933,946.5,929.5,24,1019,927,1023,933,1020.5,929.5,24,983,929,989,935,985.5,931.5,36,105,931,111,937,107.5,933.5,36,121,931,126,934,123,932,15,443,931,447,937,444.5,933.5,24,500,931,508,939,503.5,934.5,64,730,931,734,937,731.5,933.5,24,42,932,50,940,45.5,935.5,64,652,932,660,940,655.5,935.5,64,784,932,790,938,786.5,934.5,36,906,932,910,938,907.5,934.5,24,522,933,527,936,524,934,15,769,933,777,941,772.5,936.5,64,1033,933,1041,941,1036.5,936.5,64,1101,933,1106,936,1103,934,15,294,934,302,942,297.5,937.5,64,707,935,713,941,709.5,937.5,36,82,938,90,946,85.5,941.5,64,267,938,275,946,270.5,941.5,64,325,938,329,944,326.5,940.5,24,920,938,926,944,922.5,940.5,36,968,938,974,944,970.5,940.5,36,207,940,215,948,210.5,943.5,64,64,941,70,947,66.5,943.5,36,891,942,897,948,893.5,944.5,36,1101,942,1107,948,1103.5,944.5,36,1144,942,1152,950,1147.5,945.5,64,447,943,453,949,449.5,945.5,36,113,946,117,952,114.5,948.5,24,530,946,536,952,532.5,948.5,36,561,946,565,952,562.5,948.5,24,416,947,424,955,419.5,950.5,64,179,948,187,956,182.5,951.5,64,997,948,1003,954,999.5,950.5,36,685,950,693,958,688.5,953.5,64,331,951,337,957,333.5,953.5,36,1024,951,1029,954,1026,952,15,779,953,787,961,782.5,956.5,64,504,954,509,957,506,955,15,969,954,974,957,971,955,15,1038,954,1044,960,1040.5,956.5,36,1013,955,1018,958,1015,956,15,206,956,211,959,208,957,15,435,956,440,959,437,957,15,19,957,25,963,21.5,959.5,36,150,957,154,963,151.5,959.5,24,255,957,263,965,258.5,960.5,64,517,957,522,960,519,958,15,1169,957,1177,965,1172.5,960.5,64,220,958,224,964,221.5,960.5,24,716,959,722,965,718.5,961.5,36,898,959,904,965,900.5,961.5,36,295,961,300,964,297,962,15,1156,962,1161,965,1158,963,15,466,963,472,969,468.5,965.5,36,550,963,558,971,553.5,966.5,64,45,964,51,970,47.5,966.5,36,1058,964,1066,972,1061.5,967.5,64,169,965,175,971,171.5,967.5,36,80,966,86,972,82.5,968.5,36,764,966,769,969,766,967,15,1047,968,1051,974,1048.5,970.5,24,29,969,34,972,31,970,15,733,969,741,977,736.5,972.5,64,985,969,991,975,987.5,971.5,36,1015,969,1023,977,1018.5,972.5,64,1134,969,1142,977,1137.5,972.5,64,655,970,659,976,656.5,972.5,24,1099,970,1103,976,1100.5,972.5,24,949,971,953,977,950.5,973.5,24,799,972,803,978,800.5,974.5,24,747,974,753,980,749.5,976.5,36,966,975,971,978,968,976,15,467,976,472,979,469,977,15,1067,978,1072,981,1069,979,15,264,979,272,987,267.5,982.5,64,291,979,299,987,294.5,982.5,64,639,979,645,985,641.5,981.5,36,1158,979,1164,985,1160.5,981.5,36,44,980,49,983,46,981,15,711,980,715,986,712.5,982.5,24,85,981,90,984,87,982,15,192,981,197,984,194,982,15,215,981,221,987,217.5,983.5,36,73,982,79,988,75.5,984.5,36,106,982,114,990,109.5,985.5,64,138,982,144,988,140.5,984.5,36,309,982,314,985,311,983,15,323,982,328,985,325,983,15,32,985,37,988,34,986,15,750,986,756,992,752.5,988.5,36,162,987,168,993,164.5,989.5,36,521,987,526,990,523,988,15,691,987,697,993,693.5,989.5,36,924,989,932,997,927.5,992.5,64,198,990,206,998,201.5,993.5,64,230,990,234,996,231.5,992.5,24,541,990,547,996,543.5,992.5,36,1083,990,1091,998,1086.5,993.5,64,1132,990,1138,996,1134.5,992.5,36,507,991,513,997,509.5,993.5,36,677,991,681,997,678.5,993.5,24,324,992,330,998,326.5,994.5,36,661,992,669,1000,664.5,995.5,64,836,992,842,998,838.5,994.5,36,1011,992,1019,1000,1014.5,995.5,64,258,993,262,999,259.5,995.5,24,448,993,454,999,450.5,995.5,36,1071,993,1077,999,1073.5,995.5,36,283,994,289,1000,285.5,996.5,36,423,994,428,997,425,995,15,1056,995,1060,1001,1057.5,997.5,24,720,996,725,999,722,997,15,876,996,882,1002,878.5,998.5,36,970,998,975,1001,972,999,15,140,1000,146,1006,142.5,1002.5,36,580,1000,588,1008,583.5,1003.5,64,760,1000,765,1003,762,1001,15,891,1001,895,1007,892.5,1003.5,24,65,1002,70,1005,67,1003,15,736,1002,742,1008,738.5,1004.5,36,1106,1002,1110,1008,1107.5,1004.5,24,10,1003,18,1011,13.5,1006.5,64,466,1003,472,1009,468.5,1005.5,36,490,1003,498,1011,493.5,1006.5,64,687,1003,693,1009,689.5,1005.5,36,1117,1003,1122,1006,1119,1004,15,35,1004,40,1007,37,1005,15,904,1004,909,1007,906,1005,15,1037,1004,1043,1010,1039.5,1006.5,36,792,1005,798,1011,794.5,1007.5,36,184,1006,192,1014,187.5,1009.5,64,270,1006,278,1014,273.5,1009.5,64,390,1006,394,1012,391.5,1008.5,24,700,1007,708,1015,703.5,1010.5,64,939,1007,944,1010,941,1008,15,968,1007,974,1013,970.5,1009.5,36,82,1008,86,1014,83.5,1010.5,24,172,1009,176,1015,173.5,1011.5,24,525,1009,533,1017,528.5,1012.5,64,47,1010,55,1018,50.5,1013.5,64,1013,1010,1019,1016,1015.5,1012.5,36,1062,1010,1068,1016,1064.5,1012.5,36,406,1011,412,1017,408.5,1013.5,36,868,1011,876,1019,871.5,1014.5,64,231,1012,237,1018,233.5,1014.5,36,297,1012,303,1018,299.5,1014.5,36,97,1013,101,1019,98.5,1015.5,24,513,1013,519,1019,515.5,1015.5,36,916,1013,922,1019,918.5,1015.5,36,1122,1014,1127,1017,1124,1015,15,635,1015,639,1021,636.5,1017.5,24,716,1015,722,1021,718.5,1017.5,36,930,1016,938,1024,933.5,1019.5,64,310,1017,318,1025,313.5,1020.5,64,482,1017,490,1025,485.5,1020.5,64,1084,1017,1092,1025,1087.5,1020.5,64,659,1018,665,1024,661.5,1020.5,36,1031,1018,1036,1021,1033,1019,15,1141,1018,1147,1024,1143.5,1020.5,36,578,1019,584,1025,580.5,1021.5,36,767,1020,775,1028,770.5,1023.5,64,1156,1020,1160,1026,1157.5,1022.5,24,32,1021,40,1029,35.5,1024.5,64,118,1021,124,1027,120.5,1023.5,36,460,1021,465,1024,462,1022,15,365,1022,369,1028,366.5,1024.5,24,691,1022,699,1030,694.5,1025.5,64,180,1023,184,1029,181.5,1025.5,24,592,1023,596,1029,593.5,1025.5,24,833,1023,838,1026,835,1024,15,205,1024,211,1030,207.5,1026.5,36,231,1024,239,1032,234.5,1027.5,64,265,1025,269,1031,266.5,1027.5,24,530,1026,535,1029,532,1027,15,621,1026,626,1029,623,1027,15,1181,1026,1187,1032,1183.5,1028.5,36,747,1027,755,1035,750.5,1030.5,64,1016,1027,1024,1035,1019.5,1030.5,64,1123,1027,1131,1035,1126.5,1030.5,64,88,1028,93,1031,90,1029,15,793,1028,798,1031,795,1029,15,867,1030,875,1038,870.5,1033.5,64,441,1031,446,1034,443,1032,15,958,1031,963,1034,960,1032,15,1096,1031,1100,1037,1097.5,1033.5,24,887,1032,893,1038,889.5,1034.5,36,994,1032,998,1038,995.5,1034.5,24,396,1033,404,1041,399.5,1036.5,64,491,1033,499,1041,494.5,1036.5,64,555,1033,563,1041,558.5,1036.5,64,663,1034,667,1040,664.5,1036.5,24,838,1034,843,1037,840,1035,15,1053,1034,1058,1037,1055,1035,15,246,1035,250,1041,247.5,1037.5,24,382,1035,390,1043,385.5,1038.5,64,430,1035,434,1041,431.5,1037.5,24,1108,1035,1112,1041,1109.5,1037.5,24,56,1036,60,1042,57.5,1038.5,24,110,1037,116,1043,112.5,1039.5,36,682,1037,688,1043,684.5,1039.5,36,461,1038,467,1044,463.5,1040.5,36,644,1039,650,1045,646.5,1041.5,36,574,1040,578,1046,575.5,1042.5,24,706,1040,714,1048,709.5,1043.5,64,227,1041,235,1049,230.5,1044.5,64,591,1044,595,1050,592.5,1046.5,24,283,1045,287,1051,284.5,1047.5,24,418,1045,422,1051,419.5,1047.5,24,443,1045,449,1051,445.5,1047.5,36,44,1046,50,1052,46.5,1048.5,36,794,1046,802,1054,797.5,1049.5,64,96,1047,100,1053,97.5,1049.5,24,59,1048,64,1051,61,1049,15,121,1049,126,1052,123,1050,15,820,1049,824,1055,821.5,1051.5,24,1034,1049,1042,1057,1037.5,1052.5,64,399,1050,403,1056,400.5,1052.5,24,731,1050,739,1058,734.5,1053.5,64,781,1050,785,1056,782.5,1052.5,24,1152,1050,1158,1056,1154.5,1052.5,36,837,1051,843,1057,839.5,1053.5,36,107,1052,115,1060,110.5,1055.5,64,959,1053,967,1061,962.5,1056.5,64,362,1054,366,1060,363.5,1056.5,24,528,1054,532,1060,529.5,1056.5,24,703,1054,711,1062,706.5,1057.5,64,173,1055,181,1063,176.5,1058.5,64,880,1055,884,1061,881.5,1057.5,24,493,1056,497,1062,494.5,1058.5,24,216,1057,222,1063,218.5,1059.5,36,239,1057,243,1063,240.5,1059.5,24,546,1057,550,1063,547.5,1059.5,24,620,1057,628,1065,623.5,1060.5,64,1123,1057,1131,1065,1126.5,1060.5,64,1014,1058,1022,1066,1017.5,1061.5,64,578,1061,582,1067,579.5,1063.5,24,424,1063,429,1066,426,1064,15,158,1064,162,1070,159.5,1066.5,24,898,1064,902,1070,899.5,1066.5,24,809,1065,813,1071,810.5,1067.5,24,1180,1065,1185,1068,1182,1066,15,23,1066,31,1074,26.5,1069.5,64,606,1066,612,1072,608.5,1068.5,36,116,1067,122,1073,118.5,1069.5,36,651,1068,655,1074,652.5,1070.5,24,826,1068,832,1074,828.5,1070.5,36,545,1069,549,1075,546.5,1071.5,24,876,1069,884,1077,879.5,1072.5,64,1077,1069,1083,1075,1079.5,1071.5,36,1160,1069,1168,1077,1163.5,1072.5,64,530,1070,538,1078,533.5,1073.5,64,925,1070,931,1076,927.5,1072.5,36,103,1071,108,1074,105,1072,15,592,1071,600,1079,595.5,1074.5,64,475,1072,483,1080,478.5,1075.5,64,909,1072,917,1080,912.5,1075.5,64,1037,1072,1045,1080,1040.5,1075.5,64,223,1073,231,1081,226.5,1076.5,64,680,1074,686,1080,682.5,1076.5,36,45,1075,50,1078,47,1076,15,403,1075,411,1083,406.5,1078.5,64,1111,1075,1116,1078,1113,1076,15,68,1077,76,1085,71.5,1080.5,64,134,1078,138,1084,135.5,1080.5,24,245,1078,253,1086,248.5,1081.5,64,266,1078,271,1081,268,1079,15,707,1078,712,1081,709,1079,15,800,1078,805,1081,802,1079,15,618,1079,624,1085,620.5,1081.5,36,1143,1079,1147,1085,1144.5,1081.5,24,354,1080,360,1086,356.5,1082.5,36,340,1081,345,1084,342,1082,15,104,1083,109,1086,106,1084,15,1182,1083,1187,1086,1184,1084,15,1072,1084,1076,1090,1073.5,1086.5,24,926,1085,932,1091,928.5,1087.5,36,201,1086,209,1094,204.5,1089.5,64,305,1086,309,1092,306.5,1088.5,24,318,1086,324,1092,320.5,1088.5,36,688,1086,696,1094,691.5,1089.5,64,165,1087,169,1093,166.5,1089.5,24,220,1087,224,1093,221.5,1089.5,24,1082,1087,1087,1090,1084,1088,15,875,1088,881,1094,877.5,1090.5,36,944,1088,950,1094,946.5,1090.5,36,673,1089,679,1095,675.5,1091.5,36,966,1089,974,1097,969.5,1092.5,64,458,1090,463,1093,460,1091,15,598,1090,603,1093,600,1091,15,537,1091,542,1094,539,1092,15,47,1092,53,1098,49.5,1094.5,36,1143,1093,1151,1101,1146.5,1096.5,64,848,1094,854,1100,850.5,1096.5,36,1030,1094,1036,1100,1032.5,1096.5,36,79,1095,85,1101,81.5,1097.5,36,431,1096,437,1102,433.5,1098.5,36,824,1096,829,1099,826,1097,15,152,1098,157,1101,154,1099,15,411,1098,415,1104,412.5,1100.5,24,921,1098,926,1101,923,1099,15,230,1099,235,1102,232,1100,15,661,1099,665,1105,662.5,1101.5,24,1056,1099,1064,1107,1059.5,1102.5,64,946,1100,950,1106,947.5,1102.5,24,165,1101,169,1107,166.5,1103.5,24,317,1101,323,1107,319.5,1103.5,36,607,1101,613,1107,609.5,1103.5,36,1044,1101,1048,1107,1045.5,1103.5,24,1106,1101,1114,1109,1109.5,1104.5,64,126,1103,130,1109,127.5,1105.5,24,508,1103,514,1109,510.5,1105.5,36,362,1104,368,1110,364.5,1106.5,36,715,1104,723,1112,718.5,1107.5,64,758,1104,766,1112,761.5,1107.5,64,1162,1104,1170,1112,1165.5,1107.5,64,277,1105,283,1111,279.5,1107.5,36,630,1105,634,1111,631.5,1107.5,24,866,1105,870,1111,867.5,1107.5,24,204,1106,212,1114,207.5,1109.5,64,561,1106,567,1112,563.5,1108.5,36,689,1108,697,1116,692.5,1111.5,64,884,1108,888,1114,885.5,1110.5,24,824,1109,828,1115,825.5,1111.5,24,992,1109,997,1112,994,1110,15,1028,1109,1036,1117,1031.5,1112.5,64,1128,1109,1132,1115,1129.5,1111.5,24,1177,1109,1183,1115,1179.5,1111.5,36,106,1110,111,1113,108,1111,15,402,1110,407,1113,404,1111,15,542,1110,546,1116,543.5,1112.5,24,155,1111,159,1117,156.5,1113.5,24,1148,1112,1153,1115,1150,1113,15,220,1113,228,1121,223.5,1116.5,64,386,1113,390,1119,387.5,1115.5,24,642,1113,650,1121,645.5,1116.5,64,186,1114,194,1122,189.5,1117.5,64,442,1114,448,1120,444.5,1116.5,36,745,1114,751,1120,747.5,1116.5,36,1091,1114,1099,1122,1094.5,1117.5,64,55,1115,59,1121,56.5,1117.5,24,74,1115,80,1121,76.5,1117.5,36,244,1115,252,1123,247.5,1118.5,64,604,1116,610,1122,606.5,1118.5,36,958,1116,962,1122,959.5,1118.5,24,1071,1116,1076,1119,1073,1117,15,299,1118,303,1124,300.5,1120.5,24,589,1118,594,1121,591,1119,15,765,1118,771,1124,767.5,1120.5,36,929,1119,937,1127,932.5,1122.5,64,139,1120,145,1126,141.5,1122.5,36,412,1120,420,1128,415.5,1123.5,64,992,1120,1000,1128,995.5,1123.5,64,1141,1121,1149,1129,1144.5,1124.5,64,33,1123,39,1129,35.5,1125.5,36,329,1123,337,1131,332.5,1126.5,64,788,1124,794,1130,790.5,1126.5,36,530,1126,536,1132,532.5,1128.5,36,548,1126,553,1129,550,1127,15,709,1126,715,1132,711.5,1128.5,36,369,1127,373,1133,370.5,1129.5,24,170,1128,174,1134,171.5,1130.5,24,204,1128,212,1136,207.5,1131.5,64,426,1129,432,1135,428.5,1131.5,36,315,1130,323,1138,318.5,1133.5,64,588,1130,592,1136,589.5,1132.5,24,50,1131,58,1139,53.5,1134.5,64,760,1132,766,1138,762.5,1134.5,36,1163,1132,1168,1135,1165,1133,15,821,1133,826,1136,823,1134,15,1127,1133,1133,1139,1129.5,1135.5,36,439,1134,443,1140,440.5,1136.5,24,472,1134,477,1137,474,1135,15,677,1134,681,1140,678.5,1136.5,24,387,1135,395,1143,390.5,1138.5,64,512,1135,518,1141,514.5,1137.5,36,945,1137,953,1145,948.5,1140.5,64,1041,1137,1047,1143,1043.5,1139.5,36,1115,1137,1121,1143,1117.5,1139.5,36,276,1138,280,1144,277.5,1140.5,24,227,1139,231,1145,228.5,1141.5,24,557,1139,562,1142,559,1140,15,971,1139,979,1147,974.5,1142.5,64,1005,1139,1013,1147,1008.5,1142.5,64,1180,1139,1185,1142,1182,1140,15,334,1140,340,1146,336.5,1142.5,36,1086,1140,1091,1143,1088,1141,15,529,1142,537,1150,532.5,1145.5,64,909,1142,913,1148,910.5,1144.5,24,87,1145,92,1148,89,1146,15,889,1145,894,1148,891,1146,15,1167,1145,1171,1151,1168.5,1147.5,24,188,1146,192,1152,189.5,1148.5,24,248,1146,252,1152,249.5,1148.5,24,427,1147,433,1153,429.5,1149.5,36,777,1147,782,1150,779,1148,15,260,1148,265,1151,262,1149,15,375,1148,381,1154,377.5,1150.5,36,1061,1148,1067,1154,1063.5,1150.5,36,651,1150,656,1153,653,1151,15,681,1150,685,1156,682.5,1152.5,24,988,1150,996,1158,991.5,1153.5,64,206,1151,210,1157,207.5,1153.5,24,223,1151,228,1154,225,1152,15,408,1152,416,1160,411.5,1155.5,64,575,1152,580,1155,577,1153,15,692,1152,696,1158,693.5,1154.5,24,28,1156,36,1164,31.5,1159.5,64,806,1156,814,1164,809.5,1159.5,64,333,1157,341,1165,336.5,1160.5,64,478,1157,483,1160,480,1158,15,851,1157,856,1160,853,1158,15,82,1158,86,1164,83.5,1160.5,24,614,1158,619,1161,616,1159,15,913,1158,919,1164,915.5,1160.5,36,1085,1158,1090,1161,1087,1159,15,392,1159,400,1167,395.5,1162.5,64,1096,1159,1104,1167,1099.5,1162.5,64,227,1160,233,1166,229.5,1162.5,36,793,1160,799,1166,795.5,1162.5,36,934,1160,939,1163,936,1161,15,958,1160,963,1163,960,1161,15,463,1162,471,1170,466.5,1165.5,64,564,1162,569,1165,566,1163,15,47,1163,53,1169,49.5,1165.5,36,60,1163,66,1169,62.5,1165.5,36,493,1164,497,1170,494.5,1166.5,24,503,1164,511,1172,506.5,1167.5,64,579,1164,587,1172,582.5,1167.5,64,901,1164,907,1170,903.5,1166.5,36,1008,1164,1013,1167,1010,1165,15,241,1165,245,1171,242.5,1167.5,24,646,1165,652,1171,648.5,1167.5,36,1114,1166,1122,1174,1117.5,1169.5,64,689,1167,695,1173,691.5,1169.5,36,547,1168,553,1174,549.5,1170.5,36,1155,1168,1163,1176,1158.5,1171.5,64,1038,1170,1042,1176,1039.5,1172.5,24,276,1171,284,1179,279.5,1174.5,64,199,1172,207,1180,202.5,1175.5,64,1075,1172,1081,1178,1077.5,1174.5,36,915,1173,920,1176,917,1174,15,1181,1173,1189,1181,1184.5,1176.5,64,14,1174,22,1182,17.5,1177.5,64,748,1174,752,1180,749.5,1176.5,24,981,1174,985,1180,982.5,1176.5,24,1000,1174,1006,1180,1002.5,1176.5,36,367,1175,371,1181,368.5,1177.5,24,127,1176,133,1182,129.5,1178.5,36,147,1177,153,1183,149.5,1179.5,36,775,1177,779,1183,776.5,1179.5,24,1023,1177,1028,1180,1025,1178,15,1091,1177,1096,1180,1093,1178,15,50,1178,58,1186,53.5,1181.5,64,220,1178,228,1186,223.5,1181.5,64,833,1178,838,1181,835,1179,15,410,1179,414,1185,411.5,1181.5,24,758,1179,762,1185,759.5,1181.5,24,954,1179,962,1187,957.5,1182.5,64,470,1180,475,1183,472,1181,15,506,1180,510,1186,507.5,1182.5,24,290,1181,298,1189,293.5,1184.5,64,102,1182,110,1190,105.5,1185.5,64,324,1182,332,1190,327.5,1185.5,64,1148,1182,1152,1188,1149.5,1184.5,24,732,1183,737,1186,734,1184,15,35,1184,39,1190,36.5,1186.5,24,482,1184,487,1187,484,1185,15,1039,1184,1045,1190,1041.5,1186.5,36];
-const _LAKE_COUNT_WHITEOUT = 538;
-const _MT_COUNT_WHITEOUT = 1929;
-
-// Active terrain references — reassigned by switchGame()
-let _TERRAIN_B64 = (_activeGame === 'whiteout') ? _TERRAIN_B64_WHITEOUT : _TERRAIN_B64_KINGSHOT;
-let _LAKE_META   = (_activeGame === 'whiteout') ? _LAKE_META_WHITEOUT   : _LAKE_META_KINGSHOT;
-let _MT_META     = (_activeGame === 'whiteout') ? _MT_META_WHITEOUT     : _MT_META_KINGSHOT;
-let _LAKE_COUNT  = (_activeGame === 'whiteout') ? _LAKE_COUNT_WHITEOUT  : _LAKE_COUNT_KINGSHOT;
-let _MT_COUNT    = (_activeGame === 'whiteout') ? _MT_COUNT_WHITEOUT    : _MT_COUNT_KINGSHOT;
+const _TERRAIN_B64 = _TERRAIN_B64_KINGSHOT;
+const _LAKE_META   = _LAKE_META_KINGSHOT;
+const _MT_META     = _MT_META_KINGSHOT;
+const _LAKE_COUNT  = _LAKE_COUNT_KINGSHOT;
+const _MT_COUNT    = _MT_COUNT_KINGSHOT;
 
 // Cell lookup Sets — populated async, used for placement checks & cell-level rendering
 const _lakeCells = new Set();
@@ -321,18 +266,6 @@ async function _decodeTerrain() {
   _terrainReady = false;
   _lakeCells.clear();
   _mtCells.clear();
-  if (!_TERRAIN_B64) {
-    // No terrain data for this game (e.g. WoS not yet supplied) — leave cells empty.
-    // Yield once so `_natBitmapDirty` (declared later at module top-level) is
-    // initialized before we write to it — otherwise the initial _decodeTerrain()
-    // call at module load would hit a TDZ ReferenceError when a WoS user loads
-    // the page with an empty terrain blob.
-    await Promise.resolve();
-    _terrainReady = true;
-    _natBitmapDirty = true;
-    scheduleDraw();
-    return;
-  }
   const bin = atob(_TERRAIN_B64);
   const compressed = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) compressed[i] = bin.charCodeAt(i);
@@ -428,82 +361,6 @@ function rebuildPermRects() {
 }
 rebuildPermRects();
 
-// ─────────────────────────────────────
-// GAME SWITCHING
-// ─────────────────────────────────────
-// Hooks fired after a game switch completes (HTML files push UI-refresh callbacks).
-const _onGameChangeHooks = [];
-function onGameChange(fn) { if (typeof fn === 'function') _onGameChangeHooks.push(fn); }
-
-async function switchGame(newGame) {
-  if (!SUPPORTED_GAMES.includes(newGame)) {
-    console.warn('switchGame: unsupported game id:', newGame);
-    return;
-  }
-  if (newGame === _activeGame) return;
-
-  // Persist current draft before swap so it's recoverable when user switches back
-  try { saveToStorage(); } catch(e) { /* localStorage may be unavailable */ }
-
-  _activeGame = newGame;
-  try { localStorage.setItem('activeGame', newGame); } catch(e) { /* expected */ }
-
-  // Swap active per-game references
-  ZONES                  = (newGame === 'whiteout') ? ZONES_WHITEOUT                  : ZONES_KINGSHOT;
-  RES_SUBTYPE_LABELS     = (newGame === 'whiteout') ? RES_SUBTYPE_LABELS_WHITEOUT     : RES_SUBTYPE_LABELS_KINGSHOT;
-  BUILDING_COLOR_OVERRIDES = (newGame === 'whiteout') ? BUILDING_COLOR_OVERRIDES_WHITEOUT : BUILDING_COLOR_OVERRIDES_KINGSHOT;
-  PERMANENT_BUILDINGS = (newGame === 'whiteout') ? PERMANENT_BUILDINGS_WHITEOUT : PERMANENT_BUILDINGS_KINGSHOT;
-  _TERRAIN_B64        = (newGame === 'whiteout') ? _TERRAIN_B64_WHITEOUT       : _TERRAIN_B64_KINGSHOT;
-  _LAKE_META          = (newGame === 'whiteout') ? _LAKE_META_WHITEOUT         : _LAKE_META_KINGSHOT;
-  _MT_META            = (newGame === 'whiteout') ? _MT_META_WHITEOUT           : _MT_META_KINGSHOT;
-  _LAKE_COUNT         = (newGame === 'whiteout') ? _LAKE_COUNT_WHITEOUT        : _LAKE_COUNT_KINGSHOT;
-  _MT_COUNT           = (newGame === 'whiteout') ? _MT_COUNT_WHITEOUT          : _MT_COUNT_KINGSHOT;
-  STORAGE_KEY         = (newGame === 'whiteout') ? 'whiteout-map-v1'           : 'kingshot-map-v1';
-  RES_DISMISSED_KEY   = (newGame === 'whiteout') ? 'whiteout-dismissed-resources' : 'kingshot-dismissed-resources';
-  BUILDING_LABEL_OVERRIDES = (newGame === 'whiteout')
-    ? BUILDING_LABEL_OVERRIDES_WHITEOUT
-    : BUILDING_LABEL_OVERRIDES_KINGSHOT;
-
-  // Rebuild permanent-building rect/cell caches against the new PERMANENT_BUILDINGS
-  rebuildPermRects();
-
-  // Reload dismissed resources set from new key
-  _dismissedResources = new Set();
-  try {
-    const raw = localStorage.getItem(RES_DISMISSED_KEY);
-    if (raw) _dismissedResources = new Set(JSON.parse(raw));
-  } catch(e) { /* expected */ }
-
-  // Reset state and reload user draft from new STORAGE_KEY
-  buildings = [];
-  placementSeq = 0;
-  _history = [];
-  _future = [];
-  _canonicalResources = [];
-  loadFromStorage();  // pulls draft from new STORAGE_KEY (no-op if absent)
-
-  // Re-decode terrain for new game (may be empty for games without a supplied blob)
-  try { await _decodeTerrain(); } catch(e) { console.warn('terrain decode failed:', e); }
-
-  // Invalidate render caches
-  _gridDirty = true;
-  _natBitmapDirty = true;
-  if (typeof invalidateTset === 'function') invalidateTset();
-  if (typeof invalidateBuildings === 'function') invalidateBuildings();
-
-  // Fetch canonical resources for the new game
-  try { await fetchAndMergeCanonical(); } catch(e) { /* network may fail; UI still works */ }
-
-  // Notify subsystems
-  try { window._boReloadLabels && window._boReloadLabels(); } catch(e) {}
-  for (const hook of _onGameChangeHooks) {
-    try { hook(newGame); } catch(e) { console.warn('game-change hook failed:', e); }
-  }
-
-  if (typeof updatePlacedList === 'function') updatePlacedList();
-  scheduleDraw();
-}
-
 function _rectOverlap(ax1,ay1,ax2,ay2, bx1,by1,bx2,by2) {
   return ax1 < bx2 && ax2 > bx1 && ay1 < by2 && ay2 > by1;
 }
@@ -566,7 +423,7 @@ function inEnemyTerritory(gx, gy, size, label) {
 // STATE
 // ─────────────────────────────────────
 let buildings    = [];
-let selectedType = 'city';
+let selectedType = 'banner';
 let tool         = 'place';
 let hoverCell    = null;
 let selectedId   = null;
@@ -589,10 +446,8 @@ function _genId() { return 'u' + (++_nextUserId); }
 // ─────────────────────────────────────
 // HISTORY (undo/redo) + PERSISTENCE
 // ─────────────────────────────────────
-// Active localStorage keys — reassigned by switchGame() based on _activeGame.
-// Kingshot keys preserved as-is for backwards compatibility with existing drafts.
-let STORAGE_KEY  = (_activeGame === 'whiteout') ? 'whiteout-map-v1'              : 'kingshot-map-v1';
-let RES_DISMISSED_KEY = (_activeGame === 'whiteout') ? 'whiteout-dismissed-resources' : 'kingshot-dismissed-resources';
+const STORAGE_KEY  = 'kingshot-map-v1';
+const RES_DISMISSED_KEY = 'kingshot-dismissed-resources';
 const MAX_HISTORY  = 50;
 let _history = [];
 let _future  = [];
@@ -801,7 +656,6 @@ function _buildPermColors(arr) {
   }
 }
 _buildPermColors(PERMANENT_BUILDINGS_KINGSHOT);
-_buildPermColors(PERMANENT_BUILDINGS_WHITEOUT);
 
 // Reusable corner buffer to avoid allocations in hot path
 const _cornerBuf = [{sx:0,sy:0},{sx:0,sy:0},{sx:0,sy:0},{sx:0,sy:0}];
@@ -817,8 +671,18 @@ let currentOwnerMap = new Map(); // cellInt → alliance label
 const _allianceColorCache = Object.create(null);
 function _escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
+// Fixed alliance colours (e.g. from kor-layout.js) win over the hashed hue.
+const ALLIANCE_COLOR_OVERRIDES = (typeof window !== 'undefined' && window.KOR_LAYOUT && window.KOR_LAYOUT.meta
+  && window.KOR_LAYOUT.meta.allianceColors) || {};
+
 function allianceColors(label) {
   if (_allianceColorCache[label]) return _allianceColorCache[label];
+  const hex = ALLIANCE_COLOR_OVERRIDES[label];
+  if (hex && /^#[0-9a-f]{6}$/i.test(hex)) {
+    const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+    const dim = k => `rgb(${Math.round(r * k)},${Math.round(g * k)},${Math.round(b * k)})`;
+    return (_allianceColorCache[label] = { fill: dim(0.55), border: dim(0.9), swatch: hex });
+  }
   let h = 5381;
   for (let i = 0; i < label.length; i++) h = ((h << 5) + h + label.charCodeAt(i)) & 0x7fffffff;
   const hue = Math.floor((h * 137.508) % 360);
@@ -1047,12 +911,9 @@ function buildOwnershipMap(bldgs) {
     for (let a = 0; a < allianceList.length; a++) {
       const grp = allianceList[a];
       if (!grp.hqs.length) {
-        // No HQ: every banner in this alliance is orphan.
-        for (let k = 0; k < grp.banners.length; k++) {
-          const bi = grp.banners[k];
-          terri[bi]._orphan = true;
-          _markOrphanCells(bi);
-        }
+        // No HQ on the map: the HQ may lie outside the mapped area, so don't
+        // flag these banners as orphans.
+        for (let k = 0; k < grp.banners.length; k++) terri[grp.banners[k]]._orphan = false;
         continue;
       }
 
@@ -1272,8 +1133,8 @@ function _drawTerrainLabels() {
     }
     ctx.shadowBlur = 0;
   }
-  if (_terrainShowLakes) _lbl(_LAKE_META, 'Lake', 'rgba(100,190,255,0.88)', 20);
-  if (_terrainShowMts)   _lbl(_MT_META, 'Mountain', 'rgba(190,150,90,0.88)', 20);
+  if (_terrainShowLakes) _lbl(_LAKE_META, '호수', 'rgba(100,190,255,0.88)', 20);
+  if (_terrainShowMts)   _lbl(_MT_META, '산', 'rgba(190,150,90,0.88)', 20);
 }
 
 function _drawBuildingsLayer(c) {
@@ -1433,6 +1294,7 @@ function _isGenericLabel(lbl) {
   const t = lbl.trim();
   if (!t) return true;
   if (t === 'Banner' || t === 'Alliance HQ') return true;
+  if (t === '깃발' || t === '연맹 본부') return true;
   return false;
 }
 
@@ -1552,10 +1414,7 @@ self.onmessage = function (e) {
 
   for (let a = 0; a < allianceList.length; a++) {
     const grp = allianceList[a];
-    if (!grp.hqs.length) {
-      for (let k = 0; k < grp.banners.length; k++) _markOrphan(grp.banners[k]);
-      continue;
-    }
+    if (!grp.hqs.length) continue;   // HQ may lie outside the mapped area — not orphans
     queue.length = 0;
     for (let k = 0; k < grp.hqs.length; k++) _admit(grp.hqs[k]);
 
@@ -2015,13 +1874,8 @@ function _refloodAllianceForIncremental(label, terri) {
   }
 
   if (!hqs.length) {
-    // No HQ: all banners are orphan.
-    for (let i = 0; i < banners.length; i++) {
-      const b = banners[i];
-      b._orphan = true;
-      const owned = ownedByBldg.get(b);
-      if (owned) for (const ci of owned) _currentOrphanCells.add(ci);
-    }
+    // No HQ on the map: the HQ may lie outside the mapped area — not orphans.
+    for (let i = 0; i < banners.length; i++) banners[i]._orphan = false;
     return;
   }
 
@@ -2340,8 +2194,8 @@ function drawGrid(c) {
     ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.shadowColor='#000'; ctx.shadowBlur=4; ctx.fillText(t,p.sx,p.sy); ctx.restore();
   }
-  lbl(0,0,'0,0 S','#c9a84c'); lbl(1199,1199,'1199,1199 N','#c9a84c');
-  lbl(1199,0,'E','#aaaaaa');  lbl(0,1199,'W','#aaaaaa');
+  lbl(0,0,'0,0 남','#c9a84c'); lbl(1199,1199,'1199,1199 북','#c9a84c');
+  lbl(1199,0,'동','#aaaaaa');  lbl(0,1199,'서','#aaaaaa');
   if (c) ctx = _ctx; // restore global ctx
 }
 
@@ -2461,13 +2315,13 @@ function drawNaturalTerrain(c) {
   if (_terrainShowLakes) {
     if (detailed) _drawCells(_lakeCells, 'rgba(30,90,170,0.35)');
     else _drawBlobs(_LAKE_META, 'rgba(30,90,170,0.35)');
-    if (camScale >= 0.5) _drawLabels(_LAKE_META, 'Lake', 'rgba(100,190,255,0.88)', 20);
+    if (camScale >= 0.5) _drawLabels(_LAKE_META, '호수', 'rgba(100,190,255,0.88)', 20);
   }
 
   if (_terrainShowMts) {
     if (detailed) _drawCells(_mtCells, 'rgba(110,75,35,0.38)');
     else _drawBlobs(_MT_META, 'rgba(110,75,35,0.38)');
-    if (camScale >= 0.5) _drawLabels(_MT_META, 'Mountain', 'rgba(190,150,90,0.88)', 20);
+    if (camScale >= 0.5) _drawLabels(_MT_META, '산', 'rgba(190,150,90,0.88)', 20);
   }
 
   if (c) ctx = _ctx;
@@ -2521,7 +2375,7 @@ function drawCastleOverlay(c) {
     ctx.fillStyle = '#c9a84c';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     if (camScale > 0.15) { ctx.shadowColor = '#000'; ctx.shadowBlur = 4; }
-    ctx.fillText(s.label, cx, cy);
+    ctx.fillText(koName(s.label), cx, cy);
     ctx.restore();
   }
   if (c) ctx = _ctx;
@@ -2580,7 +2434,7 @@ function drawPermanentBuildings(c) {
         ctx.fillStyle = '#fff';
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         if (camScale > 0.15) { ctx.shadowColor = '#000'; ctx.shadowBlur = 5; }
-        ctx.fillText(b.label, cx, cy);
+        ctx.fillText(koName(b.label), cx, cy);
         ctx.restore();
       }
     }
@@ -2650,14 +2504,14 @@ function drawBuilding(b, c) {
 
     if (b.label || _bearOverride || _hvCityMulti) {
       const fs=Math.max(10,Math.min(15,def.size*CELL*camScale*0.26));
-      const displayLabel = _bearOverride || b.label || '';
+      const displayLabel = _bearOverride || koName(b.label) || '';
 
       if (_hvCityMulti) {
         // Multi-line centered render: [label?, "B1: Xs", "B2: Xs"]. Skip
         // diamond clip — the hive-view scene clip in _drawImmediate already
         // bounds the drawing to the bbox.
         const lines = [];
-        if (b.label) lines.push(b.label);
+        if (b.label) lines.push(koName(b.label));
         lines.push(`B1: ${_cityTimes.b1}s`);
         if (_cityTimes.b2 != null) lines.push(`B2: ${_cityTimes.b2}s`);
         const lineH = fs * 1.15;
@@ -2881,12 +2735,12 @@ function placeBuilding(gx,gy) {
   if (trimmedLabel && !_isGenericLabel(trimmedLabel) && (actualType === 'banner' || actualType === 'hq')) {
     const sameLabel = buildings.filter(b => !b._canonical && b.type === actualType && (b.label||'').trim() === trimmedLabel && !_isGenericLabel((b.label||'').trim()));
     if (actualType === 'banner' && sameLabel.length >= 285) {
-      if (!_suppressPlacementWarnings && !confirm(`Alliance "${trimmedLabel}" already has 285 banners. Place anyway?\n\n(Tip: check "Don't show warnings" in the Place tab to suppress these)`)) return;
+      if (!_suppressPlacementWarnings && !confirm(`연맹 "${trimmedLabel}"에 이미 깃발이 285개 있습니다. 그래도 배치하시겠습니까?\n\n(팁: 배치 탭에서 경고 표시 안 함을 체크하면 이 메시지가 나오지 않습니다)`)) return;
       _overLimit = true;
     }
     if (actualType === 'hq') {
       if (sameLabel.length >= 2) {
-        if (!_suppressPlacementWarnings && !confirm(`Alliance "${trimmedLabel}" already has 2 HQs. Place anyway?\n\n(Tip: check "Don't show warnings" in the Place tab to suppress these)`)) return;
+        if (!_suppressPlacementWarnings && !confirm(`연맹 "${trimmedLabel}"에 이미 본부가 2개 있습니다. 그래도 배치하시겠습니까?\n\n(팁: 배치 탭에서 경고 표시 안 함을 체크하면 이 메시지가 나오지 않습니다)`)) return;
         _overLimit = true;
       } else {
         // Per-zone HQ check (only badlands/plains valid)
@@ -2895,7 +2749,7 @@ function placeBuilding(gx,gy) {
           const eDef = BUILDING_DEFS[existing.type];
           const existingZone = _zoneAt(existing.gx + Math.floor(eDef.size/2), existing.gy + Math.floor(eDef.size/2));
           if (newZone === existingZone) {
-            if (!_suppressPlacementWarnings && !confirm(`Alliance "${trimmedLabel}" already has an HQ in ${newZone}. Place anyway?\n\n(Tip: check "Don't show warnings" in the Place tab to suppress these)`)) return;
+            if (!_suppressPlacementWarnings && !confirm(`연맹 "${trimmedLabel}"은(는) 이미 ${koName(newZone)}에 본부가 있습니다. 그래도 배치하시겠습니까?\n\n(팁: 배치 탭에서 경고 표시 안 함을 체크하면 이 메시지가 나오지 않습니다)`)) return;
             _overLimit = true;
             break;
           }
@@ -2909,7 +2763,7 @@ function placeBuilding(gx,gy) {
     const allySame = buildings.filter(b => !b._canonical && (b.label||'').trim() === trimmedLabel);
     const hasHQ = allySame.some(b => b.type === 'hq');
     if (!hasHQ) {
-      if (!_suppressPlacementWarnings) alert(`Alliance "${trimmedLabel}" has no HQ. Place an HQ first before placing banners.`);
+      if (!_suppressPlacementWarnings) alert(`연맹 "${trimmedLabel}"에 본부가 없습니다. 깃발을 배치하기 전에 먼저 본부를 배치하세요.`);
       return;
     }
     // Check 8-adjacency to existing valid alliance territory
@@ -2938,7 +2792,7 @@ function placeBuilding(gx,gy) {
         if (allyValidCells.has(x * 1200 + y)) { connected = true; break outer; }
       }
     if (!connected) {
-      if (!_suppressPlacementWarnings && !confirm(`This banner is disconnected from any HQ for alliance "${trimmedLabel}". Place as invalid?`)) return;
+      if (!_suppressPlacementWarnings && !confirm(`이 깃발은 연맹 "${trimmedLabel}"의 어떤 본부와도 연결되어 있지 않습니다. 무효 깃발로 배치하시겠습니까?`)) return;
       _orphan = true;
     }
   }
@@ -3009,14 +2863,14 @@ function selectBuilding(id) {
   if (b && b._canonical) {
     _elShow('editPanelUser', false);
     _elShow('editPanelCanonical', true);
-    _elText('editSectionTitle', 'Validated Resource Node');
+    _elText('editSectionTitle', '검증된 자원지');
     const def = BUILDING_DEFS[b.type] || BUILDING_DEFS.resource;
-    _elText('canonicalTitle', `${b.label} @ ${b.gx},${b.gy}`);
-    _elText('canonicalCoordInfo', `Type: ${RES_SUBTYPE_LABELS[b.type] || def.label} · Size: ${def.size}×${def.size}`);
+    _elText('canonicalTitle', `${koName(b.label)} @ ${b.gx},${b.gy}`);
+    _elText('canonicalCoordInfo', `종류: ${koName(RES_SUBTYPE_LABELS[b.type] || def.label)} · 크기: ${def.size}×${def.size}`);
   } else {
     _elShow('editPanelUser', true);
     _elShow('editPanelCanonical', false);
-    _elText('editSectionTitle', 'Edit Selected');
+    _elText('editSectionTitle', '선택 항목 편집');
     syncEditPanel(b);
   }
   _elShow('editSection', 'flex');
@@ -3076,7 +2930,7 @@ function commitEraseRect(gx, gy) {
   if (!toDelete.length) return;
   
   if (!_suppressPlacementWarnings) {
-    if (!confirm(`Delete ${toDelete.length} building(s) in area (${x1},${y1}) to (${x2},${y2})?`)) return;
+    if (!confirm(`영역 (${x1},${y1}) ~ (${x2},${y2})의 건물 ${toDelete.length}개를 삭제하시겠습니까?`)) return;
   }
   
   // Single history entry for the whole batch
@@ -3218,8 +3072,8 @@ function commitMultiMove() {
 
   // Confirm if any buildings will be lost
   if (doomed.length) {
-    let msg = `Move ${survived.length} building(s) by (${dx}, ${dy}).`;
-    msg += `\n${doomed.length} selected building(s) will be DELETED (overlap with existing buildings or restricted space).`;
+    let msg = `건물 ${survived.length}개를 (${dx}, ${dy})만큼 이동합니다.`;
+    msg += `\n선택한 건물 중 ${doomed.length}개는 삭제됩니다 (기존 건물 또는 배치 제한 구역과 겹침).`;
     if (!_suppressPlacementWarnings && !confirm(msg)) {
       undo();
       clearMultiSelect();
@@ -3425,7 +3279,7 @@ function syncEditPanel(b) {
   if (!b) return;
   const def=BUILDING_DEFS[b.type];
   if (!def) return;
-  _el('editTitle').textContent=`${def.label} @ ${b.gx},${b.gy}`;
+  _el('editTitle').textContent=`${koName(def.label)} @ ${b.gx},${b.gy}`;
   const isResType = RESOURCE_SUBTYPES.includes(b.type) || b.type === 'resource';
   { var _e=_el('editLabel'); if(_e) _e.style.display=isResType ? 'none' : ''; }
   const resLabelEl = _el('editResLabel');
@@ -3441,7 +3295,7 @@ function syncEditPanel(b) {
   }
   if (editColorEl) editColorEl.value=b.color||defaultColorOf(b.type);
   { var _e=_el('editType'); if(_e) _e.value=b.type; }
-  _elText('editCoordInfo', `Size: ${def.size}×${def.size}`+(def.territory?` · Territory: ${def.territory}×${def.territory}`:''))
+  _elText('editCoordInfo', `크기: ${def.size}×${def.size}`+(def.territory?` · 영토: ${def.territory}×${def.territory}`:''))
 }
 
 function applyEdit() {
@@ -3553,9 +3407,9 @@ function setTool(t) {
   _el('labelSection').style.display = t==='place'?'flex':'none';
   // editSection visibility is controlled only by selectBuilding/deselectBuilding — NOT here
   const hints={
-    place: '[D] Drop building  |  Left-click to place  |  Scroll: zoom  |  Alt+drag: pan',
-    select:'[S] Select  |  Click to select  |  Drag to move  |  Right-click to erase  |  Double-click to rename',
-    erase: '[E] Erase  |  Left-click single  |  Right-click: rectangle erase  |  Esc: cancel rect',
+    place: '[D] 건물 배치  |  좌클릭: 배치  |  드래그: 지도 이동  |  스크롤: 확대/축소',
+    select:'[S] 선택  |  클릭: 선택  |  건물 드래그: 옮기기  |  빈 곳 드래그: 지도 이동  |  Shift+드래그: 다중 선택  |  우클릭: 지우기',
+    erase: '[E] 지우기  |  좌클릭: 하나 지우기  |  드래그: 지도 이동  |  우클릭: 사각형 영역 지우기',
   };
   _el('hintText').textContent=hints[t];
   canvas.style.cursor=getCursor();
@@ -3644,13 +3498,13 @@ function updateAllianceLegend() {
     legend.innerHTML = sorted.map(([label, info]) => { label = _escHtml(label);
       const { swatch } = allianceColors(label);
       const parts = [];
-      if (info.hq)      parts.push(`${info.hq} HQ`);
-      if (info.banners) parts.push(`${info.banners} banner${info.banners !== 1 ? 's' : ''}`);
-      if (info.cities)  parts.push(`${info.cities} cit${info.cities !== 1 ? 'ies' : 'y'}`);
+      if (info.hq)      parts.push(`본부 ${info.hq}`);
+      if (info.banners) parts.push(`깃발 ${info.banners}`);
+      if (info.cities)  parts.push(`도시 ${info.cities}`);
       return `<div class="zone-legend-item" style="justify-content:space-between;width:100%">
         <div style="display:flex;align-items:center;gap:7px">
           <div class="zone-legend-dot" style="background:${swatch};border-color:${swatch}"></div>
-          <span style="color:var(--text);font-weight:500">${label}</span>
+          <span style="color:var(--text);font-weight:500">${koName(label)}</span>
         </div>
         <span style="font-size:0.68rem;color:var(--text-dim);white-space:nowrap">${parts.join(' · ')}</span>
       </div>`;
@@ -3732,7 +3586,7 @@ function updatePlacedList() {
 
     const name = document.createElement('span');
     name.className = 'placed-name';
-    name.textContent = b.label;
+    name.textContent = koName(b.label);
 
     const coord = document.createElement('span');
     coord.className = 'placed-coord';
@@ -3740,7 +3594,7 @@ function updatePlacedList() {
 
     const del = document.createElement('button');
     del.className = 'del';
-    del.title = 'Remove';
+    del.title = '삭제';
     del.textContent = '×';
     del.addEventListener('click', ev => { ev.stopPropagation(); removeBuilding(b.id); });
 
@@ -3767,17 +3621,17 @@ function openExport() {
   let content;
   if (buildings.length === 0) {
     content = [
-      '# Kingshot Territory Planner — CSV Template',
-      '# Format: type,X,Y,label,#color  (label and color are optional)',
-      '# Valid types and default colors:',
+      '# 킹샷 영토 플래너 — CSV 템플릿',
+      '# 형식: type,X,Y,label,#color  (label과 color는 선택 사항)',
+      '# 사용 가능한 type과 기본 색상:',
       ...Object.entries(BUILDING_DEFS).map(([k,d]) =>
-        `# ${k},,, ${d.label},${d.defaultColor}  (${d.size}×${d.size}${d.territory?` +${d.territory}×${d.territory} territory`:''})`
+        `# ${k},,, ${d.label},${d.defaultColor}  (${d.size}×${d.size}${d.territory?` +${d.territory}×${d.territory} 영토`:''})`
       ),
       '#',
-      '# Example rows (remove # to use):',
-      '# city,100,100,Main City,#e8a838',
+      '# 예시 행 (사용하려면 앞의 #을 지우세요):',
+      '# city,100,100,메인 도시,#e8a838',
       '# hq,300,300,Alliance HQ,#9b59b6',
-      '# banner,200,200,North Banner,#5a9e5a',
+      '# banner,200,200,북쪽 깃발,#5a9e5a',
     ].join('\n');
   } else {
     content = buildings.filter(b => !b._canonical).map(b=>[b.type,b.gx,b.gy,b.label.replace(/,/g,'|'),b.color,b.seq||0].join(',')).join('\n');
@@ -3787,7 +3641,7 @@ function openExport() {
 }
 function closeExport() { _el('exportModal')?.classList.remove('open'); }
 function confirmClearAll() {
-  if (!confirm('Clear all placed buildings and start fresh?\n\nThis will also remove your cloud map link so you can publish a new one.\nValidated resource nodes will remain.')) return;
+  if (!confirm('배치한 건물을 모두 삭제하고 새로 시작하시겠습니까?\n\n클라우드 지도 링크도 함께 제거되어 새로 게시할 수 있습니다.\n검증된 자원지는 유지됩니다.')) return;
   try {
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem('kingshot-cloud-id');
@@ -3803,8 +3657,8 @@ function confirmClearAll() {
 }
 function copyExport() {
   const t=_el('exportText'); t.select(); document.execCommand('copy');
-  const btn=_el('copyBtn'); btn.textContent='Copied ✓';
-  setTimeout(()=>btn.textContent='Copy to Clipboard',1600);
+  const btn=_el('copyBtn'); btn.textContent='복사됨 ✓';
+  setTimeout(()=>btn.textContent='클립보드에 복사',1600);
 }
 
 function downloadExport() {
@@ -3941,7 +3795,7 @@ function _renderShareState(){
     _el('shareReadUrl').value = readUrl;
     _el('shareTokenDisplay').value = token;
     _el('shareTokenDisplay').type = 'password';
-    _el('tokenToggleBtn').textContent = 'Show';
+    _el('tokenToggleBtn').textContent = '보기';
     _el('shareStateOwner').style.display = 'block';
   } else {
     // Reader who loaded via ?map=
@@ -3961,13 +3815,13 @@ function closeShare(){ _el('shareModal')?.classList.remove('open'); }
 function toggleTokenVisibility(){
   const inp=_el('shareTokenDisplay');
   const btn=_el('tokenToggleBtn');
-  if(inp.type==='password'){ inp.type='text'; btn.textContent='Hide'; }
-  else { inp.type='password'; btn.textContent='Show'; }
+  if(inp.type==='password'){ inp.type='text'; btn.textContent='숨기기'; }
+  else { inp.type='password'; btn.textContent='보기'; }
 }
 function copyShareUrl(){
   const el=_el('shareReadUrl'); el.select(); document.execCommand('copy');
-  const btn=_el('shareCopyBtn'); btn.textContent='Copied ✓';
-  setTimeout(()=>btn.textContent='Copy',1600);
+  const btn=_el('shareCopyBtn'); btn.textContent='복사됨 ✓';
+  setTimeout(()=>btn.textContent='복사',1600);
 }
 function copyShareUrlReader(){
   const el=_el('shareReadUrlReader'); el.select(); document.execCommand('copy');
@@ -3975,16 +3829,16 @@ function copyShareUrlReader(){
 function copyToken(){
   const el=_el('shareTokenDisplay');
   const t=el.type; el.type='text'; el.select(); document.execCommand('copy'); el.type=t;
-  setShareStatus('Token copied','var(--green)');
+  setShareStatus('토큰이 복사되었습니다','var(--green)');
 }
 
 // ── API calls ──────────────────────────────────────────
 async function publishMap(){
   const workerUrl=getWorkerUrl();
-  if(!workerUrl){ setShareStatus('Set worker URL first','var(--red)'); return; }
-  if(!buildings.length){ setShareStatus('No buildings to publish','var(--red)'); return; }
+  if(!workerUrl){ setShareStatus('먼저 워커 URL을 설정하세요','var(--red)'); return; }
+  if(!buildings.length){ setShareStatus('게시할 건물이 없습니다','var(--red)'); return; }
   const btn=_el('publishBtn');
-  btn.disabled=true; btn.textContent='Publishing…';
+  btn.disabled=true; btn.textContent='게시 중…';
   setShareStatus('');
   try{
     const csv=buildingsToCSV(buildings);
@@ -3996,16 +3850,16 @@ async function publishMap(){
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({csv, game: _activeGame})
     });
-    if(!resp.ok) throw new Error(`Server error ${resp.status}`);
+    if(!resp.ok) throw new Error(`서버 오류 ${resp.status}`);
     const data=await resp.json();
     localStorage.setItem(CLOUD_ID_KEY, data.id);
     localStorage.setItem(CLOUD_TOKEN_KEY, data.token);
-    setShareStatus(`Published ✓  Map ID: ${data.id}`,'var(--green)');
+    setShareStatus(`게시 완료 ✓  지도 ID: ${data.id}`,'var(--green)');
     _renderShareState();
   }catch(e){
-    setShareStatus('Publish failed: '+e.message,'var(--red)');
+    setShareStatus('게시 실패: '+e.message,'var(--red)');
   }finally{
-    btn.disabled=false; btn.textContent='☁ Publish Map';
+    btn.disabled=false; btn.textContent='☁ 지도 게시';
   }
 }
 
@@ -4013,9 +3867,9 @@ async function updateMap(){
   const workerUrl=getWorkerUrl();
   const mapId=localStorage.getItem(CLOUD_ID_KEY);
   const token=localStorage.getItem(CLOUD_TOKEN_KEY);
-  if(!workerUrl||!mapId||!token){ setShareStatus('Not published or no token','var(--red)'); return; }
+  if(!workerUrl||!mapId||!token){ setShareStatus('게시되지 않았거나 토큰이 없습니다','var(--red)'); return; }
   const btn=_el('updateBtn');
-  btn.disabled=true; btn.textContent='Pushing…';
+  btn.disabled=true; btn.textContent='업데이트 중…';
   setShareStatus('');
   try{
     const csv=buildingsToCSV(buildings);
@@ -4024,20 +3878,20 @@ async function updateMap(){
       headers:{'Content-Type':'application/json','X-Edit-Token':token},
       body:JSON.stringify({csv})
     });
-    if(resp.status===403) throw new Error('Invalid token — you may not own this map');
-    if(!resp.ok) throw new Error(`Server error ${resp.status}`);
+    if(resp.status===403) throw new Error('유효하지 않은 토큰입니다 — 이 지도의 소유자가 아닐 수 있습니다');
+    if(!resp.ok) throw new Error(`서버 오류 ${resp.status}`);
     const data=await resp.json();
     const d=new Date(data.updatedAt);
-    setShareStatus(`Updated ✓  ${d.toLocaleTimeString()}`,'var(--green)');
+    setShareStatus(`업데이트 완료 ✓  ${d.toLocaleTimeString()}`,'var(--green)');
   }catch(e){
-    setShareStatus('Update failed: '+e.message,'var(--red)');
+    setShareStatus('업데이트 실패: '+e.message,'var(--red)');
   }finally{
-    btn.disabled=false; btn.textContent='↑ Push Update';
+    btn.disabled=false; btn.textContent='↑ 업데이트 반영';
   }
 }
 
 async function unpublishMap(){
-  if(!confirm('Delete this map from the cloud? The read link will stop working.')) return;
+  if(!confirm('클라우드에서 이 지도를 삭제하시겠습니까? 읽기 링크가 더 이상 작동하지 않습니다.')) return;
   const workerUrl=getWorkerUrl();
   const mapId=localStorage.getItem(CLOUD_ID_KEY);
   const token=localStorage.getItem(CLOUD_TOKEN_KEY);
@@ -4046,22 +3900,22 @@ async function unpublishMap(){
     const resp=await fetch(`${workerUrl}/map/${mapId}`,{
       method:'DELETE',headers:{'X-Edit-Token':token}
     });
-    if(resp.status===403) throw new Error('Invalid token');
-    if(!resp.ok&&resp.status!==404) throw new Error(`Server error ${resp.status}`);
+    if(resp.status===403) throw new Error('유효하지 않은 토큰입니다');
+    if(!resp.ok&&resp.status!==404) throw new Error(`서버 오류 ${resp.status}`);
     localStorage.removeItem(CLOUD_ID_KEY);
     localStorage.removeItem(CLOUD_TOKEN_KEY);
-    setShareStatus('Map unpublished','var(--text-dim)');
+    setShareStatus('지도 게시가 취소되었습니다','var(--text-dim)');
     _renderShareState();
   }catch(e){
-    setShareStatus('Failed: '+e.message,'var(--red)');
+    setShareStatus('실패: '+e.message,'var(--red)');
   }
 }
 
 function claimToken(){
   const token=_el('claimTokenInput').value.trim();
-  if(!token){ setShareStatus('Enter a token','var(--red)'); return; }
+  if(!token){ setShareStatus('토큰을 입력하세요','var(--red)'); return; }
   localStorage.setItem(CLOUD_TOKEN_KEY, token);
-  setShareStatus('Token saved — you can now push updates','var(--green)');
+  setShareStatus('토큰이 저장되었습니다 — 이제 업데이트를 반영할 수 있습니다','var(--green)');
   setTimeout(()=>{ _renderShareState(); setShareStatus(''); }, 800);
 }
 
@@ -4084,13 +3938,6 @@ async function checkUrlShare(){
       const resp=await fetch(`${workerUrl}/map/${mapId}`);
       if(!resp.ok) throw new Error(`Map not found (${resp.status})`);
       const data=await resp.json();
-      // If the map was published for a different game, switch mode FIRST so terrain,
-      // permanent buildings, and canonical resources match before we load the CSV.
-      // Untagged records default to 'kingshot' (worker handles this).
-      const mapGame = data.game || 'kingshot';
-      if (mapGame !== _activeGame && SUPPORTED_GAMES.includes(mapGame)) {
-        await switchGame(mapGame);
-      }
       const bldgs=csvToBuildings(data.csv);
       if(bldgs.length){
         pushHistory();
@@ -4166,7 +4013,7 @@ function handleCsvFile(input) {
     _el('importText').value = e.target.result;
     _el('importError').textContent = '';
     _el('csvDropZone').style.borderColor = 'var(--green)';
-    _el('csvDropZone').textContent = `✓ ${file.name} loaded — click Import to apply`;
+    _el('csvDropZone').textContent = `✓ ${file.name} 불러옴 — 가져오기를 눌러 적용하세요`;
   };
   reader.readAsText(file);
 }
@@ -4192,13 +4039,13 @@ function doImport() {
     line=line.trim();
     if (!line||line.startsWith('#')) return;
     const parts=line.split(',');
-    if (parts.length<3) { errors.push(`Line ${i+1}: too few columns`); return; }
+    if (parts.length<3) { errors.push(`${i+1}번째 줄: 열 개수가 부족합니다`); return; }
     const [typeRaw,xRaw,yRaw,labelRaw,colorRaw,seqRaw]=parts;
     const t=typeRaw.trim().toLowerCase();
-    if (!validTypes.includes(t)) { errors.push(`Line ${i+1}: unknown type "${t}"`); return; }
+    if (!validTypes.includes(t)) { errors.push(`${i+1}번째 줄: 알 수 없는 종류 "${t}"`); return; }
     const gx=parseInt(xRaw), gy=parseInt(yRaw);
     if (isNaN(gx)||isNaN(gy)||gx<0||gx>=GRID_SIZE||gy<0||gy>=GRID_SIZE) {
-      errors.push(`Line ${i+1}: invalid coords (${xRaw},${yRaw})`); return;
+      errors.push(`${i+1}번째 줄: 잘못된 좌표 (${xRaw},${yRaw})`); return;
     }
     const label=(labelRaw||'').trim().replace(/\|/g,',')||BUILDING_DEFS[t].label;
     const colorRaw2=(colorRaw||'').trim();
@@ -4239,7 +4086,7 @@ function doImport() {
   saveToStorage();
   if (skipped.length) {
     _el('importError').textContent =
-      `Imported with ${skipped.length} overlap(s) skipped: ${skipped.slice(0,3).join(', ')}${skipped.length>3?' …':''}`;
+      `가져오기 완료 — 겹치는 ${skipped.length}개 건너뜀: ${skipped.slice(0,3).join(', ')}${skipped.length>3?' …':''}`;
     updatePlacedList(); draw();
     return;
   }
@@ -4271,7 +4118,7 @@ function openTrapOptimizer() {
   // Show inline panel (not a modal) so the user can interact with the map
   const panel = _el('optimizerAreaPanel');
   if (panel) panel.style.display = 'block';
-  _elText('optAreaCoords', 'Drag a rectangle on the map, or type coordinates below.');
+  _elText('optAreaCoords', '지도에서 사각형을 드래그하거나 아래에 좌표를 입력하세요.');
   _elText('optAreaError', '');
   if (canvas) canvas.style.cursor = 'crosshair';
   draw();
@@ -4302,7 +4149,7 @@ function _optAreaConfirm() {
     const x2 = parseInt((_el('optAreaX2')||{}).value, 10);
     const y2 = parseInt((_el('optAreaY2')||{}).value, 10);
     if ([x1,y1,x2,y2].some(v => isNaN(v) || v < 0 || v >= GRID_SIZE)) {
-      _elText('optAreaError', 'Invalid coordinates. Each must be 0–1199.');
+      _elText('optAreaError', '잘못된 좌표입니다. 각 값은 0–1199 사이여야 합니다.');
       return;
     }
     _optArea = { x1: Math.min(x1,x2), y1: Math.min(y1,y2), x2: Math.max(x1,x2), y2: Math.max(y1,y2) };
@@ -4311,7 +4158,7 @@ function _optAreaConfirm() {
   const insideBuildings = _optBuildingsInArea();
   const blockers = insideBuildings.filter(b => b.type === 'beartrap' || b.type === 'obs1' || b.type === 'obs2' || b.type === 'obs3');
   if (blockers.length) {
-    _elText('optAreaError', `Area contains ${blockers.length} bear trap/obstacle building(s) that cannot be moved automatically. Please clear them manually first.`);
+    _elText('optAreaError', `영역에 자동으로 옮길 수 없는 곰 함정/장애물이 ${blockers.length}개 있습니다. 먼저 직접 제거하세요.`);
     return;
   }
   _elText('optAreaError', '');
@@ -4320,7 +4167,7 @@ function _optAreaConfirm() {
   // Show area dimensions in params panel
   const w = _optArea.x2 - _optArea.x1 + 1;
   const h = _optArea.y2 - _optArea.y1 + 1;
-  _elText('optAreaSummary', `Area: (${_optArea.x1}, ${_optArea.y1}) to (${_optArea.x2}, ${_optArea.y2}) — ${w}×${h}`);
+  _elText('optAreaSummary', `영역: (${_optArea.x1}, ${_optArea.y1}) ~ (${_optArea.x2}, ${_optArea.y2}) — ${w}×${h}`);
   const pp = _el('optimizerParamsPanel'); if (pp) pp.style.display = 'block';
   // Initialize visibility of cities-between row based on current trap count
   const tc = _el('optTrapCount'); const row = _el('optCitiesBetweenRow');
@@ -4343,11 +4190,11 @@ function _optParamsConfirm() {
   const citiesPerTrap = parseInt((_el('optCitiesPerTrap')||{}).value, 10);
   const citiesBetween = parseInt((_el('optCitiesBetween')||{}).value, 10) || 0;
   const allianceLabel = ((_el('optAllianceLabel')||{}).value || '').trim();
-  if (![1,2].includes(trapCount)) { _elText('optParamsError', 'Trap count must be 1 or 2.'); return; }
-  if (isNaN(citiesPerTrap) || citiesPerTrap < 1) { _elText('optParamsError', 'Cities per trap must be at least 1.'); return; }
-  if (citiesPerTrap * trapCount > 100) { _elText('optParamsError', 'Total cities cannot exceed 100.'); return; }
-  if (!allianceLabel || _isGenericLabel(allianceLabel)) { _elText('optParamsError', 'Provide a non-default alliance label.'); return; }
-  if (trapCount === 2 && ![0,2,3,4,5,6].includes(citiesBetween)) { _elText('optParamsError', 'Cities between traps must be 0, 2, 3, 4, 5, or 6.'); return; }
+  if (![1,2].includes(trapCount)) { _elText('optParamsError', '함정 수는 1 또는 2여야 합니다.'); return; }
+  if (isNaN(citiesPerTrap) || citiesPerTrap < 1) { _elText('optParamsError', '함정당 도시 수는 1 이상이어야 합니다.'); return; }
+  if (citiesPerTrap * trapCount > 100) { _elText('optParamsError', '전체 도시 수는 100을 넘을 수 없습니다.'); return; }
+  if (!allianceLabel || _isGenericLabel(allianceLabel)) { _elText('optParamsError', '기본값이 아닌 연맹 이름을 입력하세요.'); return; }
+  if (trapCount === 2 && ![0,2,3,4,5,6].includes(citiesBetween)) { _elText('optParamsError', '함정 사이 도시 수는 0, 2, 3, 4, 5, 6 중 하나여야 합니다.'); return; }
   _optParams = { trapCount, citiesPerTrap, allianceLabel, citiesBetween };
   _elText('optParamsError', '');
   const pm = _el('optimizerParamsPanel'); if (pm) pm.style.display = 'none';
@@ -4358,13 +4205,13 @@ function _optParamsConfirm() {
     try {
       _optResults = _optComputeLayouts(_optArea, _optParams);
     } catch(e) {
-      _elText('optProgressMsg', 'Error: ' + e.message);
+      _elText('optProgressMsg', '오류: ' + e.message);
       console.error(e);
       return;
     }
     if (prog) prog.style.display = 'none';
     if (!_optResults.length) {
-      alert('No valid trap position found in the working area. Please select a larger area or remove obstacles.');
+      alert('작업 영역에서 유효한 함정 위치를 찾지 못했습니다. 더 넓은 영역을 선택하거나 장애물을 제거하세요.');
       closeOptimizer();
       return;
     }
@@ -4394,15 +4241,15 @@ function _optRenderPreviewStats() {
   if (!_optResults.length) return;
   const r = _optResults[_optResultIdx];
   const s = r.stats;
-  const cleanRingText = s.deepestCleanRing >= 99 ? 'All clean' : `${s.deepestCleanRing}`;
+  const cleanRingText = s.deepestCleanRing >= 99 ? '모두 깨끗함' : `${s.deepestCleanRing}`;
   const html = `
-    <div style="margin-bottom:8px"><strong>Option ${_optResultIdx+1} of ${_optResults.length}</strong> <span style="color:var(--text-dim);font-size:0.85rem">[${r.strategy}]</span></div>
-    <div>Total trap→city distance: <strong>${s.totalDist}</strong></div>
-    <div>Clean rings (no interior banners): <strong>${cleanRingText}</strong></div>
-    <div>Banners: <strong>${s.bannerCount}</strong> (${s.interiorBannerCount} interior)</div>
-    <div>HQ auto-placed: <strong>${s.hasHQ ? 'Yes' : 'No'}</strong></div>
-    <div>Cities placed: <strong>${s.cityCount}</strong>${s.partial ? ` <span style="color:var(--red)">(short of target)</span>` : ''}</div>
-    ${s.uncoveredCells > 0 ? `<div style="color:var(--red)">⚠ ${s.uncoveredCells} city cells could not be covered.</div>` : ''}
+    <div style="margin-bottom:8px"><strong>옵션 ${_optResultIdx+1} / ${_optResults.length}</strong> <span style="color:var(--text-dim);font-size:0.85rem">[${r.strategy}]</span></div>
+    <div>함정→도시 총 거리: <strong>${s.totalDist}</strong></div>
+    <div>깨끗한 링 (내부 깃발 없음): <strong>${cleanRingText}</strong></div>
+    <div>깃발: <strong>${s.bannerCount}</strong> (내부 ${s.interiorBannerCount})</div>
+    <div>본부 자동 배치: <strong>${s.hasHQ ? '예' : '아니요'}</strong></div>
+    <div>배치된 도시: <strong>${s.cityCount}</strong>${s.partial ? ` <span style="color:var(--red)">(목표 미달)</span>` : ''}</div>
+    ${s.uncoveredCells > 0 ? `<div style="color:var(--red)">⚠ 도시 칸 ${s.uncoveredCells}개를 영토로 덮지 못했습니다.</div>` : ''}
   `;
   const el = _el('optPreviewStats'); if (el) el.innerHTML = html;
   const navBtn = _el('optBtnNext'); if (navBtn) navBtn.disabled = (_optResults.length <= 1);
@@ -4581,7 +4428,7 @@ function optHandleMouseUp(gx, gy) {
   { var _e=_el('optAreaY1'); if(_e) _e.value=_optArea.y1; }
   { var _e=_el('optAreaX2'); if(_e) _e.value=_optArea.x2; }
   { var _e=_el('optAreaY2'); if(_e) _e.value=_optArea.y2; }
-  _elText('optAreaCoords', `Selected: (${_optArea.x1}, ${_optArea.y1}) to (${_optArea.x2}, ${_optArea.y2})`);
+  _elText('optAreaCoords', `선택됨: (${_optArea.x1}, ${_optArea.y1}) ~ (${_optArea.x2}, ${_optArea.y2})`);
   draw();
   return true;
 }
@@ -4593,7 +4440,7 @@ function openReport(buildingId) {
   const b = buildings.find(x => x.id === buildingId);
   if (!b || !b._canonical) return;
   _reportTargetNode = b;
-  _elText('reportNodeInfo', `${b.label} at (${b.gx}, ${b.gy})`)
+  _elText('reportNodeInfo', `${koName(b.label)} (${b.gx}, ${b.gy})`)
   // Reset select to first option
   { const _e=_el('reportAction'); if(_e) _e.value='delete'; }
   _elShow('reportMoveFields', false)
@@ -4617,13 +4464,13 @@ async function submitReport() {
 
   const cloudId = localStorage.getItem(CLOUD_ID_KEY);
   if (!cloudId) {
-    errEl.textContent = 'You must publish your map first (cloud share) before submitting reports.';
+    errEl.textContent = '신고하려면 먼저 지도를 게시(클라우드 공유)해야 합니다.';
     return;
   }
 
   const action = (_el('reportAction') || {}).value;
   if (!action || !['delete', 'move', 'rename'].includes(action)) {
-    errEl.textContent = 'Select an issue to report.';
+    errEl.textContent = '신고할 문제를 선택하세요.';
     return;
   }
 
@@ -4637,7 +4484,7 @@ async function submitReport() {
     body.newX = parseInt((_el('reportNewX')||{}).value);
     body.newY = parseInt((_el('reportNewY')||{}).value);
     if (isNaN(body.newX) || isNaN(body.newY) || body.newX < 0 || body.newX >= 1200 || body.newY < 0 || body.newY >= 1200) {
-      errEl.textContent = 'Enter valid coordinates (0-1199).';
+      errEl.textContent = '올바른 좌표를 입력하세요 (0-1199).';
       return;
     }
   }
@@ -4654,7 +4501,7 @@ async function submitReport() {
     });
     const data = await resp.json();
     if (!resp.ok) {
-      errEl.textContent = data.error || 'Report failed.';
+      errEl.textContent = data.error || '신고에 실패했습니다.';
       return;
     }
 
@@ -4685,7 +4532,7 @@ async function submitReport() {
     saveToStorage(); updatePlacedList(); draw();
     closeReport();
   } catch(e) {
-    errEl.textContent = 'Network error: ' + e.message;
+    errEl.textContent = '네트워크 오류: ' + e.message;
   }
 }
 
@@ -4729,7 +4576,7 @@ function buildPermBuildingList() {
     const div = document.createElement('div');
     div.className = 'perm-item';
     div.innerHTML = '<div class="perm-dot" style="background:' + b.color + '"></div>' +
-      '<span style="flex:1">' + b.label + '</span>' +
+      '<span style="flex:1">' + koName(b.label) + '</span>' +
       '<span style="font-size:0.75rem;color:var(--text-dim)">' + b.gx + ',' + b.gy + '</span>';
     div.onclick = () => {
       const cx = b.gx + b.size/2, cy = b.gy + b.size/2;
@@ -4818,11 +4665,11 @@ function openCityExport(allianceTag) {
   if (titleEl) {
     const hvActive = window.HiveView && HiveView.isActive();
     if (hvActive) {
-      titleEl.textContent = `🏙 Export Cities — ${HiveView.getTag()}`;
+      titleEl.textContent = `🏙 도시 내보내기 — ${HiveView.getTag()}`;
     } else if (_cityExportAllianceScope) {
-      titleEl.textContent = `🏙 Export Cities — ${_cityExportAllianceScope}`;
+      titleEl.textContent = `🏙 도시 내보내기 — ${_cityExportAllianceScope}`;
     } else {
-      titleEl.textContent = '🏙 Export City Locations';
+      titleEl.textContent = '🏙 도시 위치 내보내기';
     }
   }
   _el('cityExportModal')?.classList.add('open');
@@ -4864,9 +4711,9 @@ function refreshCityExport() {
   errEl.textContent = '';
 
   if (cities.length === 0) {
-    if (hvActive)       errEl.textContent = `No cities found in the ${HiveView.getTag()} hive.`;
-    else if (scope)     errEl.textContent = `No cities found in ${scope}'s territory.`;
-    else                errEl.textContent = 'No cities placed on the map.';
+    if (hvActive)       errEl.textContent = `${HiveView.getTag()} 하이브에 도시가 없습니다.`;
+    else if (scope)     errEl.textContent = `${scope} 영토에 도시가 없습니다.`;
+    else                errEl.textContent = '지도에 배치된 도시가 없습니다.';
     output.value = '';
     return;
   }
@@ -4878,14 +4725,14 @@ function refreshCityExport() {
     if (!tmpl.includes('{x}'))     missing.push('{x}');
     if (!tmpl.includes('{y}'))     missing.push('{y}');
     if (missing.length > 0) {
-      tmplErr.textContent = 'Template is missing: ' + missing.join(', ');
+      tmplErr.textContent = '템플릿에 다음 항목이 없습니다: ' + missing.join(', ');
       output.value = '';
       return;
     }
   }
 
   const lines = cities.map(b => {
-    const label = b.label || 'City';
+    const label = (!b.label || b.label === 'City') ? '도시' : b.label;
     if (plain) {
       return `${label}, ${b.gx}, ${b.gy}`;
     }
@@ -4939,19 +4786,19 @@ function exportAllianceCitiesQuick(allianceTag, btnEl) {
     }, 1600);
   };
 
-  if (!cities.length) { flash('No cities found'); return; }
+  if (!cities.length) { flash('도시 없음'); return; }
 
-  const text = cities.map(b => `${(b.label || 'City')}, ${b.gx}, ${b.gy}`).join('\n');
+  const text = cities.map(b => `${((!b.label || b.label === 'City') ? '도시' : b.label)}, ${b.gx}, ${b.gy}`).join('\n');
   const fallback = () => {
     const ta = document.createElement('textarea');
     ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
     document.body.appendChild(ta); ta.select();
     try { document.execCommand('copy'); } catch (e) { /* best-effort */ }
     document.body.removeChild(ta);
-    flash(`✓ Copied ${cities.length}`);
+    flash(`✓ ${cities.length}개 복사됨`);
   };
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(() => flash(`✓ Copied ${cities.length}`)).catch(fallback);
+    navigator.clipboard.writeText(text).then(() => flash(`✓ ${cities.length}개 복사됨`)).catch(fallback);
   } else {
     fallback();
   }
@@ -4977,10 +4824,10 @@ function copyHiveShareLink(btnEl) {
     document.body.appendChild(ta); ta.select();
     try { document.execCommand('copy'); } catch (e) { /* best-effort */ }
     document.body.removeChild(ta);
-    flash('✓ Copied');
+    flash('✓ 복사됨');
   };
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(url).then(() => flash('✓ Copied')).catch(fallback);
+    navigator.clipboard.writeText(url).then(() => flash('✓ 복사됨')).catch(fallback);
   } else {
     fallback();
   }
@@ -4996,7 +4843,7 @@ function copyCityExport() {
     if (!tmpl.includes('{x}'))     missing.push('{x}');
     if (!tmpl.includes('{y}'))     missing.push('{y}');
     if (missing.length > 0) {
-      _el('cityExportTemplateError').textContent = 'Template is missing: ' + missing.join(', ');
+      _el('cityExportTemplateError').textContent = '템플릿에 다음 항목이 없습니다: ' + missing.join(', ');
       return;
     }
   }
@@ -5005,8 +4852,8 @@ function copyCityExport() {
   ta.select();
   document.execCommand('copy');
   const btn = _el('cityExportCopyBtn');
-  btn.textContent = 'Copied ✓';
-  setTimeout(() => btn.textContent = 'Copy to Clipboard', 1600);
+  btn.textContent = '복사됨 ✓';
+  setTimeout(() => btn.textContent = '클립보드에 복사', 1600);
 }
 
 // ═══════════════════════════════════════════════════════
@@ -5091,6 +4938,7 @@ function _isGenericLabel(lbl) {
   if (!t) return true;
   // Default labels from BUILDING_DEFS for territory-bearing types
   if (t === 'Banner' || t === 'Alliance HQ') return true;
+  if (t === '깃발' || t === '연맹 본부') return true; // Korean defaults (display-name inputs)
   return false;
 }
 
@@ -5239,7 +5087,7 @@ function computeAllianceSummary() {
 
 function openAllianceSummary() {
   const modal = _el('allianceSummaryModal');
-  if (!modal) { alert('Alliance Summary not available — modal element missing from this page.'); return; }
+  if (!modal) { alert('연맹 요약을 사용할 수 없습니다 — 이 페이지에 모달 요소가 없습니다.'); return; }
   _renderAllianceSummary();
   modal.classList.add('open');
 }
@@ -5253,38 +5101,38 @@ function _renderAllianceSummary() {
   if (!container) return;
   const data = computeAllianceSummary();
   if (!data.length) {
-    container.innerHTML = '<p style="color:var(--text-dim);text-align:center;padding:20px">No alliances on the map yet. Place some banners or HQs first!</p>';
+    container.innerHTML = '<p style="color:var(--text-dim);text-align:center;padding:20px">지도에 아직 연맹이 없습니다. 먼저 깃발이나 본부를 배치하세요!</p>';
     return;
   }
   const rows = data.map(e => {
     const warnings = [];
-    if (e.bannerCount > 285) warnings.push(`⚠ ${e.bannerCount}/285 banners (over limit)`);
-    if (e.hqCount > 2) warnings.push(`⚠ ${e.hqCount}/2 HQs (over limit)`);
+    if (e.bannerCount > 285) warnings.push(`⚠ 깃발 ${e.bannerCount}/285 (한도 초과)`);
+    if (e.hqCount > 2) warnings.push(`⚠ 본부 ${e.hqCount}/2 (한도 초과)`);
     for (const [z, c] of Object.entries(e.hqsByZone)) {
-      if (c > 1) warnings.push(`⚠ ${c} HQs in ${z}`);
+      if (c > 1) warnings.push(`⚠ ${koName(z)}에 본부 ${c}개`);
     }
-    if (e.bannerOverLimit) warnings.push('⚠ Banner cap override used');
-    if (e.hqOverLimit) warnings.push('⚠ HQ cap override used');
-    if (e.orphanBannerCount > 0) warnings.push(`⚠ ${e.orphanBannerCount} invalid banners (disconnected from HQ)`);
+    if (e.bannerOverLimit) warnings.push('⚠ 깃발 한도 초과 배치됨');
+    if (e.hqOverLimit) warnings.push('⚠ 본부 한도 초과 배치됨');
+    if (e.orphanBannerCount > 0) warnings.push(`⚠ 무효 깃발 ${e.orphanBannerCount}개 (본부와 연결 끊김)`);
 
     const resHtml = Object.entries(e.resources)
       .filter(([_,v]) => v > 0)
-      .map(([k,v]) => `<div><span style="color:var(--text-dim)">${RES_SUBTYPE_LABELS[k]||k}:</span> +${v.toLocaleString()}/hr</div>`)
-      .join('') || '<div style="color:var(--text-dim)">None</div>';
+      .map(([k,v]) => `<div><span style="color:var(--text-dim)">${koName(RES_SUBTYPE_LABELS[k]||k)}:</span> +${v.toLocaleString()}/시간</div>`)
+      .join('') || '<div style="color:var(--text-dim)">없음</div>';
 
     const bonusHtml = Object.entries(e.bonuses)
-      .map(([stat,info]) => `<div><span style="color:var(--text-dim)">${stat}:</span> +${info.pct}%</div>`)
-      .join('') || '<div style="color:var(--text-dim)">None</div>';
+      .map(([stat,info]) => `<div><span style="color:var(--text-dim)">${koName(stat)}:</span> +${info.pct}%</div>`)
+      .join('') || '<div style="color:var(--text-dim)">없음</div>';
 
     const warnHtml = warnings.length
       ? `<div style="color:var(--red);font-size:0.85rem;margin-top:6px">${warnings.join('<br>')}</div>`
       : '';
 
     const bannerLine = e.orphanBannerCount > 0
-      ? `${e.bannerCount} Banner (${e.validBannerCount} valid · ${e.orphanBannerCount} invalid)`
-      : `${e.bannerCount} Banner`;
+      ? `깃발 ${e.bannerCount} (유효 ${e.validBannerCount} · 무효 ${e.orphanBannerCount})`
+      : `깃발 ${e.bannerCount}`;
     const cityLine = e.cityCount > 0
-      ? ` · ${e.cityCount} Cit${e.cityCount !== 1 ? 'ies' : 'y'}`
+      ? ` · 도시 ${e.cityCount}`
       : '';
 
     const tagArg = _escHtml(e.label).replace(/'/g, "\\'");
@@ -5292,25 +5140,25 @@ function _renderAllianceSummary() {
     const showExportBtn = e.label !== '(Unlabeled)' && e.cityCount > 0;
     const hiveBtnHtml = showHiveBtn
       ? `<button class="btn btn-primary" style="padding:4px 10px;font-size:0.8rem;white-space:nowrap"
-          onclick="openHiveViewForAlliance('${tagArg}')">Hive Plan</button>`
+          onclick="openHiveViewForAlliance('${tagArg}')">하이브 계획</button>`
       : '';
     const exportBtnHtml = showExportBtn
       ? `<button class="btn btn-primary" style="padding:4px 10px;font-size:0.8rem;white-space:nowrap"
-          onclick="openCityExport('${tagArg}')">Export Cities</button>`
+          onclick="openCityExport('${tagArg}')">도시 내보내기</button>`
       : '';
 
     return `<div style="border:1px solid var(--border);border-radius:6px;padding:12px;margin-bottom:10px;background:var(--bg)">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;flex-wrap:wrap">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <strong style="font-size:1.1rem;color:var(--gold)">${_escHtml(e.label)}</strong>
+          <strong style="font-size:1.1rem;color:var(--gold)">${_escHtml(koName(e.label))}</strong>
           ${hiveBtnHtml}
           ${exportBtnHtml}
         </div>
-        <span style="color:var(--text-dim);font-size:0.85rem">${e.hqCount} HQ · ${bannerLine}${cityLine}</span>
+        <span style="color:var(--text-dim);font-size:0.85rem">본부 ${e.hqCount} · ${bannerLine}${cityLine}</span>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:0.9rem">
-        <div><strong>Resources/hr</strong>${resHtml}</div>
-        <div><strong>Bonuses</strong>${bonusHtml}</div>
+        <div><strong>시간당 자원</strong>${resHtml}</div>
+        <div><strong>보너스</strong>${bonusHtml}</div>
       </div>
       ${warnHtml}
     </div>`;
@@ -5404,5 +5252,3 @@ function openHiveViewForAlliance(tag) {
 }
 window.openHiveViewForAlliance = openHiveViewForAlliance;
 
-// Expose to HTML onchange handlers
-window.switchGame = switchGame;

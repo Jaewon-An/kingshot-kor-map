@@ -294,8 +294,8 @@
 
     // Bear trap display labels (one per designated trap).
     const tag = hive.tag;
-    if (out.b1Trap) out.bearLabels.set(out.b1Trap.id, `(${tag}) Bear 1`);
-    if (out.b2Trap) out.bearLabels.set(out.b2Trap.id, `(${tag}) Bear 2`);
+    if (out.b1Trap) out.bearLabels.set(out.b1Trap.id, `(${tag}) 곰 1`);
+    if (out.b2Trap) out.bearLabels.set(out.b2Trap.id, `(${tag}) 곰 2`);
 
     // Per-city times.
     for (const c of cities) {

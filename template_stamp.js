@@ -530,11 +530,11 @@
     const dropped = result.placements.length - valid.length;
 
     if (valid.length === 0) {
-      alert('All buildings would be dropped — nothing to place.');
+      alert('모든 건물이 제외되어 배치할 건물이 없습니다.');
       return;
     }
     if (dropped > 0) {
-      const ok = confirm(`Stamp template? ${dropped} building${dropped === 1 ? '' : 's'} will be skipped due to overlap or restricted terrain.`);
+      const ok = confirm(`템플릿을 찍으시겠습니까? 겹침 또는 배치 불가 지형 때문에 건물 ${dropped}개가 제외됩니다.`);
       if (!ok) return;
     }
 
@@ -551,7 +551,7 @@
       let label;
       if (t === 'beartrap') {
         trapCounter++;
-        label = trapTotal > 1 ? `Bear Trap ${trapCounter}` : 'Bear Trap';
+        label = trapTotal > 1 ? `곰 함정 ${trapCounter}` : '곰 함정';
       } else {
         label = tag;
       }
@@ -685,23 +685,23 @@
       }
     }
     const xfPills = [];
-    if (_state.rotation) xfPills.push(`rot ${_state.rotation * 90}°`);
-    if (_state.flipX)    xfPills.push('flip X');
-    if (_state.flipY)    xfPills.push('flip Y');
+    if (_state.rotation) xfPills.push(`회전 ${_state.rotation * 90}°`);
+    if (_state.flipX)    xfPills.push('X 반전');
+    if (_state.flipY)    xfPills.push('Y 반전');
     const xfText = xfPills.length ? ` · ${xfPills.join(' · ')}` : '';
 
     const placementText = (_state.hovering && _state.hoverGX != null)
-      ? `Will place: ${willPlace.trap} trap · ${willPlace.hq} HQ · ${willPlace.banner} banner · ${willPlace.city} city` +
-        (droppedCount > 0 ? ` <span style="color:#ff7878">— ${droppedCount} dropped</span>` : '')
-      : 'Move cursor over map to preview';
+      ? `배치 예정: 함정 ${willPlace.trap} · 본부 ${willPlace.hq} · 깃발 ${willPlace.banner} · 도시 ${willPlace.city}` +
+        (droppedCount > 0 ? ` <span style="color:#ff7878">— ${droppedCount}개 제외</span>` : '')
+      : '지도 위로 커서를 옮기면 미리보기가 표시됩니다';
 
     _state._hud.innerHTML = `
       <div style="font-weight:600;color:#c9a84c;">
-        🐝 Stamping: ${_escape(tpl.name)} <span style="color:#8b949e;font-weight:normal;">[${_escape(_state.allianceTag)}]</span>${xfText}
+        🐝 찍는 중: ${_escape(tpl.name)} <span style="color:#8b949e;font-weight:normal;">[${_escape(_state.allianceTag)}]</span>${xfText}
       </div>
       <div style="margin-top:4px;color:#c9d1d9;">${placementText}</div>
       <div style="margin-top:6px;color:#c9d1d9;font-size:16px;font-weight:500;">
-        Q/E rotate · X/Y mirror · Click commit · Alt+Drag or Middle-Drag pan · Esc cancel
+        Q/E 회전 · X/Y 반전 · 클릭 배치 · Alt+드래그 또는 휠 드래그 이동 · Esc 취소
       </div>`;
   }
 

@@ -99,7 +99,7 @@
       _renderGrid();
     } catch (e) {
       _state.loading = false;
-      _state.error = e.message || 'Failed to load templates';
+      _state.error = e.message || '템플릿을 불러오지 못했습니다';
       _renderGrid();
     }
   }
@@ -144,24 +144,24 @@
     const { grid, status } = _state.dom;
 
     if (_state.loading) {
-      status.textContent = 'Loading templates…';
+      status.textContent = '템플릿 불러오는 중…';
       grid.innerHTML = '';
       return;
     }
     if (_state.error) {
       status.textContent = '';
-      grid.innerHTML = `<div class="tpl-pk-empty"><div class="tpl-pk-empty-title">Couldn't load templates</div><div class="tpl-pk-empty-sub">${_escape(_state.error)}</div></div>`;
+      grid.innerHTML = `<div class="tpl-pk-empty"><div class="tpl-pk-empty-title">템플릿을 불러오지 못했습니다</div><div class="tpl-pk-empty-sub">${_escape(_state.error)}</div></div>`;
       return;
     }
 
     const filtered = _filterAndSort(_state.templates, _state.filters);
-    status.textContent = `${filtered.length} of ${_state.templates.length} template${_state.templates.length === 1 ? '' : 's'}`;
+    status.textContent = `템플릿 ${_state.templates.length}개 중 ${filtered.length}개`;
 
     if (filtered.length === 0) {
       grid.innerHTML = `
         <div class="tpl-pk-empty">
-          <div class="tpl-pk-empty-title">No matches</div>
-          <button class="tpl-pk-clear" id="_tplPkClear">Clear filters</button>
+          <div class="tpl-pk-empty-title">일치하는 템플릿이 없습니다</div>
+          <button class="tpl-pk-clear" id="_tplPkClear">필터 지우기</button>
         </div>`;
       grid.querySelector('#_tplPkClear').addEventListener('click', () => {
         _state.filters = { sort: 'most-popular', traps: 'all', cities: 'any' };
@@ -177,7 +177,7 @@
     const renderer = (root.KingshotTemplateThumbnail && root.KingshotTemplateThumbnail.renderTemplateThumbnail)
                   || root.renderTemplateThumbnail;
     if (!renderer) {
-      grid.innerHTML = '<div class="tpl-pk-empty"><div class="tpl-pk-empty-title">Thumbnail renderer missing</div><div class="tpl-pk-empty-sub">template_thumbnail.js not loaded</div></div>';
+      grid.innerHTML = '<div class="tpl-pk-empty"><div class="tpl-pk-empty-title">썸네일 렌더러가 없습니다</div><div class="tpl-pk-empty-sub">template_thumbnail.js가 로드되지 않았습니다</div></div>';
       return;
     }
 
@@ -190,7 +190,7 @@
         <div class="tpl-pk-name">${_escape(t.name || '')}</div>
         ${t.description ? `<div class="tpl-pk-desc">${_escape(t.description)}</div>` : ''}
         <div class="tpl-pk-meta">${summary}</div>
-        <div class="tpl-pk-uses">Used ${t.useCount || 0} time${(t.useCount || 0) === 1 ? '' : 's'}</div>`;
+        <div class="tpl-pk-uses">${t.useCount || 0}회 사용됨</div>`;
       card.addEventListener('click', () => _handlePick(t));
       grid.appendChild(card);
     }
@@ -198,10 +198,10 @@
 
   function _buildSummary(t) {
     const parts = [];
-    if (t.trapCount)   parts.push(`${t.trapCount} trap${t.trapCount > 1 ? 's' : ''}`);
-    if (t.hqCount)     parts.push(`${t.hqCount} HQ`);
-    if (t.bannerCount) parts.push(`${t.bannerCount} banner${t.bannerCount > 1 ? 's' : ''}`);
-    if (t.cityCount)   parts.push(`${t.cityCount} cit${t.cityCount > 1 ? 'ies' : 'y'}`);
+    if (t.trapCount)   parts.push(`함정 ${t.trapCount}`);
+    if (t.hqCount)     parts.push(`본부 ${t.hqCount}`);
+    if (t.bannerCount) parts.push(`깃발 ${t.bannerCount}`);
+    if (t.cityCount)   parts.push(`도시 ${t.cityCount}`);
     return parts.join(' · ');
   }
 
@@ -285,26 +285,26 @@
   const _HTML = `
 <div class="tpl-pk-dialog">
   <div class="tpl-pk-header">
-    <div class="tpl-pk-title">🐝 Use Hive Template</div>
+    <div class="tpl-pk-title">🐝 하이브 템플릿 사용</div>
     <div class="tpl-pk-filters">
-      <label>Sort:
+      <label>정렬:
         <select id="tplPkSort">
-          <option value="most-popular">Most popular</option>
-          <option value="least-popular">Least popular</option>
-          <option value="newest">Newest</option>
-          <option value="oldest">Oldest</option>
+          <option value="most-popular">인기순</option>
+          <option value="least-popular">인기 낮은순</option>
+          <option value="newest">최신순</option>
+          <option value="oldest">오래된순</option>
         </select>
       </label>
-      <label>Bear traps:
+      <label>곰 함정:
         <select id="tplPkTraps">
-          <option value="all">All</option>
-          <option value="1">1 trap</option>
-          <option value="2">2 traps</option>
+          <option value="all">전체</option>
+          <option value="1">1개</option>
+          <option value="2">2개</option>
         </select>
       </label>
-      <label>Cities:
+      <label>도시:
         <select id="tplPkCities">
-          <option value="any">Any</option>
+          <option value="any">전체</option>
           <option value="<30">&lt;30</option>
           <option value="31-50">31–50</option>
           <option value="51-70">51–70</option>
@@ -312,7 +312,7 @@
         </select>
       </label>
     </div>
-    <button id="tplPkCancel" class="tpl-pk-cancel-btn">Cancel</button>
+    <button id="tplPkCancel" class="tpl-pk-cancel-btn">취소</button>
   </div>
   <div id="tplPkStatus" class="tpl-pk-status"></div>
   <div id="tplPkGrid" class="tpl-pk-grid"></div>

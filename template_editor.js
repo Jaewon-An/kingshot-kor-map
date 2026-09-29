@@ -59,8 +59,8 @@
   // Tools
   const TOOLS = ['city', 'banner', 'hq', 'beartrap', 'erase', 'pan'];
   const TOOL_LABEL = {
-    city: 'City', banner: 'Banner', hq: 'HQ', beartrap: 'Bear Trap',
-    erase: 'Erase', pan: 'Pan',
+    city: '도시', banner: '깃발', hq: '본부', beartrap: '곰 함정',
+    erase: '지우기', pan: '이동',
   };
   const TOOL_KEY = { '1': 'city', '2': 'banner', '3': 'hq', '4': 'beartrap', 'e': 'erase', 'E': 'erase', 'p': 'pan', 'P': 'pan' };
 
@@ -428,13 +428,13 @@
     const citiesOutside = _citiesOutsideTerritory(ownership.mainCells);
 
     const errors = [];
-    if (_state.buildings.length === 0) errors.push('Place buildings to begin.');
-    if (counts.trap < MIN_TRAPS) errors.push(`Need at least ${MIN_TRAPS} bear trap`);
-    if (counts.trap > MAX_TRAPS) errors.push(`Max ${MAX_TRAPS} bear traps`);
-    if (counts.hq   > MAX_HQ)    errors.push(`Max ${MAX_HQ} HQ`);
-    if (counts.city > MAX_CITIES) errors.push(`Max ${MAX_CITIES} cities`);
-    if (ownership.orphanBuildings.size > 0) errors.push(`${ownership.orphanBuildings.size} orphan banner/HQ`);
-    if (citiesOutside.size > 0) errors.push(`${citiesOutside.size} cit${citiesOutside.size === 1 ? 'y' : 'ies'} outside territory`);
+    if (_state.buildings.length === 0) errors.push('건물을 배치해 시작하세요.');
+    if (counts.trap < MIN_TRAPS) errors.push(`곰 함정이 최소 ${MIN_TRAPS}개 필요합니다`);
+    if (counts.trap > MAX_TRAPS) errors.push(`곰 함정은 최대 ${MAX_TRAPS}개입니다`);
+    if (counts.hq   > MAX_HQ)    errors.push(`본부는 최대 ${MAX_HQ}개입니다`);
+    if (counts.city > MAX_CITIES) errors.push(`도시는 최대 ${MAX_CITIES}개입니다`);
+    if (ownership.orphanBuildings.size > 0) errors.push(`연결되지 않은 깃발/본부 ${ownership.orphanBuildings.size}개`);
+    if (citiesOutside.size > 0) errors.push(`영토 밖 도시 ${citiesOutside.size}개`);
 
     _state.validation = {
       counts, errors,
@@ -684,7 +684,7 @@
       const coordStr = (_state.hoverGX >= 0)
         ? `${_state.hoverGX}, ${_state.hoverGY}`
         : '—';
-      _state.dom.hud.textContent = `Tool: ${TOOL_LABEL[t]}   Cursor: ${coordStr}   |   1 City · 2 Banner · 3 HQ · 4 Trap · E Erase · P Pan · Wheel zoom · Esc cancel`;
+      _state.dom.hud.textContent = `도구: ${TOOL_LABEL[t]}   커서: ${coordStr}   |   1 도시 · 2 깃발 · 3 본부 · 4 함정 · E 지우기 · P 이동 · 휠 확대/축소 · Esc 취소`;
     }
   }
 
@@ -704,13 +704,13 @@
       return `<div class="tpl-ed-row"><span class="tpl-ed-row-label">${label}</span><span class="tpl-ed-row-val">${value}${range} ${okStr}</span></div>`;
     };
 
-    let html = '<div class="tpl-ed-stats-title">Stats</div>';
-    html += row('Bear Traps',     c.trap,   c.trap >= MIN_TRAPS && c.trap <= MAX_TRAPS, `${MIN_TRAPS}-${MAX_TRAPS}`);
-    html += row('HQ',             c.hq,     c.hq <= MAX_HQ, `0-${MAX_HQ}`);
-    html += row('Banners',        c.banner, true);
-    html += row('Cities',         c.city,   c.city <= MAX_CITIES, MAX_CITIES);
-    html += row('Orphans',        v.orphanBuildings.size, v.orphanBuildings.size === 0);
-    html += row('Cities outside', v.citiesOutside.size,   v.citiesOutside.size === 0);
+    let html = '<div class="tpl-ed-stats-title">통계</div>';
+    html += row('곰 함정',     c.trap,   c.trap >= MIN_TRAPS && c.trap <= MAX_TRAPS, `${MIN_TRAPS}-${MAX_TRAPS}`);
+    html += row('본부',           c.hq,     c.hq <= MAX_HQ, `0-${MAX_HQ}`);
+    html += row('깃발',      c.banner, true);
+    html += row('도시',       c.city,   c.city <= MAX_CITIES, MAX_CITIES);
+    html += row('연결 끊김',      v.orphanBuildings.size, v.orphanBuildings.size === 0);
+    html += row('영토 밖 도시', v.citiesOutside.size,   v.citiesOutside.size === 0);
 
     if (v.errors.length > 0 && _state.buildings.length > 0) {
       html += '<div class="tpl-ed-errs">';
@@ -747,14 +747,14 @@
 
   function _handleSave() {
     if (_state.dom.saveBtn.disabled) return;
-    const name = prompt('Template name (required, max 60 chars):', _state.initialName || '');
+    const name = prompt('템플릿 이름 (필수, 최대 60자):', _state.initialName || '');
     if (name == null) return;
     const trimmed = name.trim();
-    if (!trimmed) { alert('Name cannot be empty.'); return; }
-    if (trimmed.length > 60) { alert('Name must be ≤60 chars.'); return; }
+    if (!trimmed) { alert('이름을 입력하세요.'); return; }
+    if (trimmed.length > 60) { alert('이름은 60자 이하여야 합니다.'); return; }
 
-    const desc = prompt('Description (optional, max 200 chars):', _state.initialDescription || '') || '';
-    if (desc.length > 200) { alert('Description must be ≤200 chars.'); return; }
+    const desc = prompt('설명 (선택, 최대 200자):', _state.initialDescription || '') || '';
+    if (desc.length > 200) { alert('설명은 200자 이하여야 합니다.'); return; }
 
     const { bbox, anchor, minX, minY } = _computeTightBboxAndAnchor();
     const buildings = _state.buildings.map(b => ({
@@ -775,7 +775,7 @@
 
   function _handleCancel() {
     if (_state.buildings.length > 0) {
-      if (!confirm('Discard this template? Unsaved changes will be lost.')) return;
+      if (!confirm('이 템플릿을 버리시겠습니까? 저장하지 않은 변경 사항은 사라집니다.')) return;
     }
     const cb = _state.onCancel;
     close();
@@ -842,14 +842,14 @@
 
   const _HTML = `
 <div class="tpl-ed-header">
-  <div class="tpl-ed-title">Template Editor</div>
+  <div class="tpl-ed-title">템플릿 편집기</div>
   <div class="tpl-ed-tools">
-    <button class="tpl-ed-tool" data-tool="city">City <span style="color:#888">(1)</span></button>
-    <button class="tpl-ed-tool" data-tool="banner">Banner <span style="color:#888">(2)</span></button>
-    <button class="tpl-ed-tool" data-tool="hq">HQ <span style="color:#888">(3)</span></button>
-    <button class="tpl-ed-tool" data-tool="beartrap">Bear Trap <span style="color:#888">(4)</span></button>
-    <button class="tpl-ed-tool" data-tool="erase">Erase <span style="color:#888">(E)</span></button>
-    <button class="tpl-ed-tool" data-tool="pan">Pan <span style="color:#888">(P)</span></button>
+    <button class="tpl-ed-tool" data-tool="city">도시 <span style="color:#888">(1)</span></button>
+    <button class="tpl-ed-tool" data-tool="banner">깃발 <span style="color:#888">(2)</span></button>
+    <button class="tpl-ed-tool" data-tool="hq">본부 <span style="color:#888">(3)</span></button>
+    <button class="tpl-ed-tool" data-tool="beartrap">곰 함정 <span style="color:#888">(4)</span></button>
+    <button class="tpl-ed-tool" data-tool="erase">지우기 <span style="color:#888">(E)</span></button>
+    <button class="tpl-ed-tool" data-tool="pan">이동 <span style="color:#888">(P)</span></button>
   </div>
   <div class="tpl-ed-spacer"></div>
 </div>
@@ -863,8 +863,8 @@
   </div>
 </div>
 <div class="tpl-ed-footer">
-  <button id="tplEdCancel" class="tpl-ed-btn tpl-ed-btn-secondary">Cancel</button>
-  <button id="tplEdSave" class="tpl-ed-btn tpl-ed-btn-primary" disabled>Save Template</button>
+  <button id="tplEdCancel" class="tpl-ed-btn tpl-ed-btn-secondary">취소</button>
+  <button id="tplEdSave" class="tpl-ed-btn tpl-ed-btn-primary" disabled>템플릿 저장</button>
 </div>`;
 
   // ── Export ──────────────────────────────────────────────────────────

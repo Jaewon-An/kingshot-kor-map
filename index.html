@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Kingshot Mapper</title>
+<title>킹샷 맵퍼</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap">
@@ -12,23 +12,6 @@
   /* Shared base styles loaded from styles.css; rules below are
      page-specific (index.html). Keep this <style> AFTER the link so
      these rules win on equal specificity. */
-
-  /* Game selector — desktop styling (was inline style before; moved to CSS
-     so mobile overrides don't fight inline specificity). */
-  #gameSelector {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 5px;
-    color: var(--text);
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 1.05rem;
-    font-weight: 600;
-    padding: 6px 8px;
-    cursor: pointer;
-    flex-shrink: 0;
-    align-self: stretch;
-    max-width: 160px;
-  }
 
   /* ── Sidebar tabs ──────────────────────────────────────────────────── */
   .sidebar {
@@ -437,9 +420,7 @@
       align-items: center;
       height: 38px;
     }
-    /* Drop the "Kingshot Mapper" / "Whiteout Survival Mapper" text on mobile —
-       keep the ⚔/❄ emoji as the brand mark. Game selector still shows which
-       game is active, so the long text is redundant and just costs space. */
+    /* Drop the "킹샷 맵퍼" text on mobile — keep the ⚔ emoji as the brand mark. */
     #appTitle .app-title-text { display: none; }
     .tb-btn {
       padding: 5px 9px;
@@ -453,33 +434,6 @@
     /* Hide non-essential toolbar buttons on mobile — they go into the overflow menu */
     .toolbar .tb-hide-mobile { display: none; }
     .mobile-only { display: flex !important; }
-
-    /* Game selector on mobile: strip native rendering so CSS centering works
-       reliably (Chrome ignores line-height/padding for vertical text position
-       inside a native <select> when explicit height is set). With appearance:
-       none, the select becomes a regular box — line-height: 38px equal to the
-       height vertically centers the text cleanly. Custom ▼ arrow painted as
-       a background SVG since we lose the native one. Switch to Inter font for
-       a more predictable baseline than Rajdhani. */
-    #gameSelector {
-      max-width: 72px;
-      width: 72px;
-      height: 38px;
-      align-self: center;
-      font-family: 'Inter', system-ui, sans-serif;
-      font-size: 0.92rem;
-      font-weight: 600;
-      line-height: 38px;
-      padding: 0 22px 0 8px;
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      appearance: none;
-      background-color: var(--surface);
-      background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%238b949e' d='M5 6L0 0h10z'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 6px center;
-      background-size: 8px;
-    }
 
     /* Right-size hamburger ☰ and more ⋮: identical 38×38 squares.
        display: inline-flex + center alignment puts the glyph dead-center
@@ -741,40 +695,37 @@
 <div id="hiveViewHeader" class="hive-view-header" style="display:none">
   <span class="hive-view-icon">🪖</span>
   <span class="hive-view-tag"></span>
-  <span class="hive-view-suffix">Hive Plan</span>
+  <span class="hive-view-suffix">하이브 계획</span>
   <div class="hive-view-actions">
-    <button class="hive-view-action" type="button" onclick="copyHiveShareLink(this)" title="Copy the shareable link to this hive plan">🔗 Copy Link</button>
-    <button class="hive-view-action" type="button" onclick="openCityExport()" title="Export this alliance's cities">🏙 Export Cities</button>
+    <button class="hive-view-action" type="button" onclick="copyHiveShareLink(this)" title="이 하이브 계획의 공유 링크 복사">🔗 링크 복사</button>
+    <button class="hive-view-action" type="button" onclick="openCityExport()" title="이 연맹의 도시 내보내기">🏙 도시 내보내기</button>
   </div>
-  <a class="hive-view-exit" href="#" onclick="event.preventDefault();HiveView.close()">✕ Exit</a>
+  <a class="hive-view-exit" href="#" onclick="event.preventDefault();HiveView.close()">✕ 나가기</a>
 </div>
 
 <!-- TOOLBAR -->
 <div class="toolbar">
-  <span class="tb-title" id="appTitle"><span class="app-title-emoji">⚔</span><span class="app-title-text"> Kingshot Mapper</span></span>
-  <select id="gameSelector" onchange="(async()=>{ window.switchGame && await window.switchGame(this.value); })()" title="Switch game mode">
-    <option value="kingshot">Kingshot</option>
-    <option value="whiteout">Whiteout Survival</option>
-  </select>
+  <span class="tb-title" id="appTitle"><span class="app-title-emoji">⚔</span><span class="app-title-text"> 킹샷 맵퍼</span></span>
   <div class="toolbar-sep tb-hide-mobile"></div>
-  <button class="tb-btn active-place tb-hide-mobile" id="btnPlace"  onclick="setTool('place')" title="[D] Place">✦ Place</button>
-  <button class="tb-btn tb-hide-mobile"              id="btnSelect" onclick="setTool('select')" title="[S] Select">↖ Select</button>
-  <button class="tb-btn tb-hide-mobile"              id="btnErase"  onclick="setTool('erase')"  title="[E] Erase">✕ Erase</button>
+  <button class="tb-btn active-place tb-hide-mobile" id="btnPlace"  onclick="setTool('place')" title="[D] 배치">✦ 배치</button>
+  <button class="tb-btn tb-hide-mobile"              id="btnSelect" onclick="setTool('select')" title="[S] 선택">↖ 선택</button>
+  <button class="tb-btn tb-hide-mobile"              id="btnErase"  onclick="setTool('erase')"  title="[E] 지우기">✕ 지우기</button>
   <div class="toolbar-sep tb-hide-mobile"></div>
-  <button class="tb-btn tb-hide-mobile" id="btnUndo" onclick="undo()" disabled title="Undo (Ctrl+Z)">↩ Undo</button>
-  <button class="tb-btn tb-hide-mobile" id="btnRedo" onclick="redo()" disabled title="Redo (Ctrl+Y)">↪ Redo</button>
+  <button class="tb-btn tb-hide-mobile" id="btnUndo" onclick="undo()" disabled title="되돌리기 (Ctrl+Z)">↩ 되돌리기</button>
+  <button class="tb-btn tb-hide-mobile" id="btnRedo" onclick="redo()" disabled title="다시 실행 (Ctrl+Y)">↪ 다시 실행</button>
   <div class="toolbar-sep tb-hide-mobile"></div>
-  <button class="tb-btn tb-hide-mobile" onclick="openImport()" title="Import CSV">↓ Import</button>
-  <button class="tb-btn tb-hide-mobile" onclick="openExport()" title="Export CSV">↑ Export</button>
-  <button class="tb-btn tb-hide-mobile" onclick="openCityExport()" title="Export city locations">🏰 Cities</button>
-  <button class="tb-btn tb-gold tb-hide-mobile" onclick="openShare()" title="Share map">🔗 Share</button>
-  <button class="tb-btn tb-hide-mobile" onclick="confirmClearAll()" title="Clear all" style="color:var(--red);border-color:rgba(248,81,73,0.4)">🗑 Clear</button>
+  <button class="tb-btn tb-hide-mobile" onclick="openImport()" title="CSV 가져오기">↓ 가져오기</button>
+  <button class="tb-btn tb-hide-mobile" onclick="openExport()" title="CSV 내보내기">↑ 내보내기</button>
+  <button class="tb-btn tb-hide-mobile" onclick="openCityExport()" title="도시 위치 내보내기">🏰 도시</button>
+  <button class="tb-btn tb-gold tb-hide-mobile" onclick="openShare()" title="지도 공유">🔗 공유</button>
+  <button class="tb-btn tb-hide-mobile" onclick="confirmClearAll()" title="전체 삭제" style="color:var(--red);border-color:rgba(248,81,73,0.4)">🗑 전체 삭제</button>
   <div class="toolbar-sep tb-hide-mobile"></div>
-  <button class="tb-btn tb-hide-mobile" onclick="openInstructions()" title="Help">? Help</button>
+  <button class="tb-btn tb-hide-mobile" onclick="openInstructions()" title="도움말">? 도움말</button>
   <select id="langSelect" class="tb-hide-mobile" onchange="setLang(this.value)"
     style="background:var(--surface);border:1px solid var(--border);border-radius:5px;
            color:var(--text-dim);font-family:'Rajdhani',sans-serif;font-size:1.215rem;
            padding:8px 8px;cursor:pointer;width:72px;flex-shrink:0;box-sizing:border-box;align-self:stretch">
+    <option value="ko" selected>KO</option>
     <option value="en">EN</option>
     <option value="tl" hidden>TL</option>
     <option value="es" hidden>ES</option>
@@ -785,19 +736,19 @@
   </select>
   <div class="toolbar-sep tb-hide-mobile"></div>
   <span class="tb-title tb-hide-mobile" style="margin-left:auto;cursor:default">
-    <span id="creditLink">Made by : FluffyPiñata | Kingdom 1249</span>
+    <span id="creditLink">제작: FluffyPiñata | 1249 왕국</span>
   </span>
   <!-- Mobile-only: hamburger to open bottom sheet -->
-  <button class="tb-btn mobile-only" style="margin-left:auto" onclick="toggleMainSheet()" title="Open panel">☰</button>
-  <button class="tb-btn mobile-only" onclick="toggleMoreMenu()" title="More">⋮</button>
+  <button class="tb-btn mobile-only" style="margin-left:auto" onclick="toggleMainSheet()" title="패널 열기">☰</button>
+  <button class="tb-btn mobile-only" onclick="toggleMoreMenu()" title="더 보기">⋮</button>
 </div>
 <div class="more-menu" id="moreMenu">
-  <button class="more-item" onclick="closeMoreMenu();openImport()">↓ Import CSV</button>
-  <button class="more-item" onclick="closeMoreMenu();openExport()">↑ Export CSV</button>
-  <button class="more-item" onclick="closeMoreMenu();openCityExport()">🏰 Export Cities</button>
-  <button class="more-item" onclick="closeMoreMenu();openInstructions()">? Help</button>
+  <button class="more-item" onclick="closeMoreMenu();openImport()">↓ CSV 가져오기</button>
+  <button class="more-item" onclick="closeMoreMenu();openExport()">↑ CSV 내보내기</button>
+  <button class="more-item" onclick="closeMoreMenu();openCityExport()">🏰 도시 내보내기</button>
+  <button class="more-item" onclick="closeMoreMenu();openInstructions()">? 도움말</button>
   <div style="border-top:1px solid var(--border);margin:4px 0"></div>
-  <button class="more-item danger" onclick="closeMoreMenu();confirmClearAll()">🗑 Clear All</button>
+  <button class="more-item danger" onclick="closeMoreMenu();confirmClearAll()">🗑 전체 삭제</button>
 </div>
 <div class="sheet-backdrop" id="sheetBackdrop" onclick="closeAllSheets()"></div>
 
@@ -807,139 +758,139 @@
     <div class="sheet-handle-row" onclick="closeAllSheets()"><div class="sheet-handle"></div></div>
     <!-- Mobile-only tool bar: segmented Place/Select/Erase + Undo/Redo/Share -->
     <div class="mobile-tool-bar">
-      <div class="seg-tools" role="tablist" aria-label="Tool">
-        <button class="seg-btn active-place" id="btnPlaceM" onclick="setTool('place')"  aria-label="Place">✦ Place</button>
-        <button class="seg-btn"              id="btnSelectM" onclick="setTool('select')" aria-label="Select">↖ Select</button>
-        <button class="seg-btn"              id="btnEraseM"  onclick="setTool('erase')"  aria-label="Erase">✕ Erase</button>
+      <div class="seg-tools" role="tablist" aria-label="도구">
+        <button class="seg-btn active-place" id="btnPlaceM" onclick="setTool('place')"  aria-label="배치">✦ 배치</button>
+        <button class="seg-btn"              id="btnSelectM" onclick="setTool('select')" aria-label="선택">↖ 선택</button>
+        <button class="seg-btn"              id="btnEraseM"  onclick="setTool('erase')"  aria-label="지우기">✕ 지우기</button>
       </div>
       <div class="seg-extras">
-        <button class="seg-extra-btn" id="btnUndoM" onclick="undo()" disabled>↩ Undo</button>
-        <button class="seg-extra-btn" id="btnRedoM" onclick="redo()" disabled>↪ Redo</button>
-        <button class="seg-extra-btn seg-gold" onclick="openShare()">🔗 Share</button>
+        <button class="seg-extra-btn" id="btnUndoM" onclick="undo()" disabled>↩ 되돌리기</button>
+        <button class="seg-extra-btn" id="btnRedoM" onclick="redo()" disabled>↪ 다시 실행</button>
+        <button class="seg-extra-btn seg-gold" onclick="openShare()">🔗 공유</button>
       </div>
     </div>
     <div class="sidebar-tabs">
-      <button class="stab active" onclick="showSideTab('place',this)">🏗 Place</button>
-      <button class="stab"        onclick="showSideTab('placed',this)">📋 Placed</button>
-      <button class="stab"        onclick="showSideTab('map',this)">🗺 Map</button>
+      <button class="stab active" onclick="showSideTab('place',this)">🏗 배치</button>
+      <button class="stab"        onclick="showSideTab('placed',this)">📋 배치됨</button>
+      <button class="stab"        onclick="showSideTab('map',this)">🗺 지도</button>
     </div>
 
     <!-- TAB: Place -->
     <div class="sidebar-panel active" id="panel-place">
       <div class="section" id="typeSection">
-        <h2>Building Type</h2>
-        <button class="building-btn active" onclick="selectType('city')"     id="bt_city">
-          <span class="swatch" style="background:#4a9edd"></span>City<span class="size-tag">2×2</span></button>
+        <h2>건물 종류</h2>
+        <button class="building-btn"        onclick="selectType('city')"     id="bt_city">
+          <span class="swatch" style="background:#4a9edd"></span>도시<span class="size-tag">2×2</span></button>
         <button class="building-btn"        onclick="selectType('beartrap')" id="bt_beartrap">
-          <span class="swatch" style="background:#c0392b"></span>Bear Trap<span class="size-tag">3×3</span></button>
-        <button class="building-btn"        onclick="selectType('banner')"   id="bt_banner">
-          <span class="swatch" style="background:#aaaaaa"></span>Banner<span class="size-tag">1×1 +7×7</span></button>
+          <span class="swatch" style="background:#c0392b"></span>곰 함정<span class="size-tag">3×3</span></button>
+        <button class="building-btn active" onclick="selectType('banner')"   id="bt_banner">
+          <span class="swatch" style="background:#aaaaaa"></span>깃발<span class="size-tag">1×1 +7×7</span></button>
         <button class="building-btn"        onclick="selectType('resource')" id="bt_resource">
-          <span class="swatch" style="background:#27ae60"></span>Resource Node<span class="size-tag">2×2</span></button>
+          <span class="swatch" style="background:#27ae60"></span>자원지<span class="size-tag">2×2</span></button>
         <button class="building-btn"        onclick="selectType('hq')"       id="bt_hq">
-          <span class="swatch" style="background:#8e44ad"></span>Alliance HQ<span class="size-tag">3×3 +15×15</span></button>
+          <span class="swatch" style="background:#8e44ad"></span>연맹 본부<span class="size-tag">3×3 +15×15</span></button>
         <button class="building-btn"        onclick="selectType('obs1')"     id="bt_obs1">
-          <span class="swatch" style="background:#222222"></span>Obstacle<span class="size-tag">1×1</span></button>
+          <span class="swatch" style="background:#222222"></span>장애물<span class="size-tag">1×1</span></button>
         <button class="building-btn"        onclick="selectType('obs2')"     id="bt_obs2">
-          <span class="swatch" style="background:#222222"></span>Obstacle<span class="size-tag">2×2</span></button>
+          <span class="swatch" style="background:#222222"></span>장애물<span class="size-tag">2×2</span></button>
         <button class="building-btn"        onclick="selectType('obs3')"     id="bt_obs3">
-          <span class="swatch" style="background:#222222"></span>Obstacle<span class="size-tag">3×3</span></button>
+          <span class="swatch" style="background:#222222"></span>장애물<span class="size-tag">3×3</span></button>
       </div>
       <div class="section" id="labelSection">
-        <h2>Label &amp; Color</h2>
-        <label>Label</label>
-        <input type="text"  id="buildingLabel" placeholder="e.g. PHZ or Main Base" />
+        <h2>이름 및 색상</h2>
+        <label>이름</label>
+        <input type="text"  id="buildingLabel" placeholder="예: PHZ 또는 본진" />
         <select id="resourceSubtype" style="display:none;width:100%;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:Inter,sans-serif;font-size:0.95rem">
-          <option value="bread">Bread</option>
-          <option value="woodmill">Wood</option>
-          <option value="quarry">Stone</option>
-          <option value="ironmine">Iron</option>
+          <option value="bread">빵</option>
+          <option value="woodmill">목재</option>
+          <option value="quarry">석재</option>
+          <option value="ironmine">철광</option>
         </select>
-        <div id="colorRow"><label>Color</label>
+        <div id="colorRow"><label>색상</label>
         <input type="color" id="buildingColor" value="#4a9edd" /></div>
         <div style="margin-top:6px">
           <label style="font-size:0.78rem;color:var(--text-dim);cursor:pointer;display:flex;align-items:center;gap:5px">
             <input type="checkbox" id="chkSuppressWarnings" onchange="_suppressPlacementWarnings=this.checked">
-            Don't show placement warnings
+            배치 경고 표시 안 함
           </label>
         </div>
       </div>
       <div class="section">
-        <button class="btn btn-primary" onclick="openBannerOpt()" style="width:100%;padding:10px;margin-bottom:6px">🚩 Banner Optimizer</button>
-        <button class="btn btn-primary" onclick="openHiveOpt()" style="width:100%;padding:10px;margin-bottom:6px">🏙️ Hive Optimizer</button>
-        <button class="btn btn-primary" onclick="openTemplatePicker()" style="width:100%;padding:10px;margin-bottom:6px">🏗️ Use Hive Template</button>
-        <button class="btn btn-primary" onclick="openTemplateEditor()" style="width:100%;padding:10px">📐 Create Hive Template</button>
-        <button class="btn btn-primary" onclick="openTrapOptimizer()" style="width:100%;padding:10px;display:none">🎯 Bear Trap Optimizer</button>
+        <button class="btn btn-primary" onclick="openBannerOpt()" style="width:100%;padding:10px;margin-bottom:6px">🚩 깃발 최적화</button>
+        <button class="btn btn-primary" onclick="openHiveOpt()" style="width:100%;padding:10px;margin-bottom:6px">🏙️ 하이브 최적화</button>
+        <button class="btn btn-primary" onclick="openTemplatePicker()" style="width:100%;padding:10px;margin-bottom:6px">🏗️ 하이브 템플릿 사용</button>
+        <button class="btn btn-primary" onclick="openTemplateEditor()" style="width:100%;padding:10px">📐 하이브 템플릿 만들기</button>
+        <button class="btn btn-primary" onclick="openTrapOptimizer()" style="width:100%;padding:10px;display:none">🎯 곰 함정 최적화</button>
         <!-- Step 1: Area selection -->
         <div id="optimizerAreaPanel" style="display:none;margin-top:10px;padding:10px;background:var(--bg);border:1px solid var(--gold-dim);border-radius:6px">
-          <div style="font-weight:600;color:var(--gold);margin-bottom:6px;font-size:0.9rem">Step 1: Working Area</div>
-          <div style="color:var(--text-dim);font-size:0.78rem;margin-bottom:6px">Drag a rectangle on the map, or type coordinates.</div>
+          <div style="font-weight:600;color:var(--gold);margin-bottom:6px;font-size:0.9rem">1단계: 작업 영역</div>
+          <div style="color:var(--text-dim);font-size:0.78rem;margin-bottom:6px">지도에서 사각형을 드래그하거나 좌표를 입력하세요.</div>
           <div id="optAreaCoords" style="font-family:monospace;color:var(--ice);margin:6px 0;font-size:0.78rem"></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:6px 0">
-            <div><label style="font-size:0.72rem;color:var(--text-dim)">TL X</label><input type="number" id="optAreaX1" min="0" max="1199" style="width:100%;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--ice);font-family:monospace;font-size:0.78rem"></div>
-            <div><label style="font-size:0.72rem;color:var(--text-dim)">TL Y</label><input type="number" id="optAreaY1" min="0" max="1199" style="width:100%;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--ice);font-family:monospace;font-size:0.78rem"></div>
-            <div><label style="font-size:0.72rem;color:var(--text-dim)">BR X</label><input type="number" id="optAreaX2" min="0" max="1199" style="width:100%;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--ice);font-family:monospace;font-size:0.78rem"></div>
-            <div><label style="font-size:0.72rem;color:var(--text-dim)">BR Y</label><input type="number" id="optAreaY2" min="0" max="1199" style="width:100%;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--ice);font-family:monospace;font-size:0.78rem"></div>
+            <div><label style="font-size:0.72rem;color:var(--text-dim)">좌상 X</label><input type="number" id="optAreaX1" min="0" max="1199" style="width:100%;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--ice);font-family:monospace;font-size:0.78rem"></div>
+            <div><label style="font-size:0.72rem;color:var(--text-dim)">좌상 Y</label><input type="number" id="optAreaY1" min="0" max="1199" style="width:100%;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--ice);font-family:monospace;font-size:0.78rem"></div>
+            <div><label style="font-size:0.72rem;color:var(--text-dim)">우하 X</label><input type="number" id="optAreaX2" min="0" max="1199" style="width:100%;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--ice);font-family:monospace;font-size:0.78rem"></div>
+            <div><label style="font-size:0.72rem;color:var(--text-dim)">우하 Y</label><input type="number" id="optAreaY2" min="0" max="1199" style="width:100%;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--ice);font-family:monospace;font-size:0.78rem"></div>
           </div>
           <div class="error-msg" id="optAreaError" style="font-size:0.78rem;color:var(--red);margin:4px 0"></div>
           <div style="display:flex;gap:5px;margin-top:6px">
-            <button class="btn btn-cancel" onclick="closeOptimizer()" style="flex:1;padding:6px;font-size:0.82rem">Cancel</button>
-            <button class="btn btn-primary" onclick="_optAreaConfirm()" style="flex:1;padding:6px;font-size:0.82rem">Next →</button>
+            <button class="btn btn-cancel" onclick="closeOptimizer()" style="flex:1;padding:6px;font-size:0.82rem">취소</button>
+            <button class="btn btn-primary" onclick="_optAreaConfirm()" style="flex:1;padding:6px;font-size:0.82rem">다음 →</button>
           </div>
         </div>
-        <!-- Step 2: Parameters -->
+        <!-- 2단계: 매개변수 -->
         <div id="optimizerParamsPanel" style="display:none;margin-top:10px;padding:10px;background:var(--bg);border:1px solid var(--gold-dim);border-radius:6px">
-          <div style="font-weight:600;color:var(--gold);margin-bottom:6px;font-size:0.9rem">Step 2: Parameters</div>
+          <div style="font-weight:600;color:var(--gold);margin-bottom:6px;font-size:0.9rem">2단계: 매개변수</div>
           <div id="optAreaSummary" style="color:var(--text-dim);font-size:0.78rem;margin-bottom:8px;font-family:monospace"></div>
           <div style="display:flex;flex-direction:column;gap:8px">
             <div>
-              <label style="font-size:0.78rem;color:var(--text-dim)">Bear traps</label>
+              <label style="font-size:0.78rem;color:var(--text-dim)">곰 함정</label>
               <select id="optTrapCount" onchange="_optToggleCitiesBetween()" style="width:100%;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:0.85rem">
-                <option value="1">1 trap</option>
-                <option value="2" selected>2 traps</option>
+                <option value="1">함정 1개</option>
+                <option value="2" selected>함정 2개</option>
               </select>
             </div>
             <div id="optCitiesBetweenRow" style="display:block;padding:6px;border-left:3px solid var(--gold);background:rgba(212,175,55,0.06);border-radius:4px">
-              <label style="font-size:0.78rem;color:var(--gold);font-weight:600">Cities between traps</label>
+              <label style="font-size:0.78rem;color:var(--gold);font-weight:600">함정 사이 도시 수</label>
               <select id="optCitiesBetween" style="width:100%;padding:6px;margin-top:3px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:0.85rem">
-                <option value="0">0 — touching</option>
-                <option value="2" selected>2 (4-cell gap)</option>
-                <option value="3">3 (6-cell gap)</option>
-                <option value="4">4 (8-cell gap)</option>
-                <option value="5">5 (10-cell gap)</option>
-                <option value="6">6 (12-cell gap)</option>
+                <option value="0">0 — 맞닿음</option>
+                <option value="2" selected>2 (4칸 간격)</option>
+                <option value="3">3 (6칸 간격)</option>
+                <option value="4">4 (8칸 간격)</option>
+                <option value="5">5 (10칸 간격)</option>
+                <option value="6">6 (12칸 간격)</option>
               </select>
             </div>
             <div>
-              <label style="font-size:0.78rem;color:var(--text-dim)">Cities per trap</label>
+              <label style="font-size:0.78rem;color:var(--text-dim)">함정당 도시 수</label>
               <input type="number" id="optCitiesPerTrap" min="1" max="100" value="20" style="width:100%;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--ice);font-family:monospace;font-size:0.85rem">
-              <div style="color:var(--text-dim);font-size:0.7rem;margin-top:2px">Total ≤ 100</div>
+              <div style="color:var(--text-dim);font-size:0.7rem;margin-top:2px">합계 ≤ 100</div>
             </div>
             <div>
-              <label style="font-size:0.78rem;color:var(--text-dim)">Alliance label</label>
-              <input type="text" id="optAllianceLabel" placeholder="e.g. PHZ" maxlength="20" style="width:100%;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:0.85rem">
+              <label style="font-size:0.78rem;color:var(--text-dim)">연맹 이름</label>
+              <input type="text" id="optAllianceLabel" placeholder="예: PHZ" maxlength="20" style="width:100%;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:0.85rem">
             </div>
           </div>
           <div class="error-msg" id="optParamsError" style="font-size:0.78rem;color:var(--red);margin:4px 0"></div>
           <div style="display:flex;gap:5px;margin-top:6px">
-            <button class="btn btn-cancel" onclick="closeOptimizer()" style="flex:1;padding:6px;font-size:0.82rem">Cancel</button>
-            <button class="btn btn-primary" onclick="_optParamsConfirm()" style="flex:1;padding:6px;font-size:0.82rem">Compute →</button>
+            <button class="btn btn-cancel" onclick="closeOptimizer()" style="flex:1;padding:6px;font-size:0.82rem">취소</button>
+            <button class="btn btn-primary" onclick="_optParamsConfirm()" style="flex:1;padding:6px;font-size:0.82rem">계산 →</button>
           </div>
         </div>
         <!-- Step 3: Progress -->
         <div id="optimizerProgressPanel" style="display:none;margin-top:10px;padding:10px;background:var(--bg);border:1px solid var(--gold-dim);border-radius:6px;text-align:center">
           <div style="font-size:1.5rem;margin:8px 0">⏳</div>
-          <div id="optProgressMsg" style="color:var(--text-dim);font-size:0.82rem">Computing layouts…</div>
+          <div id="optProgressMsg" style="color:var(--text-dim);font-size:0.82rem">배치 계산 중…</div>
         </div>
         <!-- Step 4: Preview -->
         <div id="optimizerPreviewPanel" style="display:none;margin-top:10px;padding:10px;background:var(--bg);border:1px solid var(--gold-dim);border-radius:6px">
-          <div style="font-weight:600;color:var(--gold);margin-bottom:6px;font-size:0.9rem">Preview</div>
+          <div style="font-weight:600;color:var(--gold);margin-bottom:6px;font-size:0.9rem">미리보기</div>
           <div id="optPreviewStats" style="font-size:0.82rem;line-height:1.5;margin-bottom:6px"></div>
-          <div style="color:var(--text-dim);font-size:0.7rem;margin-bottom:6px">Yellow: area · Red: traps · Blue: cities · Grey: banners · Purple: HQ</div>
+          <div style="color:var(--text-dim);font-size:0.7rem;margin-bottom:6px">노랑: 영역 · 빨강: 함정 · 파랑: 도시 · 회색: 깃발 · 보라: 본부</div>
           <div style="display:flex;gap:5px;flex-wrap:wrap">
-            <button class="btn btn-cancel" onclick="closeOptimizer()" style="flex:1;padding:6px;font-size:0.82rem">Cancel</button>
-            <button class="btn btn-cancel" id="optBtnNext" onclick="optNextResult()" style="flex:1;padding:6px;font-size:0.82rem">Next →</button>
-            <button class="btn btn-primary" onclick="optApply()" style="flex:1;padding:6px;font-size:0.82rem">Apply</button>
+            <button class="btn btn-cancel" onclick="closeOptimizer()" style="flex:1;padding:6px;font-size:0.82rem">취소</button>
+            <button class="btn btn-cancel" id="optBtnNext" onclick="optNextResult()" style="flex:1;padding:6px;font-size:0.82rem">다음 →</button>
+            <button class="btn btn-primary" onclick="optApply()" style="flex:1;padding:6px;font-size:0.82rem">적용</button>
           </div>
         </div>
       </div>
@@ -948,63 +899,63 @@
     <!-- TAB: Placed — edit panel lives here -->
     <div class="sidebar-panel" id="panel-placed">
       <div class="section">
-        <button class="btn btn-primary" onclick="openAllianceSummary()" style="width:100%;padding:10px">⚔ Alliance Territory Summary</button>
+        <button class="btn btn-primary" onclick="openAllianceSummary()" style="width:100%;padding:10px">⚔ 연맹 영토 요약</button>
       </div>
       <div class="section" id="editSection" style="display:none">
-        <h2 id="editSectionTitle">Edit Selected</h2>
+        <h2 id="editSectionTitle">선택 항목 편집</h2>
         <div class="edit-panel" id="editPanelUser">
           <h3 id="editTitle">—</h3>
           <div class="edit-row">
-            <label>Label</label>
-            <input type="text" id="editLabel" placeholder="Label" oninput="applyEdit()" />
+            <label>이름</label>
+            <input type="text" id="editLabel" placeholder="이름" oninput="applyEdit()" />
             <select id="editResLabel" style="display:none;width:100%;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:Inter,sans-serif;font-size:0.95rem" onchange="applyEdit()">
-              <option value="Bread">Bread</option>
-              <option value="Wood">Wood</option>
-              <option value="Stone">Stone</option>
-              <option value="Iron">Iron</option>
+              <option value="Bread">빵</option>
+              <option value="Wood">목재</option>
+              <option value="Stone">석재</option>
+              <option value="Iron">철광</option>
             </select>
           </div>
           <div class="edit-row" id="editColorRow">
-            <label>Color</label>
+            <label>색상</label>
             <input type="color" id="editColor" value="#e8a838" oninput="applyEditColor()" onchange="applyEdit()" />
           </div>
           <div class="edit-row">
-            <label>Type</label>
+            <label>종류</label>
             <select id="editType" onchange="applyEditType()">
-              <option value="city">City (2×2)</option>
-              <option value="beartrap">Bear Trap (3×3)</option>
-              <option value="banner">Banner (1×1)</option>
-              <option value="resource">Resource Node (2×2)</option>
-              <option value="hq">Alliance HQ (3×3)</option>
-              <option value="obs1">Obstacle 1×1</option>
-              <option value="obs2">Obstacle 2×2</option>
-              <option value="obs3">Obstacle 3×3</option>
+              <option value="city">도시 (2×2)</option>
+              <option value="beartrap">곰 함정 (3×3)</option>
+              <option value="banner">깃발 (1×1)</option>
+              <option value="resource">자원지 (2×2)</option>
+              <option value="hq">연맹 본부 (3×3)</option>
+              <option value="obs1">장애물 1×1</option>
+              <option value="obs2">장애물 2×2</option>
+              <option value="obs3">장애물 3×3</option>
             </select>
           </div>
           <div class="edit-coord" id="editCoordInfo"></div>
           <div class="edit-row">
-            <button class="small-btn" onclick="deselectBuilding()">Deselect</button>
-            <button class="small-btn danger" onclick="deleteSelected()">Delete</button>
+            <button class="small-btn" onclick="deselectBuilding()">선택 해제</button>
+            <button class="small-btn danger" onclick="deleteSelected()">삭제</button>
           </div>
         </div>
         <div class="edit-panel" id="editPanelCanonical" style="display:none">
           <h3 id="canonicalTitle">—</h3>
           <div class="edit-coord" id="canonicalCoordInfo"></div>
           <div style="font-size:0.82rem;color:var(--text-dim);line-height:1.4;margin:6px 0">
-            This is a canonical resource node. To make changes, submit a report for admin review.
+            공식 자원지입니다. 변경하려면 관리자 검토용 신고를 제출하세요.
           </div>
           <div class="edit-row">
-            <button class="small-btn" onclick="deselectBuilding()">Deselect</button>
-            <button class="small-btn" onclick="openReport(selectedId)" style="background:rgba(201,168,76,0.15);border-color:var(--gold-dim);color:var(--gold)">📝 Report Issue</button>
+            <button class="small-btn" onclick="deselectBuilding()">선택 해제</button>
+            <button class="small-btn" onclick="openReport(selectedId)" style="background:rgba(201,168,76,0.15);border-color:var(--gold-dim);color:var(--gold)">📝 오류 신고</button>
           </div>
         </div>
       </div>
       <div class="section">
-        <h2>Placed Buildings (<span id="placedCount">0</span>)</h2>
+        <h2>배치된 건물 (<span id="placedCount">0</span>)</h2>
         <div class="placed-list" id="placedList"></div>
       </div>
       <div class="section" id="allianceSection" style="display:none">
-        <h2>Territory Owners</h2>
+        <h2>영토 소유 연맹</h2>
         <div class="zone-legend" id="allianceLegend"></div>
       </div>
     </div>
@@ -1012,46 +963,46 @@
     <!-- TAB: Map -->
     <div class="sidebar-panel" id="panel-map">
       <div class="section">
-        <h2>Map Zones</h2>
+        <h2>지도 구역</h2>
         <div class="zone-legend">
-          <div class="zone-legend-item"><div class="zone-legend-dot" style="background:#4a0010"></div>Forbidden (no build)</div>
-          <div class="zone-legend-item"><div class="zone-legend-dot" style="background:#5a3214"></div>Ruins (no alliance)</div>
-          <div class="zone-legend-item"><div class="zone-legend-dot" style="background:#1a4020"></div>Fertile Lands</div>
-          <div class="zone-legend-item"><div class="zone-legend-dot" style="background:#2d5e2a"></div>Plains</div>
-          <div class="zone-legend-item"><div class="zone-legend-dot" style="background:#3d7035"></div>Badlands</div>
+          <div class="zone-legend-item"><div class="zone-legend-dot" style="background:#4a0010"></div>금지 구역 (건설 불가)</div>
+          <div class="zone-legend-item"><div class="zone-legend-dot" style="background:#5a3214"></div>폐허 (연맹 불가)</div>
+          <div class="zone-legend-item"><div class="zone-legend-dot" style="background:#1a4020"></div>비옥한 땅</div>
+          <div class="zone-legend-item"><div class="zone-legend-dot" style="background:#2d5e2a"></div>평원</div>
+          <div class="zone-legend-item"><div class="zone-legend-dot" style="background:#3d7035"></div>황무지</div>
         </div>
       </div>
       <div class="section">
-        <h2>Terrain & Resources</h2>
+        <h2>지형 및 자원</h2>
         <div class="zone-legend">
-          <div class="zone-legend-item"><div class="zone-legend-dot" style="background:rgba(30,90,170,0.7)"></div>Lakes (501)</div>
-          <div class="zone-legend-item"><div class="zone-legend-dot" style="background:rgba(110,75,35,0.7)"></div>Mountains (1948)</div>
+          <div class="zone-legend-item"><div class="zone-legend-dot" style="background:rgba(30,90,170,0.7)"></div>호수 (501)</div>
+          <div class="zone-legend-item"><div class="zone-legend-dot" style="background:rgba(110,75,35,0.7)"></div>산 (1948)</div>
         </div>
-        <div style="font-size:0.82rem;color:var(--text-dim);margin-top:4px">Nothing can be placed on lakes or mountains. Territory can overlay them.</div>
+        <div style="font-size:0.82rem;color:var(--text-dim);margin-top:4px">호수와 산 위에는 아무것도 배치할 수 없습니다. 영토는 그 위로 겹칠 수 있습니다.</div>
         <div style="display:flex;flex-direction:column;gap:5px;margin-top:8px">
-          <label class="filter-item"><input type="checkbox" checked onchange="toggleResourceNodes(this.checked)"> Show Resource Nodes</label>
-          <label class="filter-item"><input type="checkbox" checked onchange="toggleTerrain('lake',this.checked)"> Show Lakes</label>
-          <label class="filter-item"><input type="checkbox" checked onchange="toggleTerrain('mt',this.checked)"> Show Mountains</label>
-          <label class="filter-item"><input type="checkbox" onchange="toggleBuildOverTerrain(this.checked)"> Allow build over terrain &amp; resources</label>
+          <label class="filter-item"><input type="checkbox" checked onchange="toggleResourceNodes(this.checked)"> 자원지 표시</label>
+          <label class="filter-item"><input type="checkbox" checked onchange="toggleTerrain('lake',this.checked)"> 호수 표시</label>
+          <label class="filter-item"><input type="checkbox" checked onchange="toggleTerrain('mt',this.checked)"> 산 표시</label>
+          <label class="filter-item"><input type="checkbox" onchange="toggleBuildOverTerrain(this.checked)"> 지형·자원 위 건설 허용</label>
         </div>
       </div>
       <div class="section">
-        <h2>Fixed Structure Filters</h2>
+        <h2>고정 구조물 필터</h2>
         <div style="display:flex;flex-direction:column;gap:5px">
-          <label class="filter-item"><input type="checkbox" checked onchange="toggleFilter('Fortress',this.checked)"> Fortress</label>
-          <label class="filter-item"><input type="checkbox" checked onchange="toggleFilter('Sanctuary',this.checked)"> Sanctuary</label>
-          <label class="filter-item"><input type="checkbox" checked onchange="toggleFilter('Construction Outpost',this.checked)"> Construction Outpost</label>
-          <label class="filter-item"><input type="checkbox" checked onchange="toggleFilter('Defense Outpost',this.checked)"> Defense Outpost</label>
-          <label class="filter-item"><input type="checkbox" checked onchange="toggleFilter('Research Outpost',this.checked)"> Research Outpost</label>
-          <label class="filter-item"><input type="checkbox" checked onchange="toggleFilter('Resource Production Outpost',this.checked)"> Resource Production</label>
-          <label class="filter-item"><input type="checkbox" checked onchange="toggleFilter('Frontier Lodge',this.checked)"> Frontier Lodge</label>
-          <label class="filter-item"><input type="checkbox" checked onchange="toggleFilter('Gathering Outpost',this.checked)"> Gathering Outpost</label>
-          <label class="filter-item"><input type="checkbox" checked onchange="toggleFilter('Attack Outpost',this.checked)"> Attack Outpost</label>
-          <label class="filter-item"><input type="checkbox" checked onchange="toggleFilter('Training Outpost',this.checked)"> Training Outpost</label>
+          <label class="filter-item"><input type="checkbox" checked onchange="toggleFilter('Fortress',this.checked)"> 요새</label>
+          <label class="filter-item"><input type="checkbox" checked onchange="toggleFilter('Sanctuary',this.checked)"> 성소</label>
+          <label class="filter-item"><input type="checkbox" checked onchange="toggleFilter('Construction Outpost',this.checked)"> 건설 전초기지</label>
+          <label class="filter-item"><input type="checkbox" checked onchange="toggleFilter('Defense Outpost',this.checked)"> 방어 전초기지</label>
+          <label class="filter-item"><input type="checkbox" checked onchange="toggleFilter('Research Outpost',this.checked)"> 연구 전초기지</label>
+          <label class="filter-item"><input type="checkbox" checked onchange="toggleFilter('Resource Production Outpost',this.checked)"> 자원 생산 전초기지</label>
+          <label class="filter-item"><input type="checkbox" checked onchange="toggleFilter('Frontier Lodge',this.checked)"> 개척자 오두막</label>
+          <label class="filter-item"><input type="checkbox" checked onchange="toggleFilter('Gathering Outpost',this.checked)"> 채집 전초기지</label>
+          <label class="filter-item"><input type="checkbox" checked onchange="toggleFilter('Attack Outpost',this.checked)"> 공격 전초기지</label>
+          <label class="filter-item"><input type="checkbox" checked onchange="toggleFilter('Training Outpost',this.checked)"> 훈련 전초기지</label>
         </div>
       </div>
       <div class="section" style="flex:1;min-height:0">
-        <h2>Fixed Buildings — click to navigate</h2>
+        <h2>고정 건물 — 클릭하여 이동</h2>
         <div id="permBuildingList" style="display:flex;flex-direction:column;gap:2px;overflow-y:auto;max-height:280px"></div>
       </div>
     </div>
@@ -1061,8 +1012,8 @@
   <div class="sidebar" id="bannerOptPanel" style="display:none">
     <div class="sheet-handle-row" onclick="closeAllSheets()"><div class="sheet-handle"></div></div>
     <div class="bo-hdr">
-      <span class="bo-hdr-title">⚡ Banner Optimizer</span>
-      <button class="bo-close-btn" onclick="closeBannerOpt()" title="Close optimizer">✕</button>
+      <span class="bo-hdr-title">⚡ 깃발 최적화</span>
+      <button class="bo-close-btn" onclick="closeBannerOpt()" title="최적화 닫기">✕</button>
     </div>
     <div class="bo-content">
 
@@ -1070,16 +1021,16 @@
       <div class="bo-section">
         <div class="bo-section-hdr">
           <span class="bo-step-badge">1</span>
-          <span class="bo-section-title">Starting Point</span>
+          <span class="bo-section-title">시작 지점</span>
         </div>
         <div class="bo-section-body">
-          <p class="bo-hint">Pick a starting point: click a specific Banner/HQ on the map, or choose any active alliance from the list.</p>
-          <button class="bo-pick-btn" id="boPickStartBtn" onclick="boActivateStartPick()">↖ Select from Map</button>
+          <p class="bo-hint">시작 지점을 고르세요: 지도에서 특정 깃발/본부를 클릭하거나 목록에서 활성 연맹을 선택하세요.</p>
+          <button class="bo-pick-btn" id="boPickStartBtn" onclick="boActivateStartPick()">↖ 지도에서 선택</button>
           <select class="bo-pick-btn" id="boAllianceSelect" onchange="boOnAllianceChange(this)">
-            <option value="">— or pick an alliance —</option>
+            <option value="">— 또는 연맹 선택 —</option>
           </select>
           <div class="bo-start-display" id="boStartDisplay">
-            <span class="bo-start-none">No starting point selected</span>
+            <span class="bo-start-none">선택된 시작 지점 없음</span>
           </div>
         </div>
       </div>
@@ -1088,17 +1039,17 @@
       <div class="bo-section">
         <div class="bo-section-hdr">
           <span class="bo-step-badge">2</span>
-          <span class="bo-section-title" id="boTargetSectionTitle">Target Outposts</span>
+          <span class="bo-section-title" id="boTargetSectionTitle">목표 전초기지</span>
           <span class="bo-count-badge" id="boTargetCount"></span>
-          <button class="bo-hdr-clear-btn" id="boClearTargetsBtn" onclick="boClearAllTargets()" style="display:none">Clear</button>
+          <button class="bo-hdr-clear-btn" id="boClearTargetsBtn" onclick="boClearAllTargets()" style="display:none">지우기</button>
         </div>
         <div class="bo-section-body" style="padding-bottom:6px">
           <label class="bo-check-row">
             <input type="checkbox" id="boOptAutoPickTargets" onchange="boToggleAutoPickTargets(this)">
-            <span id="boAutoPickLabelText">🎯 Auto-pick the closest outpost of each type</span>
+            <span id="boAutoPickLabelText">🎯 종류별 가장 가까운 전초기지 자동 선택</span>
           </label>
-          <p class="bo-hint" id="boTargetManualHint">Click outposts on the map, or expand a category to select by location.</p>
-          <p class="bo-hint" id="boTargetAutoHint" style="display:none;color:var(--blue)">Will pick the nearest reachable outpost of each type when you run the optimizer.</p>
+          <p class="bo-hint" id="boTargetManualHint">지도에서 전초기지를 클릭하거나 분류를 펼쳐 위치별로 선택하세요.</p>
+          <p class="bo-hint" id="boTargetAutoHint" style="display:none;color:var(--blue)">최적화 실행 시 종류별로 도달 가능한 가장 가까운 전초기지를 선택합니다.</p>
         </div>
         <div class="bo-accordion" id="boAccordion"></div>
       </div>
@@ -1107,27 +1058,27 @@
       <div class="bo-section">
         <div class="bo-section-hdr">
           <span class="bo-step-badge">3</span>
-          <span class="bo-section-title">Options</span>
+          <span class="bo-section-title">옵션</span>
         </div>
         <div class="bo-section-body">
           <label class="bo-check-row">
             <input type="checkbox" id="boOptSameAlliance" checked>
-            Use existing banners from the same alliance
+            같은 연맹의 기존 깃발 사용
           </label>
           <label class="bo-check-row">
             <input type="checkbox" id="boOptCaptureRes" checked>
-            Capture resource nodes along the path (no extra banners)
+            경로상의 자원지 확보 (추가 깃발 없음)
           </label>
         </div>
       </div>
 
     </div>
 
-    <button class="bo-run-btn" id="boRunBtn" onclick="boRunOptimizer()" disabled>⚡ Optimize Connection</button>
+    <button class="bo-run-btn" id="boRunBtn" onclick="boRunOptimizer()" disabled>⚡ 연결 최적화</button>
 
     <div class="bo-results" id="boResults" style="display:none">
       <div class="bo-res-hdr">
-        <span class="bo-res-title">Route Preview</span>
+        <span class="bo-res-title">경로 미리보기</span>
         <div class="bo-res-nav" id="boResNav" style="display:none">
           <button class="bo-nav-btn" id="boPrevSolBtn" onclick="boPrevSolution()">‹</button>
           <span class="bo-nav-info" id="boSolInfo">1/1</span>
@@ -1139,15 +1090,15 @@
         <div class="bo-res-stats">
           <div class="bo-res-stat">
             <span class="bo-res-stat-val" id="boResBanners">—</span>
-            <span class="bo-res-stat-lbl">New Banners</span>
+            <span class="bo-res-stat-lbl">새 깃발</span>
           </div>
           <div class="bo-res-stat">
             <span class="bo-res-stat-val" id="boResNodes">—</span>
-            <span class="bo-res-stat-lbl">Resource Nodes</span>
+            <span class="bo-res-stat-lbl">자원지</span>
           </div>
         </div>
         <p class="bo-res-msg" id="boResMsg"></p>
-        <button class="bo-apply-btn" id="boApplyBtn" onclick="boApplyBanners()">✓ Place All Banners</button>
+        <button class="bo-apply-btn" id="boApplyBtn" onclick="boApplyBanners()">✓ 깃발 모두 배치</button>
       </div>
     </div>
   </div>
@@ -1156,8 +1107,8 @@
   <div class="sidebar" id="hiveOptPanel" style="display:none">
     <div class="sheet-handle-row" onclick="closeAllSheets()"><div class="sheet-handle"></div></div>
     <div class="bo-hdr">
-      <span class="bo-hdr-title">🏙️ Hive Optimizer</span>
-      <button class="bo-close-btn" onclick="closeHiveOpt()" title="Cancel and exit (discards preview, exits isolated view)">✕</button>
+      <span class="bo-hdr-title">🏙️ 하이브 최적화</span>
+      <button class="bo-close-btn" onclick="closeHiveOpt()" title="취소 후 나가기 (미리보기 폐기, 격리 보기 종료)">✕</button>
     </div>
     <div class="bo-content">
 
@@ -1165,30 +1116,30 @@
       <div class="bo-section" id="hoStepConfig">
         <div class="bo-section-hdr">
           <span class="bo-step-badge">1</span>
-          <span class="bo-section-title">Alliance &amp; City Count</span>
+          <span class="bo-section-title">연맹 및 도시 수</span>
         </div>
         <div class="bo-section-body">
           <div class="bo-hint" style="border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:5px;background:rgba(88,166,255,0.06);padding:9px 11px">
-            <div style="color:var(--blue);font-weight:600;margin-bottom:4px">Before you start</div>
+            <div style="color:var(--blue);font-weight:600;margin-bottom:4px">시작 전 확인</div>
             <ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:3px">
-              <li>Cities are placed inside the chosen alliance's territory (the alliance's full bbox is used — no area drawing).</li>
-              <li>A bear trap must already exist within or near the alliance's territory. Alliances without one are not shown in the list.</li>
-              <li>The optimizer places <strong>cities only</strong> — it does <strong>not</strong> place banners, HQ, or bear traps.</li>
+              <li>도시는 선택한 연맹의 영토 안에 배치됩니다(연맹 전체 범위 사용 — 영역 지정 불필요).</li>
+              <li>연맹 영토 안이나 근처에 곰 함정이 이미 있어야 합니다. 곰 함정이 없는 연맹은 목록에 표시되지 않습니다.</li>
+              <li>최적화는 <strong>도시만</strong> 배치하며, 깃발·본부·곰 함정은 배치하지 <strong>않습니다</strong>.</li>
             </ul>
           </div>
-          <p class="bo-hint">Pick an alliance, enter how many cities to place, then run the optimizer.</p>
+          <p class="bo-hint">연맹을 고르고 배치할 도시 수를 입력한 뒤 최적화를 실행하세요.</p>
           <select class="bo-pick-btn" id="hoAllianceSelect" onchange="hoOnAllianceChange(this)">
-            <option value="">— pick an alliance —</option>
+            <option value="">— 연맹 선택 —</option>
           </select>
-          <p class="bo-hint" style="margin:4px 2px 0;font-style:italic;opacity:0.85">Only alliances with a bear trap nearby their territory are shown.</p>
+          <p class="bo-hint" style="margin:4px 2px 0;font-style:italic;opacity:0.85">영토 근처에 곰 함정이 있는 연맹만 표시됩니다.</p>
           <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:0.85rem;color:var(--text-dim)">
-            Cities to place:
+            배치할 도시 수:
             <input type="number" id="hoCityCount" value="10" min="1" max="100"
                    style="width:80px;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--ice);font-family:monospace;font-size:0.9rem"
                    onchange="hoOnCityCountChange(this)">
           </label>
           <button class="bo-run-btn" id="hoEnterBtn" onclick="hoEnterIsolated()" disabled style="margin-top:10px">
-            ▶ Run Optimizer
+            ▶ 최적화 실행
           </button>
         </div>
       </div>
@@ -1197,8 +1148,8 @@
       <div class="bo-section" id="hoStepResults" style="display:none">
         <div class="bo-section-hdr">
           <span class="bo-step-badge">2</span>
-          <span class="bo-section-title">Preview</span>
-          <span class="bo-count-badge" id="hoSolName" style="display:inline-flex">Closest</span>
+          <span class="bo-section-title">미리보기</span>
+          <span class="bo-count-badge" id="hoSolName" style="display:inline-flex">최단</span>
         </div>
         <div class="bo-section-body">
           <div class="bo-res-nav" id="hoSolNav" style="display:none;justify-content:center;align-items:center;gap:10px;margin-bottom:8px">
@@ -1209,24 +1160,24 @@
           <div class="bo-res-stats" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
             <div class="bo-res-stat">
               <span class="bo-res-stat-val" id="hoSolCities">—</span>
-              <span class="bo-res-stat-lbl">Cities</span>
+              <span class="bo-res-stat-lbl">도시</span>
             </div>
             <div class="bo-res-stat">
               <span class="bo-res-stat-val" id="hoSolAvg">—</span>
-              <span class="bo-res-stat-lbl">Avg seconds</span>
+              <span class="bo-res-stat-lbl">평균 초</span>
             </div>
           </div>
           <p class="bo-hint" style="margin:4px 0 8px">
-            Total: <span id="hoSolTotal">—</span>s &nbsp;·&nbsp; <span id="hoSolSplit">—</span>
+            합계: <span id="hoSolTotal">—</span>s &nbsp;·&nbsp; <span id="hoSolSplit">—</span>
           </p>
           <label style="display:flex;align-items:center;gap:8px;margin:6px 0;font-size:0.85rem;color:var(--text-dim)">
-            Cities to place:
+            배치할 도시 수:
             <input type="number" id="hoCityCountResults" value="10" min="1" max="100"
                    style="width:80px;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--ice);font-family:monospace;font-size:0.9rem"
                    onchange="hoOnCityCountChange(this)">
           </label>
-          <button class="bo-apply-btn" onclick="hoApply()">✓ Apply These Cities</button>
-          <button class="bo-pick-btn" onclick="closeHiveOpt()" style="margin-top:6px">✕ Cancel</button>
+          <button class="bo-apply-btn" onclick="hoApply()">✓ 이 도시들 적용</button>
+          <button class="bo-pick-btn" onclick="closeHiveOpt()" style="margin-top:6px">✕ 취소</button>
         </div>
       </div>
 
@@ -1237,14 +1188,14 @@
   <div class="canvas-wrap" id="canvasWrap">
     <canvas id="mapCanvas"></canvas>
     <div id="renamePopup">
-      <label>Rename Building</label>
-      <input type="text" id="renameInput" placeholder="Label…" />
-      <span class="hint-tiny">Enter to confirm · Esc to cancel</span>
+      <label>건물 이름 변경</label>
+      <input type="text" id="renameInput" placeholder="이름…" />
+      <span class="hint-tiny">Enter 확인 · Esc 취소</span>
     </div>
-    <div class="hint" id="hintText">Left-click: place building  |  Scroll: zoom  |  Alt+drag: pan</div>
+    <div class="hint" id="hintText">좌클릭: 건물 배치  |  스크롤: 확대/축소  |  드래그: 지도 이동</div>
     <div class="map-overlay-bar">
       <div class="map-overlay-pill" id="zoomDisplay">100%</div>
-      <div class="map-overlay-pill coord-pill-overlay" id="coordDisplay" onclick="openCoordJump()" title="Click to navigate to coordinates">
+      <div class="map-overlay-pill coord-pill-overlay" id="coordDisplay" onclick="openCoordJump()" title="클릭하여 좌표로 이동">
         <span id="coordText">— , —</span>
       </div>
     </div>
@@ -1254,14 +1205,14 @@
 <!-- COORD JUMP MODAL -->
 <div id="coordJumpModal">
   <div class="coord-jump-box">
-    <h4>📍 Navigate to Coordinates</h4>
+    <h4>📍 좌표로 이동</h4>
     <div class="coord-jump-row">
       <input type="number" id="jumpX" placeholder="X" min="0" max="1199" />
       <input type="number" id="jumpY" placeholder="Y" min="0" max="1199" />
     </div>
     <div style="display:flex;gap:8px">
-      <button class="btn btn-primary" onclick="doCoordJump()" style="flex:1">Go ↵</button>
-      <button class="btn btn-cancel" onclick="closeCoordJump()">Cancel</button>
+      <button class="btn btn-primary" onclick="doCoordJump()" style="flex:1">이동 ↵</button>
+      <button class="btn btn-cancel" onclick="closeCoordJump()">취소</button>
     </div>
   </div>
 </div>
@@ -1269,130 +1220,129 @@
 <!-- INSTRUCTIONS MODAL -->
 <div id="instructionsModal">
   <div class="instr-box">
-    <h2>⚔ Kingshot Mapper <span style="font-size:0.78rem;color:var(--text-dim);font-weight:400">User Guide</span></h2>
+    <h2>⚔ 킹샷 맵퍼 <span style="font-size:0.78rem;color:var(--text-dim);font-weight:400">사용 설명서</span></h2>
     <div class="help-body">
       <div class="help-tabs" role="tablist">
-        <button class="help-tab active" data-help-tab="quickstart" onclick="selectHelpTab('quickstart')">🗺 Quick Start</button>
-        <button class="help-tab" data-help-tab="tools" onclick="selectHelpTab('tools')">✏ Tools &amp; Editing</button>
-        <button class="help-tab" data-help-tab="alliance" onclick="selectHelpTab('alliance')">🏰 Alliances</button>
-        <button class="help-tab" data-help-tab="hiveview" onclick="selectHelpTab('hiveview')">🪖 Hive View</button>
-        <button class="help-tab" data-help-tab="optimizer" onclick="selectHelpTab('optimizer')">⚡ Banner Optimizer</button>
-        <button class="help-tab" data-help-tab="hiveopt" onclick="selectHelpTab('hiveopt')">🏙️ Hive Optimizer</button>
-        <button class="help-tab" data-help-tab="templates" onclick="selectHelpTab('templates')">📐 Hive Templates</button>
-        <button class="help-tab" data-help-tab="display" onclick="selectHelpTab('display')">🗺 Map &amp; Display</button>
-        <button class="help-tab" data-help-tab="sharing" onclick="selectHelpTab('sharing')">📦 Import &amp; Share</button>
-        <button class="help-tab" data-help-tab="shortcuts" onclick="selectHelpTab('shortcuts')">⌨ Shortcuts</button>
+        <button class="help-tab active" data-help-tab="quickstart" onclick="selectHelpTab('quickstart')">🗺 빠른 시작</button>
+        <button class="help-tab" data-help-tab="tools" onclick="selectHelpTab('tools')">✏ 도구 및 편집</button>
+        <button class="help-tab" data-help-tab="alliance" onclick="selectHelpTab('alliance')">🏰 연맹</button>
+        <button class="help-tab" data-help-tab="hiveview" onclick="selectHelpTab('hiveview')">🪖 하이브 보기</button>
+        <button class="help-tab" data-help-tab="optimizer" onclick="selectHelpTab('optimizer')">⚡ 깃발 최적화</button>
+        <button class="help-tab" data-help-tab="hiveopt" onclick="selectHelpTab('hiveopt')">🏙️ 하이브 최적화</button>
+        <button class="help-tab" data-help-tab="templates" onclick="selectHelpTab('templates')">📐 하이브 템플릿</button>
+        <button class="help-tab" data-help-tab="display" onclick="selectHelpTab('display')">🗺 지도 및 표시</button>
+        <button class="help-tab" data-help-tab="sharing" onclick="selectHelpTab('sharing')">📦 가져오기 및 공유</button>
+        <button class="help-tab" data-help-tab="shortcuts" onclick="selectHelpTab('shortcuts')">⌨ 단축키</button>
       </div>
       <div class="help-panels">
 
         <div class="help-panel active" data-help-panel="quickstart">
-          <h3>🗺 Quick Start</h3>
-          <div class="instr-tip"><span class="tip-icon">💡</span><span>Pick a tool: <strong style="color:var(--gold)">Place [D]</strong> drops buildings · <strong style="color:var(--blue)">Select [S]</strong> moves &amp; edits · <strong style="color:var(--red)">Erase [E]</strong> removes. Select a building type in the sidebar, then click the map.</span></div>
-          <div class="instr-tip"><span class="tip-icon">📂</span><span>For lots of buildings, it's much faster to type coordinates into a spreadsheet and <strong style="color:var(--gold)">↓ Import</strong> a CSV than to place each one manually.</span></div>
-          <div class="instr-tip"><span class="tip-icon">💾</span><span>Save your work with <strong style="color:var(--gold)">↑ Export</strong> (CSV file backup) and/or <strong style="color:var(--gold)">🔗 Share</strong> (cloud link).</span></div>
-          <div class="instr-tip"><span class="tip-icon">🎮</span><span>Use the <strong style="color:var(--gold)">game selector</strong> in the top toolbar to switch between Kingshot and Whiteout Survival — building names, resource labels (Bread↔Meat, Stone↔Coal), and permanent structures change accordingly.</span></div>
+          <h3>🗺 빠른 시작</h3>
+          <div class="instr-tip"><span class="tip-icon">💡</span><span>도구 선택: <strong style="color:var(--gold)">배치 [D]</strong> 건물 놓기 · <strong style="color:var(--blue)">선택 [S]</strong> 이동·편집 · <strong style="color:var(--red)">지우기 [E]</strong> 제거. 사이드바에서 건물 종류를 고른 뒤 지도를 클릭하세요.</span></div>
+          <div class="instr-tip"><span class="tip-icon">📂</span><span>건물이 많다면 하나씩 배치하기보다 스프레드시트에 좌표를 입력한 뒤 CSV로 <strong style="color:var(--gold)">↓ 가져오기</strong> 하는 편이 훨씬 빠릅니다.</span></div>
+          <div class="instr-tip"><span class="tip-icon">💾</span><span>작업은 <strong style="color:var(--gold)">↑ 내보내기</strong>(CSV 파일 백업) 또는 <strong style="color:var(--gold)">🔗 공유</strong>(클라우드 링크)로 저장하세요.</span></div>
         </div>
 
         <div class="help-panel" data-help-panel="tools">
-          <h3>✏ Tools &amp; Editing</h3>
-          <div class="instr-tip"><span class="tip-icon">🛠</span><span><strong style="color:var(--gold)">Place / Select / Erase</strong> — pick from the toolbar or press <strong>D / S / E</strong>.</span></div>
-          <div class="instr-tip"><span class="tip-icon">🖱</span><span><strong>Right-click</strong> erases a single building in Select or Erase mode — no need to switch tools.</span></div>
-          <div class="instr-tip"><span class="tip-icon">▭</span><span><strong style="color:var(--red)">Rectangle erase</strong> — in Erase mode, right-click-drag a box, then right-click again to confirm the removal.</span></div>
-          <div class="instr-tip"><span class="tip-icon">☑</span><span><strong style="color:var(--blue)">Multi-select</strong> — in Select mode, left-drag over empty space to box-select multiple buildings. Drag the selected group to <strong>multi-move</strong> them as one unit.</span></div>
-          <div class="instr-tip"><span class="tip-icon">✏</span><span><strong>Double-click</strong> a selected building to rename it.</span></div>
-          <div class="instr-tip"><span class="tip-icon">📋</span><span><strong>Ctrl+C</strong> copies the selected building; <strong>Ctrl+V</strong> places a new copy with the same label and color.</span></div>
-          <div class="instr-tip"><span class="tip-icon">↩</span><span><strong>Ctrl+Z</strong> undo · <strong>Ctrl+Y</strong> (or <strong>Ctrl+Shift+Z</strong>) redo.</span></div>
-          <div class="instr-tip"><span class="tip-icon">🔍</span><span><strong>Pan</strong>: middle-click-drag, or Alt+drag. <strong>Zoom</strong>: scroll wheel. <strong>Jump to coordinates</strong>: click the coord pill at the bottom of the map to enter an X,Y.</span></div>
+          <h3>✏ 도구 및 편집</h3>
+          <div class="instr-tip"><span class="tip-icon">🛠</span><span><strong style="color:var(--gold)">배치 / 선택 / 지우기</strong> — 툴바에서 고르거나 <strong>D / S / E</strong> 키를 누르세요.</span></div>
+          <div class="instr-tip"><span class="tip-icon">🖱</span><span>선택 또는 지우기 모드에서 <strong>우클릭</strong>하면 건물 하나를 지웁니다. 도구를 바꿀 필요가 없습니다.</span></div>
+          <div class="instr-tip"><span class="tip-icon">▭</span><span><strong style="color:var(--red)">사각형 지우기</strong> — 지우기 모드에서 우클릭으로 영역을 지정한 뒤, 다시 우클릭하면 삭제가 확정됩니다.</span></div>
+          <div class="instr-tip"><span class="tip-icon">☑</span><span><strong style="color:var(--blue)">다중 선택</strong> — 선택 모드에서 빈 곳을 <strong>Shift+드래그</strong>하면 여러 건물을 한꺼번에 선택합니다. 선택된 그룹을 드래그하면 한 묶음으로 <strong>일괄 이동</strong>합니다.</span></div>
+          <div class="instr-tip"><span class="tip-icon">✏</span><span>선택한 건물을 <strong>더블클릭</strong>하면 이름을 바꿀 수 있습니다.</span></div>
+          <div class="instr-tip"><span class="tip-icon">📋</span><span><strong>Ctrl+C</strong>로 선택한 건물을 복사하고, <strong>Ctrl+V</strong>로 같은 이름·색상의 사본을 배치합니다.</span></div>
+          <div class="instr-tip"><span class="tip-icon">↩</span><span><strong>Ctrl+Z</strong> 되돌리기 · <strong>Ctrl+Y</strong>(또는 <strong>Ctrl+Shift+Z</strong>) 다시 실행.</span></div>
+          <div class="instr-tip"><span class="tip-icon">🔍</span><span><strong>이동</strong>: 빈 곳을 좌클릭 드래그(휠 클릭·Alt+드래그도 가능). <strong>확대/축소</strong>: 마우스 휠. <strong>좌표로 이동</strong>: 지도 하단의 좌표 표시를 클릭해 X,Y를 입력하세요.</span></div>
         </div>
 
         <div class="help-panel" data-help-panel="alliance">
-          <h3>🏰 Alliance Banners &amp; Territory</h3>
-          <div class="instr-tip"><span class="tip-icon">⚠</span><span>Use your <strong style="color:var(--gold)">3-letter alliance tag</strong> as the label for Banners and HQ (e.g. PHZ). Territory merges by label — same label = shared territory.</span></div>
-          <div class="instr-tip"><span class="tip-icon">🔢</span><span><strong>Placement sequence matters</strong> — banners and HQ placed first take priority where territories would overlap, just like in-game.</span></div>
-          <div class="instr-tip"><span class="tip-icon">🔴</span><span>Cities marked with a <strong style="color:var(--red)">red ✕</strong> sit outside all alliance territory and don't get alliance bonuses.</span></div>
-          <div class="instr-tip"><span class="tip-icon">📏</span><span>Limits per alliance: <strong>285 banners, 2 HQs</strong>. You can override placement warnings, but the game won't honor anything beyond these.</span></div>
-          <div class="instr-tip"><span class="tip-icon">📊</span><span>Open <strong style="color:var(--gold)">Alliance Summary</strong> from the toolbar to see counts (HQ · banners · cities), validation warnings, resource production per hour, and territory broken down by zone. Each row also shows the city count attributed by ownership (≥3 of 4 cells inside the alliance's territory).</span></div>
-          <div class="instr-tip"><span class="tip-icon">🪖</span><span>Each summary row exposes two action buttons: <strong style="color:var(--gold)">Hive Plan</strong> (only when the alliance has 10+ cities clustered together) opens the isolated <strong>Hive View</strong>; <strong style="color:var(--gold)">Export Cities</strong> opens the city export modal scoped to that alliance's territory. See the <strong>Hive View</strong> tab for the full feature.</span></div>
-          <div class="instr-tip"><span class="tip-icon">🌾</span><span><strong>Resource nodes</strong> (<strong style="color:#daa520">Bread/Meat</strong> · <strong style="color:#66BB6A">Wood</strong> · <strong style="color:#B0BEC5">Stone/Coal</strong> · <strong style="color:#42A5F5">Iron</strong>) are fixed and match the in-game map. Select a node and click <strong style="color:var(--gold)">📝 Report Issue</strong> if a location is wrong (requires a published cloud map).</span></div>
+          <h3>🏰 연맹 깃발 및 영토</h3>
+          <div class="instr-tip"><span class="tip-icon">⚠</span><span>깃발과 본부의 이름에는 <strong style="color:var(--gold)">3글자 연맹 태그</strong>를 사용하세요(예: PHZ). 영토는 이름 기준으로 합쳐집니다 — 같은 이름 = 같은 영토.</span></div>
+          <div class="instr-tip"><span class="tip-icon">🔢</span><span><strong>배치 순서가 중요합니다</strong> — 게임과 마찬가지로 영토가 겹치는 곳에서는 먼저 배치한 깃발과 본부가 우선합니다.</span></div>
+          <div class="instr-tip"><span class="tip-icon">🔴</span><span><strong style="color:var(--red)">빨간 ✕</strong> 표시된 도시는 모든 연맹 영토 밖에 있어 연맹 보너스를 받지 못합니다.</span></div>
+          <div class="instr-tip"><span class="tip-icon">📏</span><span>연맹당 한도: <strong>깃발 285개, 본부 2개</strong>. 배치 경고를 무시할 수는 있지만, 게임에서는 이 한도를 넘는 것은 인정되지 않습니다.</span></div>
+          <div class="instr-tip"><span class="tip-icon">📊</span><span>툴바에서 <strong style="color:var(--gold)">연맹 요약</strong>을 열면 수량(본부 · 깃발 · 도시), 검증 경고, 시간당 자원 생산량, 구역별 영토를 볼 수 있습니다. 각 행에는 소유 기준 도시 수(4칸 중 3칸 이상이 연맹 영토 안)도 표시됩니다.</span></div>
+          <div class="instr-tip"><span class="tip-icon">🪖</span><span>각 요약 행에는 버튼이 두 개 있습니다. <strong style="color:var(--gold)">하이브 계획</strong>(연맹 도시가 10개 이상 모여 있을 때만 표시)은 격리된 <strong>하이브 보기</strong>를 열고, <strong style="color:var(--gold)">도시 내보내기</strong>는 해당 연맹 영토로 한정된 도시 내보내기 창을 엽니다. 자세한 내용은 <strong>하이브 보기</strong> 탭을 참고하세요.</span></div>
+          <div class="instr-tip"><span class="tip-icon">🌾</span><span><strong>자원지</strong> (<strong style="color:#daa520">빵/고기</strong> · <strong style="color:#66BB6A">목재</strong> · <strong style="color:#B0BEC5">석재/석탄</strong> · <strong style="color:#42A5F5">철광</strong>)는 고정되어 있으며 게임 내 지도와 일치합니다. 위치가 틀렸다면 자원지를 선택하고 <strong style="color:var(--gold)">📝 오류 신고</strong>를 클릭하세요(클라우드에 게시된 지도 필요).</span></div>
         </div>
 
         <div class="help-panel" data-help-panel="hiveview">
-          <h3>🪖 Hive View</h3>
-          <div class="instr-tip"><span class="tip-icon">👀</span><span><strong>Isolated alliance view</strong> — focus the map on one alliance's hive (HQ + banners + cities + bear trap) with every other alliance's buildings hidden. Useful for sharing a clean snapshot or for scouting an enemy hive.</span></div>
-          <div class="instr-tip"><span class="tip-icon">▶</span><span><strong>Open it</strong> from <strong style="color:var(--gold)">Alliance Summary</strong>: the <strong style="color:var(--gold)">Hive Plan</strong> button appears on any row whose alliance has at least 10 cities clustered together.</span></div>
-          <div class="instr-tip"><span class="tip-icon">🔗</span><span><strong>Share a direct link:</strong> use the <strong style="color:var(--gold)">🔗 Copy Link</strong> button inside the view — recipients open straight into the same hive view.</span></div>
-          <div class="instr-tip"><span class="tip-icon">🏙</span><span><strong>🏙 Export Cities</strong> (top bar) opens the city export scoped to just this hive — handy for sending relocation messages to your players.</span></div>
-          <div class="instr-tip"><span class="tip-icon">🖱</span><span>Pan with left-drag, zoom with the scroll wheel. Hive View is <strong>read-only</strong>. Press <strong>Esc</strong> to exit.</span></div>
+          <h3>🪖 하이브 보기</h3>
+          <div class="instr-tip"><span class="tip-icon">👀</span><span><strong>연맹 격리 보기</strong> — 다른 연맹의 건물을 모두 숨기고 한 연맹의 하이브(본부 + 깃발 + 도시 + 곰 함정)만 보여줍니다. 깔끔한 화면을 공유하거나 적 하이브를 정찰할 때 유용합니다.</span></div>
+          <div class="instr-tip"><span class="tip-icon">▶</span><span><strong style="color:var(--gold)">연맹 요약</strong>에서 <strong>열 수 있습니다</strong>. 도시가 10개 이상 모여 있는 연맹 행에 <strong style="color:var(--gold)">하이브 계획</strong> 버튼이 나타납니다.</span></div>
+          <div class="instr-tip"><span class="tip-icon">🔗</span><span><strong>직접 링크 공유:</strong> 보기 화면의 <strong style="color:var(--gold)">🔗 링크 복사</strong> 버튼을 사용하세요. 받는 사람은 같은 하이브 보기로 바로 열립니다.</span></div>
+          <div class="instr-tip"><span class="tip-icon">🏙</span><span><strong>🏙 도시 내보내기</strong>(상단 바)는 이 하이브만 대상으로 도시 내보내기를 엽니다. 멤버에게 이주 메시지를 보낼 때 편리합니다.</span></div>
+          <div class="instr-tip"><span class="tip-icon">🖱</span><span>좌클릭 드래그로 이동, 마우스 휠로 확대/축소합니다. 하이브 보기는 <strong>읽기 전용</strong>입니다. <strong>Esc</strong>를 누르면 나갑니다.</span></div>
         </div>
 
         <div class="help-panel" data-help-panel="optimizer">
-          <h3>⚡ Banner Optimizer</h3>
-          <div class="instr-tip"><span class="tip-icon">🚀</span><span>Open with the <strong style="color:var(--gold)">⚡ Banner Optimizer</strong> button in the toolbar. It finds the minimum number of banners needed to connect your HQ to a set of outposts.</span></div>
-          <div class="instr-tip"><span class="tip-icon">1️⃣</span><span><strong>Step 1 — Starting point:</strong> pick your HQ or an existing banner, either by clicking the map or by selecting from the alliance dropdown.</span></div>
-          <div class="instr-tip"><span class="tip-icon">2️⃣</span><span><strong>Step 2 — Target outposts:</strong> pick the outposts you want to capture (Builder's Guild, Armory, Scholar's, Frontier, etc.). Tick <strong style="color:var(--gold)">Auto-pick closest</strong> to grab the nearest of each type automatically.</span></div>
-          <div class="instr-tip"><span class="tip-icon">3️⃣</span><span><strong>Step 3 — Options:</strong> <strong style="color:var(--gold)">Same alliance only</strong> keeps the solution inside one alliance's territory. <strong style="color:var(--gold)">Capture resource nodes</strong> also connects nearby resources.</span></div>
-          <div class="instr-tip"><span class="tip-icon">▶</span><span>Click <strong style="color:var(--gold)">Run</strong> to compute. Use <strong>Previous / Next</strong> to flip through alternate solutions, then <strong style="color:var(--gold)">Apply</strong> to drop the banners on the map.</span></div>
+          <h3>⚡ 깃발 최적화</h3>
+          <div class="instr-tip"><span class="tip-icon">🚀</span><span>툴바의 <strong style="color:var(--gold)">⚡ 깃발 최적화</strong> 버튼으로 엽니다. 본부와 여러 전초기지를 연결하는 데 필요한 최소 깃발 수를 찾아줍니다.</span></div>
+          <div class="instr-tip"><span class="tip-icon">1️⃣</span><span><strong>1단계 — 시작 지점:</strong> 지도를 클릭하거나 연맹 드롭다운에서 본부 또는 기존 깃발을 선택합니다.</span></div>
+          <div class="instr-tip"><span class="tip-icon">2️⃣</span><span><strong>2단계 — 목표 전초기지:</strong> 점령할 전초기지를 선택합니다(건설, 방어, 연구, 개척자 오두막 등). <strong style="color:var(--gold)">가장 가까운 곳 자동 선택</strong>을 체크하면 종류별로 가장 가까운 곳을 자동으로 고릅니다.</span></div>
+          <div class="instr-tip"><span class="tip-icon">3️⃣</span><span><strong>3단계 — 옵션:</strong> <strong style="color:var(--gold)">같은 연맹만</strong>은 결과를 한 연맹의 영토 안으로 제한합니다. <strong style="color:var(--gold)">자원지 확보</strong>는 근처 자원도 함께 연결합니다.</span></div>
+          <div class="instr-tip"><span class="tip-icon">▶</span><span><strong style="color:var(--gold)">실행</strong>을 눌러 계산합니다. <strong>이전 / 다음</strong>으로 다른 결과를 살펴본 뒤 <strong style="color:var(--gold)">적용</strong>을 눌러 지도에 깃발을 배치하세요.</span></div>
         </div>
 
         <div class="help-panel" data-help-panel="hiveopt">
-          <h3>🏙️ Hive Optimizer</h3>
-          <div class="instr-tip"><span class="tip-icon">🚀</span><span>Open with the <strong style="color:var(--gold)">🏙️ Hive Optimizer</strong> button in the sidebar. It auto-places <strong>cities</strong> inside an alliance's territory to minimize bear-trap march time.</span></div>
-          <div class="instr-tip"><span class="tip-icon">⚠</span><span><strong>Before you run:</strong> the alliance's <strong>HQ and at least one Bear Trap</strong> must already be on the map. The optimizer places <strong>cities only</strong> — not banners, HQ, or bear traps.</span></div>
-          <div class="instr-tip"><span class="tip-icon">▶</span><span>Pick an alliance, enter the number of cities (1–100), then click <strong style="color:var(--gold)">▶ Run Optimizer</strong>. The map switches into isolated Hive View and shows the city preview.</span></div>
-          <div class="instr-tip"><span class="tip-icon">🎨</span><span><strong>Preview:</strong> deep-orange cities rally to <strong>B1</strong>, lighter-orange to <strong>B2</strong> (the chosen traps are outlined in gold). Use <strong>◀ ▶</strong> to compare variants — <strong>Closest</strong> (shortest total march time) and <strong>Balanced</strong> (split evenly between the two traps).</span></div>
-          <div class="instr-tip"><span class="tip-icon">🔢</span><span>Change <strong>Cities to place</strong> on the preview to re-run live. If you ask for more cities than fit, you'll be offered the maximum that fits.</span></div>
-          <div class="instr-tip"><span class="tip-icon">✓</span><span><strong>Apply</strong> places the cities (labeled <code style="color:var(--ice);background:rgba(168,216,234,0.1);padding:1px 5px;border-radius:3px">[TAG] N</code>) and exits. <strong>✕</strong> cancels without placing anything.</span></div>
+          <h3>🏙️ 하이브 최적화</h3>
+          <div class="instr-tip"><span class="tip-icon">🚀</span><span>사이드바의 <strong style="color:var(--gold)">🏙️ 하이브 최적화</strong> 버튼으로 엽니다. 곰 함정까지의 행군 시간이 최소가 되도록 연맹 영토 안에 <strong>도시</strong>를 자동 배치합니다.</span></div>
+          <div class="instr-tip"><span class="tip-icon">⚠</span><span><strong>실행 전:</strong> 연맹의 <strong>본부와 곰 함정 1개 이상</strong>이 지도에 있어야 합니다. 최적화는 <strong>도시만</strong> 배치하며 깃발, 본부, 곰 함정은 배치하지 않습니다.</span></div>
+          <div class="instr-tip"><span class="tip-icon">▶</span><span>연맹을 고르고 도시 수(1–100)를 입력한 뒤 <strong style="color:var(--gold)">▶ 최적화 실행</strong>을 클릭하세요. 지도가 격리된 하이브 보기로 전환되고 도시 미리보기가 표시됩니다.</span></div>
+          <div class="instr-tip"><span class="tip-icon">🎨</span><span><strong>미리보기:</strong> 진한 주황색 도시는 <strong>B1</strong>, 옅은 주황색 도시는 <strong>B2</strong>로 집결합니다(선택된 함정은 금색 테두리). <strong>◀ ▶</strong>로 변형을 비교하세요 — <strong>최단</strong>(총 행군 시간 최소)과 <strong>균형</strong>(두 함정에 고르게 분배).</span></div>
+          <div class="instr-tip"><span class="tip-icon">🔢</span><span>미리보기에서 <strong>배치할 도시 수</strong>를 바꾸면 즉시 다시 계산합니다. 들어갈 수 있는 수보다 많이 요청하면 가능한 최대치를 제안합니다.</span></div>
+          <div class="instr-tip"><span class="tip-icon">✓</span><span><strong>적용</strong>하면 도시가 배치되고(이름: <code style="color:var(--ice);background:rgba(168,216,234,0.1);padding:1px 5px;border-radius:3px">[TAG] N</code>) 종료됩니다. <strong>✕</strong>는 아무것도 배치하지 않고 취소합니다.</span></div>
         </div>
 
         <div class="help-panel" data-help-panel="templates">
-          <h3>📐 Hive Templates</h3>
-          <div class="instr-tip"><span class="tip-icon">🏗</span><span><strong>Browse &amp; stamp (🏗 button):</strong> filter templates by sort (popular / newest), trap count, or city count. Click a template to select it, then click the map to stamp.</span></div>
-          <div class="instr-tip"><span class="tip-icon">🔄</span><span><strong>While stamping:</strong> <span class="key">Q</span> rotate left · <span class="key">E</span> rotate right · <span class="key">X</span> flip across X · <span class="key">Y</span> flip across Y · <span class="key">Esc</span> cancel. Clicking commits the stamp — you'll be asked to confirm before overwriting any existing buildings.</span></div>
-          <div class="instr-tip"><span class="tip-icon">📐</span><span><strong>Create (📐 button):</strong> opens a 99×99 grid editor with an anchor point. Use the tool palette or press number keys <span class="key">1</span>–<span class="key">4</span> to swap between City, Banner, HQ, Bear Trap, Erase, and Pan tools.</span></div>
-          <div class="instr-tip"><span class="tip-icon">🧭</span><span>In the editor, <strong>middle-click or Alt+drag</strong> to pan, scroll to zoom. <strong>Validation:</strong> max 2 bear traps, max 1 HQ, max 100 cities per template.</span></div>
-          <div class="instr-tip"><span class="tip-icon">📤</span><span>Save with a name and description, then submit for approval. Approved templates show up in everyone's picker.</span></div>
+          <h3>📐 하이브 템플릿</h3>
+          <div class="instr-tip"><span class="tip-icon">🏗</span><span><strong>찾아보기 및 찍기 (🏗 버튼):</strong> 정렬(인기순 / 최신순), 함정 수, 도시 수로 템플릿을 필터링합니다. 템플릿을 클릭해 선택한 뒤 지도를 클릭하면 찍힙니다.</span></div>
+          <div class="instr-tip"><span class="tip-icon">🔄</span><span><strong>찍는 중:</strong> <span class="key">Q</span> 왼쪽 회전 · <span class="key">E</span> 오른쪽 회전 · <span class="key">X</span> X축 반전 · <span class="key">Y</span> Y축 반전 · <span class="key">Esc</span> 취소. 클릭하면 확정되며, 기존 건물을 덮어쓰기 전에 확인을 요청합니다.</span></div>
+          <div class="instr-tip"><span class="tip-icon">📐</span><span><strong>만들기 (📐 버튼):</strong> 기준점이 있는 99×99 격자 편집기를 엽니다. 도구 팔레트를 사용하거나 숫자 키 <span class="key">1</span>–<span class="key">4</span>로 도시, 깃발, 본부, 곰 함정, 지우기, 이동 도구를 전환합니다.</span></div>
+          <div class="instr-tip"><span class="tip-icon">🧭</span><span>편집기에서 <strong>휠 클릭 또는 Alt+드래그</strong>로 이동, 스크롤로 확대/축소합니다. <strong>검증 규칙:</strong> 템플릿당 곰 함정 최대 2개, 본부 최대 1개, 도시 최대 100개.</span></div>
+          <div class="instr-tip"><span class="tip-icon">📤</span><span>이름과 설명을 입력해 저장한 뒤 승인을 요청하세요. 승인된 템플릿은 모든 사용자의 선택 목록에 표시됩니다.</span></div>
         </div>
 
         <div class="help-panel" data-help-panel="display">
-          <h3>🗺 Map &amp; Display</h3>
-          <div class="instr-tip"><span class="tip-icon">🗺</span><span><strong>Map tab</strong> (sidebar) — toggle terrain overlays (Lakes, Mountains, Fertile, Badlands, etc.), resource nodes, and per-outpost type filters (Fortress, Sanctuary, Construction, Defense, Research, Resource, Gathering, Attack, Training).</span></div>
-          <div class="instr-tip"><span class="tip-icon">🧱</span><span><strong>Allow build over terrain &amp; resources</strong> — bypasses placement warnings for restricted zones. Useful when you're planning around terrain rather than dodging it.</span></div>
-          <div class="instr-tip"><span class="tip-icon">📋</span><span><strong>Placed list tab</strong> — full inventory of every building you've placed. Click an entry to select it on the map; trash icon to delete.</span></div>
-          <div class="instr-tip"><span class="tip-icon">📍</span><span><strong>Coordinate jump</strong> — click the coord pill at the bottom-right of the map to jump to any X,Y. The pill also shows your live hover coordinates.</span></div>
-          <div class="instr-tip"><span class="tip-icon">🌐</span><span><strong>Language selector</strong> (top right) — EN · TL · ES · PT · VI · ID · ZH.</span></div>
-          <div class="instr-tip"><span class="tip-icon">📱</span><span><strong>Mobile</strong> — a touch-friendly layout is available at <code style="color:var(--ice);background:rgba(168,216,234,0.1);padding:1px 5px;border-radius:3px">mobile.html</code> (auto-redirected on small screens).</span></div>
+          <h3>🗺 지도 및 표시</h3>
+          <div class="instr-tip"><span class="tip-icon">🗺</span><span><strong>지도 탭</strong>(사이드바) — 지형 오버레이(호수, 산, 비옥한 땅, 황무지 등), 자원지, 전초기지 종류별 필터(요새, 성소, 건설, 방어, 연구, 자원, 채집, 공격, 훈련)를 켜고 끕니다.</span></div>
+          <div class="instr-tip"><span class="tip-icon">🧱</span><span><strong>지형·자원 위 건설 허용</strong> — 제한 구역의 배치 경고를 건너뜁니다. 지형을 피하기보다 지형을 기준으로 계획할 때 유용합니다.</span></div>
+          <div class="instr-tip"><span class="tip-icon">📋</span><span><strong>배치됨 탭</strong> — 배치한 모든 건물 목록입니다. 항목을 클릭하면 지도에서 선택되고, 휴지통 아이콘으로 삭제합니다.</span></div>
+          <div class="instr-tip"><span class="tip-icon">📍</span><span><strong>좌표 이동</strong> — 지도 우측 하단의 좌표 표시를 클릭해 원하는 X,Y로 이동합니다. 마우스 위치의 좌표도 실시간으로 표시됩니다.</span></div>
+          <div class="instr-tip"><span class="tip-icon">🌐</span><span><strong>언어 선택</strong>(우측 상단) — KO · EN · TL · ES · PT · VI · ID · ZH.</span></div>
+          <div class="instr-tip"><span class="tip-icon">📱</span><span><strong>모바일</strong> — 터치에 맞춘 레이아웃은 <code style="color:var(--ice);background:rgba(168,216,234,0.1);padding:1px 5px;border-radius:3px">mobile.html</code>에서 사용할 수 있습니다(작은 화면에서는 자동 전환).</span></div>
         </div>
 
         <div class="help-panel" data-help-panel="sharing">
-          <h3>📦 Import, Export &amp; Sharing</h3>
-          <div class="instr-tip"><span class="tip-icon">📄</span><span><strong>CSV format:</strong> <code style="color:var(--ice);background:rgba(168,216,234,0.1);padding:1px 5px;border-radius:3px">type,X,Y,label,#color,seq</code><br>Types: city · beartrap · banner · resource · hq · obs1 · obs2 · obs3<br>Label, color, and seq are optional.</span></div>
-          <div class="instr-tip"><span class="tip-icon">↓</span><span><strong>Import</strong> — paste CSV text or drag a file into the import modal.</span></div>
-          <div class="instr-tip"><span class="tip-icon">↑</span><span><strong>Export</strong> — full map as CSV (copy to clipboard or download). <strong>🏙 Cities Export</strong> exports only city coordinates, with optional custom-template formatting or plain text.</span></div>
-          <div class="instr-tip"><span class="tip-icon">🔗</span><span><strong>Cloud sharing (🔗 Share):</strong> publishes your map and gives you a <strong>read link</strong> (share with everyone) and a private <strong style="color:var(--gold)">edit token</strong> (share only with trusted R4s / Hive Planners). You can update or unpublish from the same modal anytime.</span></div>
-          <div class="instr-tip"><span class="tip-icon">🪖</span><span><strong>Hive-view share link</strong>: append <code style="color:var(--ice);background:rgba(168,216,234,0.1);padding:1px 5px;border-radius:3px">&amp;tag=ABC</code> to the read link to send people straight into a single alliance's hive view. See the <strong>Hive View</strong> tab.</span></div>
-          <div class="instr-tip"><span class="tip-icon">⚠</span><span>Cloud is a convenience — <strong style="color:var(--gold)">always keep a CSV backup</strong>. Cloud maps may be lost due to service interruptions or expiry. <span style="color:var(--text-dim)">The developer is not liable for any data loss.</span></span></div>
+          <h3>📦 가져오기, 내보내기 및 공유</h3>
+          <div class="instr-tip"><span class="tip-icon">📄</span><span><strong>CSV 형식:</strong> <code style="color:var(--ice);background:rgba(168,216,234,0.1);padding:1px 5px;border-radius:3px">type,X,Y,label,#color,seq</code><br>종류: city · beartrap · banner · resource · hq · obs1 · obs2 · obs3<br>이름, 색상, seq는 선택 사항입니다.</span></div>
+          <div class="instr-tip"><span class="tip-icon">↓</span><span><strong>가져오기</strong> — 가져오기 창에 CSV 텍스트를 붙여넣거나 파일을 끌어다 놓습니다.</span></div>
+          <div class="instr-tip"><span class="tip-icon">↑</span><span><strong>내보내기</strong> — 전체 지도를 CSV로 내보냅니다(클립보드 복사 또는 다운로드). <strong>🏙 도시 내보내기</strong>는 도시 좌표만 사용자 템플릿 형식 또는 일반 텍스트로 내보냅니다.</span></div>
+          <div class="instr-tip"><span class="tip-icon">🔗</span><span><strong>클라우드 공유 (🔗 공유):</strong> 지도를 게시하고 <strong>읽기 링크</strong>(모두에게 공유)와 비공개 <strong style="color:var(--gold)">편집 토큰</strong>(신뢰하는 R4 / 하이브 담당자에게만 공유)을 발급합니다. 같은 창에서 언제든 업데이트하거나 게시를 취소할 수 있습니다.</span></div>
+          <div class="instr-tip"><span class="tip-icon">🪖</span><span><strong>하이브 보기 공유 링크</strong>: 읽기 링크 뒤에 <code style="color:var(--ice);background:rgba(168,216,234,0.1);padding:1px 5px;border-radius:3px">&amp;tag=ABC</code>를 붙이면 특정 연맹의 하이브 보기로 바로 열립니다. <strong>하이브 보기</strong> 탭을 참고하세요.</span></div>
+          <div class="instr-tip"><span class="tip-icon">⚠</span><span>클라우드는 편의 기능입니다 — <strong style="color:var(--gold)">항상 CSV 백업을 보관하세요</strong>. 서비스 중단이나 만료로 클라우드 지도가 사라질 수 있습니다. <span style="color:var(--text-dim)">개발자는 데이터 손실에 책임지지 않습니다.</span></span></div>
         </div>
 
         <div class="help-panel" data-help-panel="shortcuts">
-          <h3>⌨ Keyboard Shortcuts</h3>
+          <h3>⌨ 키보드 단축키</h3>
           <div class="shortcut-grid">
-            <div><span class="key">D</span> Place tool</div>
-            <div><span class="key">Ctrl+C</span> Copy selected</div>
-            <div><span class="key">S</span> Select tool</div>
-            <div><span class="key">Ctrl+V</span> Paste copy</div>
-            <div><span class="key">E</span> Erase tool</div>
-            <div><span class="key">Del</span> Delete selected</div>
-            <div><span class="key">Ctrl+Z</span> Undo</div>
-            <div><span class="key">Esc</span> Deselect / close</div>
-            <div><span class="key">Ctrl+Y</span> Redo</div>
-            <div><span class="key">Dbl-click</span> Rename building</div>
-            <div><span class="key">Ctrl+Shift+Z</span> Redo (alt)</div>
-            <div><span class="key">Scroll</span> Zoom</div>
-            <div><span class="key">1</span>–<span class="key">4</span> Template tools (in editor)</div>
-            <div><span class="key">Alt+drag</span> / <span class="key">Middle-drag</span> Pan</div>
-            <div><span class="key">Q</span> / <span class="key">E</span> Rotate template (stamping)</div>
-            <div><span class="key">Right-click</span> Erase single / rect-erase</div>
-            <div><span class="key">X</span> / <span class="key">Y</span> Flip template (stamping)</div>
+            <div><span class="key">D</span> 배치 도구</div>
+            <div><span class="key">Ctrl+C</span> 선택 항목 복사</div>
+            <div><span class="key">S</span> 선택 도구</div>
+            <div><span class="key">Ctrl+V</span> 사본 붙여넣기</div>
+            <div><span class="key">E</span> 지우기 도구</div>
+            <div><span class="key">Del</span> 선택 항목 삭제</div>
+            <div><span class="key">Ctrl+Z</span> 되돌리기</div>
+            <div><span class="key">Esc</span> 선택 해제 / 닫기</div>
+            <div><span class="key">Ctrl+Y</span> 다시 실행</div>
+            <div><span class="key">더블클릭</span> 건물 이름 변경</div>
+            <div><span class="key">Ctrl+Shift+Z</span> 다시 실행 (대체)</div>
+            <div><span class="key">스크롤</span> 확대/축소</div>
+            <div><span class="key">1</span>–<span class="key">4</span> 템플릿 도구 (편집기)</div>
+            <div><span class="key">드래그</span> / <span class="key">휠 드래그</span> 지도 이동</div>
+            <div><span class="key">Q</span> / <span class="key">E</span> 템플릿 회전 (찍기 중)</div>
+            <div><span class="key">우클릭</span> 단일 지우기 / 사각형 지우기</div>
+            <div><span class="key">X</span> / <span class="key">Y</span> 템플릿 반전 (찍기 중)</div>
             <div></div>
           </div>
         </div>
@@ -1402,9 +1352,9 @@
     <div class="instr-footer">
       <label class="instr-no-show">
         <input type="checkbox" id="noShowInstr" onchange="saveNoShowInstr(this.checked)">
-        Don't show this again
+        다시 보지 않기
       </label>
-      <button class="btn btn-primary" onclick="closeInstructions()" style="flex:0;padding:7px 24px">OK ✓</button>
+      <button class="btn btn-primary" onclick="closeInstructions()" style="flex:0;padding:7px 24px;white-space:nowrap">확인 ✓</button>
     </div>
   </div>
 </div>
@@ -1413,28 +1363,28 @@
 <!-- Resource Report Modal -->
 <div class="modal-overlay" id="allianceSummaryModal">
   <div class="modal" style="width:680px;max-width:95vw;max-height:85vh;overflow-y:auto">
-    <h3>⚔ Alliance Territory Summary</h3>
+    <h3>⚔ 연맹 영토 요약</h3>
     <div id="allianceSummaryContent" style="margin-top:12px"></div>
     <div class="modal-actions">
-      <button class="btn btn-cancel" onclick="closeAllianceSummary()">Close</button>
+      <button class="btn btn-cancel" onclick="closeAllianceSummary()">닫기</button>
     </div>
   </div>
 </div>
 
 <div class="modal-overlay" id="reportModal">
   <div class="modal" style="width:420px">
-    <h3>📝 Report Resource Node</h3>
+    <h3>📝 자원지 신고</h3>
     <div id="reportNodeInfo" style="font-size:0.88rem;color:var(--ice);font-family:monospace;margin-bottom:8px"></div>
     <div style="display:flex;flex-direction:column;gap:8px">
-      <label style="font-size:0.85rem;color:var(--text-dim)">What's wrong?</label>
+      <label style="font-size:0.85rem;color:var(--text-dim)">무엇이 잘못되었나요?</label>
       <select id="reportAction" onchange="onReportActionChange()"
         style="padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);font-size:0.95rem">
-        <option value="delete">This node doesn't exist here</option>
-        <option value="move">Wrong location (I know the correct one)</option>
-        <option value="rename">Wrong type</option>
+        <option value="delete">이 위치에 자원지가 없음</option>
+        <option value="move">위치가 틀림 (정확한 위치를 앎)</option>
+        <option value="rename">종류가 틀림</option>
       </select>
       <div id="reportMoveFields" style="display:none;gap:8px;align-items:center">
-        <label style="font-size:0.82rem;color:var(--text-dim)">Correct coordinates:</label>
+        <label style="font-size:0.82rem;color:var(--text-dim)">정확한 좌표:</label>
         <div style="display:flex;gap:6px">
           <input type="number" id="reportNewX" min="0" max="1199" placeholder="X"
             style="width:70px;padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--ice);font-family:monospace;font-size:0.9rem">
@@ -1443,31 +1393,31 @@
         </div>
       </div>
       <div id="reportRenameFields" style="display:none">
-        <label style="font-size:0.82rem;color:var(--text-dim)">Correct type:</label>
+        <label style="font-size:0.82rem;color:var(--text-dim)">정확한 종류:</label>
         <select id="reportNewType"
           style="width:100%;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);font-size:0.95rem">
-          <option value="bread">Bread</option>
-          <option value="woodmill">Wood</option>
-          <option value="quarry">Stone</option>
-          <option value="ironmine">Iron</option>
+          <option value="bread">빵</option>
+          <option value="woodmill">목재</option>
+          <option value="quarry">석재</option>
+          <option value="ironmine">철광</option>
         </select>
       </div>
     </div>
     <div class="error-msg" id="reportError"></div>
     <div class="modal-actions">
-      <button class="btn btn-cancel" onclick="closeReport()">Cancel</button>
-      <button class="btn btn-primary" onclick="submitReport()">Submit Report</button>
+      <button class="btn btn-cancel" onclick="closeReport()">취소</button>
+      <button class="btn btn-primary" onclick="submitReport()">신고 제출</button>
     </div>
   </div>
 </div>
 
 <div class="modal-overlay" id="importModal">
   <div class="modal">
-    <h3>Import CSV</h3>
+    <h3>CSV 가져오기</h3>
     <div style="font-size:0.8rem;color:var(--text-dim);line-height:1.5">
-      One building per line: <strong style="color:var(--ice)">type,X,Y,label,#color</strong><br>
-      Types: city · beartrap · banner · resource · hq · obs1 · obs2 · obs3<br>
-      Label and color are optional — defaults used if blank.
+      한 줄에 건물 하나: <strong style="color:var(--ice)">type,X,Y,label,#color</strong><br>
+      종류: city · beartrap · banner · resource · hq · obs1 · obs2 · obs3<br>
+      이름과 색상은 선택 사항이며, 비워 두면 기본값을 사용합니다.
     </div>
     <!-- File upload -->
     <div id="csvDropZone" onclick="document.getElementById('csvFileInput').click()"
@@ -1476,15 +1426,15 @@
       ondragover="event.preventDefault();this.style.borderColor='var(--gold)'"
       ondragleave="this.style.borderColor='var(--border)'"
       ondrop="handleCsvDrop(event)">
-      ↑ Click to upload .csv file, or drag &amp; drop
+      ↑ 클릭하여 .csv 파일 업로드 또는 끌어다 놓기
     </div>
     <input type="file" id="csvFileInput" accept=".csv,text/csv" style="display:none" onchange="handleCsvFile(this)">
-    <div style="text-align:center;font-size:0.7rem;color:var(--text-dim);margin-bottom:4px">— or paste below —</div>
-    <textarea id="importText" placeholder="city,100,100,Main Base,#e8a838&#10;banner,200,200&#10;hq,300,300,,#9b59b6&#10;obs1,50,50"></textarea>
+    <div style="text-align:center;font-size:0.7rem;color:var(--text-dim);margin-bottom:4px">— 또는 아래에 붙여넣기 —</div>
+    <textarea id="importText" placeholder="city,100,100,본진,#e8a838&#10;banner,200,200&#10;hq,300,300,,#9b59b6&#10;obs1,50,50"></textarea>
     <div class="error-msg" id="importError"></div>
     <div class="modal-actions">
-      <button class="btn btn-cancel" onclick="closeImport()">Cancel</button>
-      <button class="btn btn-primary" onclick="doImport()">Import ✦</button>
+      <button class="btn btn-cancel" onclick="closeImport()">취소</button>
+      <button class="btn btn-primary" onclick="doImport()">가져오기 ✦</button>
     </div>
   </div>
 </div>
@@ -1492,13 +1442,13 @@
 <!-- Export Modal -->
 <div class="modal-overlay" id="exportModal">
   <div class="modal">
-    <h3>Export CSV</h3>
+    <h3>CSV 내보내기</h3>
     <textarea id="exportText" readonly></textarea>
     <div class="modal-actions">
-      <button class="btn btn-cancel" onclick="closeExport()">Close</button>
-      <button class="btn btn-primary" id="copyBtn" onclick="copyExport()">Copy to Clipboard</button>
-      <button class="btn btn-primary" onclick="downloadExport()">↓ Download .csv</button>
-      <button class="btn btn-cancel" onclick="clearStorage()" style="font-size:0.7rem;opacity:0.65" title="Clear auto-saved map and start fresh">🗑 Clear Cache</button>
+      <button class="btn btn-cancel" onclick="closeExport()">닫기</button>
+      <button class="btn btn-primary" id="copyBtn" onclick="copyExport()">클립보드에 복사</button>
+      <button class="btn btn-primary" onclick="downloadExport()">↓ .csv 다운로드</button>
+      <button class="btn btn-cancel" onclick="clearStorage()" style="font-size:0.7rem;opacity:0.65" title="자동 저장된 지도를 지우고 새로 시작">🗑 캐시 지우기</button>
     </div>
   </div>
 </div>
@@ -1506,19 +1456,19 @@
 <!-- City Export Modal -->
 <div class="modal-overlay" id="cityExportModal">
   <div class="modal" style="width:560px">
-    <h3 id="cityExportTitle">🏙 Export City Locations</h3>
+    <h3 id="cityExportTitle">🏙 도시 위치 내보내기</h3>
 
     <!-- Template editor -->
     <div>
       <label style="display:block;margin-bottom:6px;font-size:0.9rem;color:var(--text-dim)">
-        Message template — use <code style="color:var(--gold);background:rgba(201,168,76,0.1);padding:1px 5px;border-radius:3px">{label}</code>
+        메시지 템플릿 — 사용 가능: <code style="color:var(--gold);background:rgba(201,168,76,0.1);padding:1px 5px;border-radius:3px">{label}</code>
         <code style="color:var(--ice);background:rgba(168,216,234,0.1);padding:1px 5px;border-radius:3px">{x}</code>
         <code style="color:var(--ice);background:rgba(168,216,234,0.1);padding:1px 5px;border-radius:3px">{y}</code>
       </label>
       <textarea id="cityExportTemplate"
         style="min-height:72px;font-size:0.88rem;resize:vertical"
         oninput="refreshCityExport()"
-        placeholder="Enter your message template…">Hey {label}! We are moving to a new hive, this is your new coordinates. please move here as soon as possible. X: {x}, Y: {y}</textarea>
+        placeholder="메시지 템플릿을 입력하세요…">{label}님! 새 하이브로 이동합니다. 새 좌표는 아래와 같습니다. 가능한 한 빨리 이동해 주세요. X: {x}, Y: {y}</textarea>
       <div class="error-msg" id="cityExportTemplateError"></div>
     </div>
 
@@ -1527,7 +1477,7 @@
       <input type="checkbox" id="cityExportPlain"
         style="width:15px;height:15px;accent-color:var(--gold);cursor:pointer;flex-shrink:0"
         onchange="refreshCityExport()">
-      Plain list only (Label, X, Y) — ignore template
+      단순 목록만 (이름, X, Y) — 템플릿 무시
     </label>
 
     <!-- Output -->
@@ -1535,8 +1485,8 @@
     <div class="error-msg" id="cityExportError"></div>
 
     <div class="modal-actions">
-      <button class="btn btn-cancel" onclick="closeCityExport()">Close</button>
-      <button class="btn btn-primary" id="cityExportCopyBtn" onclick="copyCityExport()">Copy to Clipboard</button>
+      <button class="btn btn-cancel" onclick="closeCityExport()">닫기</button>
+      <button class="btn btn-primary" id="cityExportCopyBtn" onclick="copyCityExport()">클립보드에 복사</button>
     </div>
   </div>
 </div>
@@ -1544,66 +1494,66 @@
 <!-- Share Modal -->
 <div class="modal-overlay" id="shareModal">
   <div class="modal" style="max-width:460px">
-    <h3>🔗 Share Map</h3>
+    <h3>🔗 지도 공유</h3>
 
     <!-- Not yet published -->
     <div id="shareStateNew">
       <p style="font-size:0.78rem;color:var(--text-dim);margin:0 0 12px">
-        Publish your map to the cloud. You'll get a <strong style="color:var(--text)">read link</strong> to share with everyone
-        and a private <strong style="color:var(--gold)">edit token</strong> to push updates.
+        지도를 클라우드에 게시합니다. 모두와 공유할 <strong style="color:var(--text)">읽기 링크</strong>와
+        업데이트용 비공개 <strong style="color:var(--gold)">편집 토큰</strong>이 발급됩니다.
       </p>
       <button class="btn btn-primary" id="publishBtn" onclick="publishMap()" style="width:100%">
-        ☁ Publish Map
+        ☁ 지도 게시
       </button>
     </div>
 
     <!-- Owner view -->
     <div id="shareStateOwner" style="display:none">
-      <div style="font-size:0.72rem;color:var(--text-dim);margin-bottom:4px">Read link — share this with everyone:</div>
+      <div style="font-size:0.72rem;color:var(--text-dim);margin-bottom:4px">읽기 링크 — 모두에게 공유하세요:</div>
       <div style="display:flex;gap:6px;align-items:center;margin-bottom:10px">
         <input id="shareReadUrl" readonly style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:4px;
           padding:5px 8px;color:var(--text);font-size:0.72rem;font-family:monospace;min-width:0">
-        <button class="btn btn-primary" id="shareCopyBtn" onclick="copyShareUrl()" style="white-space:nowrap;font-size:0.75rem">Copy</button>
+        <button class="btn btn-primary" id="shareCopyBtn" onclick="copyShareUrl()" style="white-space:nowrap;font-size:0.75rem">복사</button>
       </div>
 
-      <div style="font-size:0.72rem;color:var(--text-dim);margin-bottom:4px">Edit token — keep this private (officers only):</div>
+      <div style="font-size:0.72rem;color:var(--text-dim);margin-bottom:4px">편집 토큰 — 비공개로 보관 (간부 전용):</div>
       <div style="display:flex;gap:6px;align-items:center;margin-bottom:12px">
         <input id="shareTokenDisplay" type="password" readonly style="flex:1;background:var(--bg);border:1px solid var(--gold-dim);border-radius:4px;
           padding:5px 8px;color:var(--gold);font-size:0.72rem;font-family:monospace;min-width:0">
-        <button class="btn btn-cancel" onclick="toggleTokenVisibility()" style="font-size:0.75rem;white-space:nowrap" id="tokenToggleBtn">Show</button>
-        <button class="btn btn-cancel" onclick="copyToken()" style="font-size:0.75rem;white-space:nowrap">Copy</button>
+        <button class="btn btn-cancel" onclick="toggleTokenVisibility()" style="font-size:0.75rem;white-space:nowrap" id="tokenToggleBtn">보기</button>
+        <button class="btn btn-cancel" onclick="copyToken()" style="font-size:0.75rem;white-space:nowrap">복사</button>
       </div>
 
       <button class="btn btn-primary" id="updateBtn" onclick="updateMap()" style="width:100%;margin-bottom:6px">
-        ↑ Push Update
+        ↑ 업데이트 반영
       </button>
       <button class="btn btn-cancel" onclick="unpublishMap()" style="width:100%;font-size:0.72rem;opacity:0.65">
-        🗑 Unpublish (delete from cloud)
+        🗑 게시 취소 (클라우드에서 삭제)
       </button>
     </div>
 
     <!-- Reader view (has ?map= but no token) -->
     <div id="shareStateReader" style="display:none">
       <p style="font-size:0.78rem;color:var(--text-dim);margin:0 0 10px">
-        You're viewing a shared map. You can read but not edit it on the server.
+        공유된 지도를 보고 있습니다. 읽기만 가능하며 서버의 지도를 편집할 수는 없습니다.
       </p>
-      <div style="font-size:0.72rem;color:var(--text-dim);margin-bottom:4px">Read link:</div>
+      <div style="font-size:0.72rem;color:var(--text-dim);margin-bottom:4px">읽기 링크:</div>
       <div style="display:flex;gap:6px;align-items:center;margin-bottom:10px">
         <input id="shareReadUrlReader" readonly style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:4px;
           padding:5px 8px;color:var(--text);font-size:0.72rem;font-family:monospace;min-width:0">
-        <button class="btn btn-primary" onclick="copyShareUrlReader()" style="white-space:nowrap;font-size:0.75rem">Copy</button>
+        <button class="btn btn-primary" onclick="copyShareUrlReader()" style="white-space:nowrap;font-size:0.75rem">복사</button>
       </div>
-      <div style="font-size:0.72rem;color:var(--text-dim)">Have an edit token? Enter it below to enable updates:</div>
+      <div style="font-size:0.72rem;color:var(--text-dim)">편집 토큰이 있나요? 아래에 입력하면 업데이트할 수 있습니다:</div>
       <div style="display:flex;gap:6px;margin-top:6px;margin-bottom:10px">
-        <input id="claimTokenInput" type="password" placeholder="Paste edit token…"
+        <input id="claimTokenInput" type="password" placeholder="편집 토큰 붙여넣기…"
           style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:5px 8px;color:var(--text);font-size:0.75rem;min-width:0">
-        <button class="btn btn-primary" onclick="claimToken()" style="white-space:nowrap;font-size:0.75rem">Claim</button>
+        <button class="btn btn-primary" onclick="claimToken()" style="white-space:nowrap;font-size:0.75rem">등록</button>
       </div>
     </div>
 
     <div id="shareStatus" style="font-size:0.75rem;min-height:1.2em;margin-top:4px"></div>
     <div class="modal-actions" style="margin-top:8px">
-      <button class="btn btn-cancel" onclick="closeShare()">Close</button>
+      <button class="btn btn-cancel" onclick="closeShare()">닫기</button>
     </div>
   </div>
 </div>
@@ -1675,7 +1625,7 @@ function openTemplateEditor(initialBuildings) {
 // ── Picker → tag prompt → stamp ───────────────────────────────────────
 function openTemplatePicker() {
   const workerUrl = (typeof getWorkerUrl === 'function') ? getWorkerUrl() : '';
-  if (!workerUrl) { alert('Worker URL not available.'); return; }
+  if (!workerUrl) { alert('Worker URL을 사용할 수 없습니다.'); return; }
   TemplatePicker.open({
     workerUrl,
     onPick: (template) => {
@@ -1698,11 +1648,11 @@ function openTemplatePicker() {
 // string, or null if the user cancels.
 function _promptAllianceTag() {
   while (true) {
-    const raw = prompt('Alliance tag (3 letters/digits, e.g. PHX):');
+    const raw = prompt('연맹 태그 (영문/숫자 3자, 예: PHX):');
     if (raw == null) return null;
     const v = String(raw).trim();
     if (/^[A-Za-z0-9]{3}$/.test(v)) return v;
-    alert('Tag must be exactly 3 alphanumeric characters.');
+    alert('태그는 영문/숫자 정확히 3자여야 합니다.');
   }
 }
 
@@ -1740,7 +1690,7 @@ function _openSubmitResultModal() {
   overlay.style.cssText = 'position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;padding:32px;';
   overlay.innerHTML = `
     <div id="_tplResBox" style="background:#161b22;border:1px solid #30363d;border-radius:8px;padding:22px;max-width:520px;width:100%;color:#e6edf3;font:14px/1.5 -apple-system,sans-serif;">
-      <div id="_tplResTitle" style="font-weight:600;font-size:16px;margin-bottom:10px;color:#c9a84c;">Submitting…</div>
+      <div id="_tplResTitle" style="font-weight:600;font-size:16px;margin-bottom:10px;color:#c9a84c;">제출 중…</div>
       <div id="_tplResBody" style="color:#c9d1d9;margin-bottom:16px;"></div>
       <div id="_tplResActions" style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;"></div>
     </div>`;
@@ -1764,34 +1714,34 @@ function _openSubmitResultModal() {
     opts = opts || {};
     actsEl.innerHTML = '';
     if (state === 'submitting') {
-      titleEl.textContent = 'Submitting template…';
+      titleEl.textContent = '템플릿 제출 중…';
       titleEl.style.color = '#c9a84c';
-      bodyEl.innerHTML = `<div style="color:#8b949e;">Sending <strong>${_escape(opts.name || '')}</strong> to the server.</div>`;
+      bodyEl.innerHTML = `<div style="color:#8b949e;"><strong>${_escape(opts.name || '')}</strong>을(를) 서버로 전송 중입니다.</div>`;
       // No buttons during submit
     } else if (state === 'success') {
-      titleEl.textContent = opts.isAdmin ? '✓ Template approved' : '✓ Template submitted';
+      titleEl.textContent = opts.isAdmin ? '✓ 템플릿 승인됨' : '✓ 템플릿 제출됨';
       titleEl.style.color = '#3fb950';
       const statusLine = opts.isAdmin
-        ? 'Admin path — published immediately. Available in the picker now.'
-        : 'Pending admin review. You\'ll see it in the picker once approved.';
+        ? '관리자 경로 — 즉시 게시되었습니다. 지금 선택 목록에서 사용할 수 있습니다.'
+        : '관리자 검토 대기 중입니다. 승인되면 선택 목록에 표시됩니다.';
       bodyEl.innerHTML = `
         <div><strong>${_escape(opts.name)}</strong> &mdash; <code style="color:#8b949e;font-size:12px;">${_escape(opts.id || '')}</code></div>
         <div style="color:#8b949e;margin-top:6px;">${statusLine}</div>`;
-      actsEl.appendChild(btn('Done', true, close));
+      actsEl.appendChild(btn('완료', true, close));
     } else if (state === 'error') {
       titleEl.style.color = '#f85149';
-      let title = 'Submission failed', msg = opts.error || 'Unknown error';
+      let title = '제출 실패', msg = opts.error || '알 수 없는 오류';
       let showEdit = true, showRetry = false;
       if (opts.kind === 'name-taken') {
-        title = 'Name already taken';
-        msg = 'A template with this name already exists. Click Edit to change the name and try again.';
+        title = '이미 사용 중인 이름';
+        msg = '같은 이름의 템플릿이 이미 있습니다. 수정을 눌러 이름을 바꾼 뒤 다시 시도하세요.';
         showEdit = true;  showRetry = false;
       } else if (opts.kind === 'unauthorized') {
-        title = 'Admin key invalid';
-        msg = 'Your admin key was rejected by the server. Update it via:<br><code>localStorage.setItem(\'kingshot-admin-key\', \'…\')</code>';
+        title = '관리자 키가 잘못됨';
+        msg = '서버가 관리자 키를 거부했습니다. 다음 방법으로 갱신하세요:<br><code>localStorage.setItem(\'kingshot-admin-key\', \'…\')</code>';
         showEdit = true;  showRetry = true;
       } else if (opts.kind === 'validation') {
-        title = 'Validation failed';
+        title = '검증 실패';
         showEdit = true;  showRetry = false;
       } else if (opts.kind === 'network') {
         showEdit = true;  showRetry = true;
@@ -1800,9 +1750,9 @@ function _openSubmitResultModal() {
       }
       titleEl.textContent = '✕ ' + title;
       bodyEl.innerHTML = `<div>${msg}</div>${opts.kind !== 'name-taken' && opts.error ? `<div style="color:#8b949e;margin-top:8px;font-family:monospace;font-size:12px;">${_escape(opts.error)}</div>` : ''}`;
-      actsEl.appendChild(btn('Cancel', false, close));
-      if (showEdit && opts.onEdit)   actsEl.appendChild(btn('Edit',   false, opts.onEdit));
-      if (showRetry && opts.onRetry) actsEl.appendChild(btn('Retry',  true,  opts.onRetry));
+      actsEl.appendChild(btn('취소', false, close));
+      if (showEdit && opts.onEdit)   actsEl.appendChild(btn('수정',   false, opts.onEdit));
+      if (showRetry && opts.onRetry) actsEl.appendChild(btn('재시도',  true,  opts.onRetry));
       if (!showRetry && opts.onEdit) {
         // Make Edit primary when retry isn't offered, so it's clearly the next step
         actsEl.lastChild.style.cssText = 'background:#c9a84c;border:1px solid #c9a84c;color:#0d1117;padding:8px 16px;border-radius:6px;cursor:pointer;font:inherit;font-weight:600;';
@@ -1826,6 +1776,15 @@ coreInitDOM();
 // the camera is locked. See hive_view.js + the "View Hive Plan" feature.
 function _hvBlock() { return window.HiveView && HiveView.isActive(); }
 
+// Left-drag on empty map pans the camera. The click action (place / erase /
+// deselect) is deferred to mouseup and only runs if the pointer barely moved.
+const PAN_THRESHOLD = 5;
+let _leftPress = null;   // { sx, sy, gx, gy } while a left press may still become a pan
+function _startPan(sx, sy) {
+  isDragging=true; dragStartX=sx; dragStartY=sy; dragCamX=camX; dragCamY=camY;
+  canvas.style.cursor='grabbing';
+}
+
 canvas.addEventListener('mousemove', e => {
   const rect=canvas.getBoundingClientRect();
   const sx=e.clientX-rect.left, sy=e.clientY-rect.top;
@@ -1841,6 +1800,11 @@ canvas.addEventListener('mousemove', e => {
   } else {
     updateCoordDisplay();
     hoverCell=null;
+  }
+
+  if (_leftPress && Math.hypot(sx-_leftPress.sx, sy-_leftPress.sy) > PAN_THRESHOLD) {
+    _startPan(_leftPress.sx, _leftPress.sy);
+    _leftPress = null;
   }
 
   // Drag-pan — allowed in hive view (so the user can pan around the hive).
@@ -1911,18 +1875,14 @@ canvas.addEventListener('mousedown', e => {
   // Pan initiator (middle-click or alt+left-drag) is allowed even in hive
   // view — only edit actions are blocked there.
   if (e.button===1||(e.button===0&&e.altKey)) {
-    isDragging=true; dragStartX=sx; dragStartY=sy; dragCamX=camX; dragCamY=camY;
-    canvas.style.cursor='grabbing'; return;
+    _startPan(sx, sy); return;
   }
 
   // In hive view: plain left-click also pans (edit actions are blocked, so
   // the left button is free for view manipulation — more intuitive than
   // requiring Alt). Right-click still does nothing.
   if (_hvBlock()) {
-    if (e.button === 0) {
-      isDragging=true; dragStartX=sx; dragStartY=sy; dragCamX=camX; dragCamY=camY;
-      canvas.style.cursor='grabbing';
-    }
+    if (e.button === 0) _startPan(sx, sy);
     return;
   }
 
@@ -1953,12 +1913,11 @@ canvas.addEventListener('mousedown', e => {
     }
     return;
   }
-  if (!hoverCell) return;
+  if (e.button!==0) return;
+  if (!hoverCell) { _leftPress = { sx, sy, gx:-1, gy:-1 }; return; }
 
-  if (tool==='place') {
-    placeBuilding(hoverCell.gx, hoverCell.gy);
-  } else if (tool==='erase') {
-    eraseAt(hoverCell.gx, hoverCell.gy);
+  if (tool==='place' || tool==='erase') {
+    _leftPress = { sx, sy, gx:hoverCell.gx, gy:hoverCell.gy };
   } else if (tool==='select') {
     // Multi-move: if we have a multi-selection and click inside it, start moving
     if (_multiSelected.length && !_multiSelectStart && hoverCell) {
@@ -1968,10 +1927,10 @@ canvas.addEventListener('mousedown', e => {
         canvas.style.cursor='grabbing';
         return;
       }
-      // Clicked outside selection — clear it and fall through to normal select
-      clearMultiSelect();
     }
     const hit=getBuildingAt(sx,sy);
+    // Clicked outside the multi-selection — clear it, then select normally
+    if (_multiSelected.length && (hit || e.shiftKey)) clearMultiSelect();
     if (hit) {
       pushHistory();
       selectBuilding(hit.id);
@@ -1983,12 +1942,13 @@ canvas.addEventListener('mousedown', e => {
         isMoving=true;
         canvas.style.cursor='grabbing';
       }
-    } else {
+    } else if (e.shiftKey) {
+      // Shift+drag on empty space: rectangle multi-select
       deselectBuilding();
-      // Start multi-select drag on empty space
-      if (hoverCell) {
-        startMultiSelect(hoverCell.gx, hoverCell.gy);
-      }
+      startMultiSelect(hoverCell.gx, hoverCell.gy);
+    } else {
+      // Plain drag on empty space pans; a plain click deselects (on mouseup)
+      _leftPress = { sx, sy, gx:hoverCell.gx, gy:hoverCell.gy };
     }
   }
 });
@@ -1996,7 +1956,14 @@ canvas.addEventListener('mousedown', e => {
 canvas.addEventListener('mouseup', e => {
   // Pan-drag release is allowed in hive view (matches mousedown's gating).
   if (isDragging) { isDragging=false; canvas.style.cursor=getCursor(); }
+  const press = _leftPress; _leftPress = null;
   if (_hvBlock()) return;
+  // Left press that never turned into a pan: run the deferred click action
+  if (press && e.button===0 && press.gx>=0) {
+    if (tool==='place') placeBuilding(press.gx, press.gy);
+    else if (tool==='erase') eraseAt(press.gx, press.gy);
+    else if (tool==='select') { clearMultiSelect(); deselectBuilding(); }
+  }
   if (isOptimizerActive() && hoverCell && optHandleMouseUp(hoverCell.gx, hoverCell.gy)) return;
   if (isMoving)   {
     isMoving=false; _pendingIncrementalMove=null; canvas.style.cursor=getCursor();
@@ -2024,7 +1991,7 @@ canvas.addEventListener('dblclick', e => {
 
 canvas.addEventListener('mouseleave', () => {
   // Always clean up drag state — pan must release even in hive view.
-  hoverCell=null; isDragging=false; isMoving=false;
+  hoverCell=null; isDragging=false; isMoving=false; _leftPress=null;
   _pendingIncrementalMove=null;
   if (_multiSelectStart) { _multiSelectStart=null; _multiSelectEnd=null; }
   if (_multiMoving) { _multiMoving=false; _multiMoveAnchor=null; _multiMoveOffset=null; }
@@ -2079,66 +2046,31 @@ document.addEventListener('keydown', e=>{
 // ─────────────────────────────────────
 // INIT
 // ─────────────────────────────────────
-// ── Game mode UI sync ──
-function _updateGameUI(game) {
-  const sel = document.getElementById('gameSelector');
-  if (sel) sel.value = game;
-  const titleEmoji = document.querySelector('#appTitle .app-title-emoji');
-  const titleText  = document.querySelector('#appTitle .app-title-text');
-  if (titleEmoji) titleEmoji.textContent = (game === 'whiteout') ? '❄' : '⚔';
-  if (titleText)  titleText.textContent  = (game === 'whiteout') ? ' Whiteout Survival Mapper' : ' Kingshot Mapper';
-  document.title = (game === 'whiteout') ? 'Whiteout Survival Mapper' : 'Kingshot Mapper';
-
-  // Refresh resource type dropdowns with game-appropriate labels
-  const labels = (typeof RES_SUBTYPE_LABELS !== 'undefined') ? RES_SUBTYPE_LABELS
-    : { bread:'Bread', woodmill:'Wood', quarry:'Stone', ironmine:'Iron' };
-
-  // #resourceSubtype — place panel (values are type ids, only text changes)
-  const subSel = document.getElementById('resourceSubtype');
-  if (subSel) {
-    for (const opt of subSel.options) {
-      if (labels[opt.value]) opt.textContent = labels[opt.value];
-    }
-  }
-
-  // #reportNewType — report panel (values are type ids, only text changes)
-  const repSel = document.getElementById('reportNewType');
-  if (repSel) {
-    for (const opt of repSel.options) {
-      if (labels[opt.value]) opt.textContent = labels[opt.value];
-    }
-  }
-
-  // #editResLabel — edit panel (values are display names used for reverse-mapping in applyEdit)
-  const editSel = document.getElementById('editResLabel');
-  if (editSel) {
-    const typeIds = ['bread','woodmill','quarry','ironmine'];
-    for (let i = 0; i < editSel.options.length && i < typeIds.length; i++) {
-      editSel.options[i].value = labels[typeIds[i]];
-      editSel.options[i].textContent = labels[typeIds[i]];
-    }
-  }
-}
-_updateGameUI(window.getActiveGame ? window.getActiveGame() : 'kingshot');
-if (typeof onGameChange === 'function') onGameChange(_updateGameUI);
 
 setTool('place');
+selectType('banner');   // default to banner placement
 window.addEventListener('resize', ()=>{ resizeCanvas(); });
 // KOR: seed the KOR banner layout (kor-layout.js) when there is no saved draft, or on ?kor=reset
+// A new KOR_LAYOUT.meta.version also re-seeds over an existing draft (the old draft stays undoable).
+const KOR_VERSION_KEY = 'kor-layout-version';
 let _korSeeded = false;
 if (new URLSearchParams(location.search).get('kor') === 'reset') {
   try { localStorage.removeItem(STORAGE_KEY); } catch(e) { /* localStorage may be unavailable */ }
 }
-if (loadFromStorage()) { updatePlacedList(); }
-else if (window.KOR_LAYOUT && getActiveGame() === 'kingshot') {
+const _hadDraft = loadFromStorage();
+let _korVersion = null;
+try { _korVersion = localStorage.getItem(KOR_VERSION_KEY); } catch(e) { /* localStorage may be unavailable */ }
+if (window.KOR_LAYOUT && (!_hadDraft || _korVersion !== KOR_LAYOUT.meta.version)) {
+  if (_hadDraft) pushHistory();
   buildings = KOR_LAYOUT.buildings.map(b => ({...b}));
   placementSeq = KOR_LAYOUT.placementSeq;
   _nextUserId = buildings.length;
   invalidateTset();
   saveToStorage();
-  updatePlacedList();
+  try { localStorage.setItem(KOR_VERSION_KEY, KOR_LAYOUT.meta.version); } catch(e) { /* localStorage may be unavailable */ }
   _korSeeded = true;
 }
+updatePlacedList();
 resizeCanvas();
 resetView();
 if (_korSeeded) fitCameraToBbox(...KOR_LAYOUT.meta.bbox);
@@ -2174,7 +2106,7 @@ function onReportActionChange() {
     if (resp.ok) {
       const json = await resp.json();
       const name = json?.data?.name, kingdom = json?.data?.kingdom;
-      if (name && kingdom) { el.textContent = 'Made by : ' + name + ' | Kingdom ' + kingdom; }
+      if (name && kingdom) { el.textContent = '제작: ' + name + ' | ' + kingdom + ' 왕국'; }
     }
   } catch(e) { /* silent */ }
 })();
@@ -2188,19 +2120,6 @@ function onReportActionChange() {
 // ─────────────────────────────────────
 
 function isMobileViewport() { return window.matchMedia('(max-width: 900px)').matches; }
-
-// ── Game selector: abbreviate labels on mobile (KS / WoS) for compactness ──
-function _updateGameSelectorLabels() {
-  const sel = document.getElementById('gameSelector');
-  if (!sel) return;
-  const mobile = isMobileViewport();
-  for (const opt of sel.options) {
-    if (opt.value === 'kingshot') opt.textContent = mobile ? 'KS'  : 'Kingshot';
-    if (opt.value === 'whiteout') opt.textContent = mobile ? 'WoS' : 'Whiteout Survival';
-  }
-}
-_updateGameSelectorLabels();
-window.addEventListener('resize', _updateGameSelectorLabels);
 
 // ── Sheet open/close ──
 let _mainSheetOpen = false;
@@ -2341,7 +2260,7 @@ setTimeout(() => { _setToolInitDone = true; }, 0);
       // with an actionable hint so the empty state isn't mistaken for a bug.
       const sel = document.getElementById('boAllianceSelect');
       if (sel && sel.options.length === 1) {
-        sel.options[0].text = '⚠ No alliances yet — place a banner with a label first';
+        sel.options[0].text = '⚠ 연맹 없음 — 먼저 이름을 지정한 깃발을 배치하세요';
       }
       if (isMobileViewport()) openBoSheet();
     };

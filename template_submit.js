@@ -41,9 +41,9 @@
     opts = opts || {};
     const workerUrl = (opts.workerUrl || '').replace(/\/$/, '');
     const fetchFn   = opts.fetchFn || (typeof fetch !== 'undefined' ? fetch : null);
-    if (!workerUrl) return { ok: false, kind: 'validation', error: 'workerUrl missing' };
-    if (!fetchFn)   return { ok: false, kind: 'validation', error: 'fetch unavailable' };
-    if (!payload || !payload.name) return { ok: false, kind: 'validation', error: 'payload.name missing' };
+    if (!workerUrl) return { ok: false, kind: 'validation', error: 'workerUrl이 없습니다' };
+    if (!fetchFn)   return { ok: false, kind: 'validation', error: 'fetch를 사용할 수 없습니다' };
+    if (!payload || !payload.name) return { ok: false, kind: 'validation', error: '템플릿 이름이 없습니다' };
 
     const adminKey = opts.adminKey || null;
     const isAdmin  = !!adminKey;
@@ -70,7 +70,7 @@
     try {
       resp = await fetchFn(url, { method: 'POST', headers, body });
     } catch (e) {
-      return { ok: false, kind: 'network', error: 'Network error: ' + (e && e.message ? e.message : 'unknown') };
+      return { ok: false, kind: 'network', error: '네트워크 오류: ' + (e && e.message ? e.message : '알 수 없음') };
     }
 
     try { respBody = await resp.json(); } catch { respBody = {}; }
@@ -83,9 +83,9 @@
         isAdmin,
       };
     }
-    if (resp.status === 401) return { ok: false, kind: 'unauthorized', error: respBody.error || 'Invalid admin key', status: 401 };
-    if (resp.status === 409) return { ok: false, kind: 'name-taken',  error: respBody.error || 'A template with that name already exists.', status: 409 };
-    if (resp.status === 400) return { ok: false, kind: 'validation',  error: respBody.error || 'Invalid template', status: 400 };
+    if (resp.status === 401) return { ok: false, kind: 'unauthorized', error: respBody.error || '관리자 키가 올바르지 않습니다', status: 401 };
+    if (resp.status === 409) return { ok: false, kind: 'name-taken',  error: respBody.error || '같은 이름의 템플릿이 이미 있습니다.', status: 409 };
+    if (resp.status === 400) return { ok: false, kind: 'validation',  error: respBody.error || '올바르지 않은 템플릿입니다', status: 400 };
     return { ok: false, kind: 'server', error: respBody.error || ('HTTP ' + resp.status), status: resp.status };
   }
 

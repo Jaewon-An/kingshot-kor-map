@@ -25,76 +25,22 @@
   ];
 
   const OUTPOST_DISPLAY_KINGSHOT = {
-    "Builder's Guild 1": "Builder's Guild — Level 1",
-    "Builder's Guild 3": "Builder's Guild — Level 3",
-    "Armory 2":          "Armory — Level 2",
-    "Armory 4":          "Armory — Level 4",
-    "Scholar's 1":       "Scholar's — Level 1",
-    "Scholar's 3":       "Scholar's — Level 3",
-    "Arsenal 2":         "Arsenal — Level 2",
-    "Arsenal 4":         "Arsenal — Level 4",
-    "Forager 1":         "Forager — Level 1",
-    "Harvest 1":         "Harvest — Level 1",
-    "Drill Camp 2":      "Drill Camp — Level 2",
-    "Frontier 3":        "Frontier — Level 3",
+    "Builder's Guild 1": "건설 전초기지 — Lv.1",
+    "Builder's Guild 3": "건설 전초기지 — Lv.3",
+    "Armory 2":          "방어 전초기지 — Lv.2",
+    "Armory 4":          "방어 전초기지 — Lv.4",
+    "Scholar's 1":       "연구 전초기지 — Lv.1",
+    "Scholar's 3":       "연구 전초기지 — Lv.3",
+    "Arsenal 2":         "공격 전초기지 — Lv.2",
+    "Arsenal 4":         "공격 전초기지 — Lv.4",
+    "Forager 1":         "채집 전초기지 — Lv.1",
+    "Harvest 1":         "자원 생산 전초기지 — Lv.1",
+    "Drill Camp 2":      "훈련 전초기지 — Lv.2",
+    "Frontier 3":        "개척자 오두막 — Lv.3",
   };
 
-  // Whiteout Survival outpost labels — must match _WOS_PERM_LABEL_MAP values in core.js.
-  const OUTPOST_LABELS_WHITEOUT = [
-    'Construction 1',
-    'Construction 3',
-    'Defense 2',
-    'Defense 4',
-    'Tech 1',
-    'Tech 3',
-    'Weapons 2',
-    'Weapons 4',
-    'Gathering 1',
-    'Production 1',
-    'Training 2',
-    'Expedition 3',
-  ];
-
-  const OUTPOST_DISPLAY_WHITEOUT = {
-    'Construction 1': 'Construction — Level 1',
-    'Construction 3': 'Construction — Level 3',
-    'Defense 2':      'Defense — Level 2',
-    'Defense 4':      'Defense — Level 4',
-    'Tech 1':         'Tech — Level 1',
-    'Tech 3':         'Tech — Level 3',
-    'Weapons 2':      'Weapons — Level 2',
-    'Weapons 4':      'Weapons — Level 4',
-    'Gathering 1':    'Gathering — Level 1',
-    'Production 1':   'Production — Level 1',
-    'Training 2':     'Training — Level 2',
-    'Expedition 3':   'Expedition — Level 3',
-  };
-
-  function _boActiveGame() {
-    return (typeof window !== 'undefined' && typeof window.getActiveGame === 'function')
-      ? window.getActiveGame()
-      : 'kingshot';
-  }
-
-  // Active references — initialized from the active game; reassigned by _boReloadLabels()
-  let OUTPOST_LABELS  = (_boActiveGame() === 'whiteout') ? OUTPOST_LABELS_WHITEOUT  : OUTPOST_LABELS_KINGSHOT;
-  let OUTPOST_DISPLAY = (_boActiveGame() === 'whiteout') ? OUTPOST_DISPLAY_WHITEOUT : OUTPOST_DISPLAY_KINGSHOT;
-
-  // Called by core.js switchGame() after a game switch. Swaps label arrays,
-  // clears stale target selections, re-renders the dropdown if open.
-  function _boReloadLabels() {
-    const g = _boActiveGame();
-    OUTPOST_LABELS  = (g === 'whiteout') ? OUTPOST_LABELS_WHITEOUT  : OUTPOST_LABELS_KINGSHOT;
-    OUTPOST_DISPLAY = (g === 'whiteout') ? OUTPOST_DISPLAY_WHITEOUT : OUTPOST_DISPLAY_KINGSHOT;
-    // Stale selections — label strings may have changed; clear so user re-picks
-    try { _bo.targets = {}; } catch (e) { /* _bo may not exist yet at first load */ }
-    // Re-render dropdown if it's currently open
-    try {
-      const acc = (typeof document !== 'undefined') ? document.getElementById('boAccordion') : null;
-      if (acc) _boRenderAccordion();
-      _boUpdateTerminology();
-    } catch (e) { /* UI not initialized yet — safe to ignore */ }
-  }
+  const OUTPOST_LABELS  = OUTPOST_LABELS_KINGSHOT;
+  const OUTPOST_DISPLAY = OUTPOST_DISPLAY_KINGSHOT;
 
   // ── State ──────────────────────────────────────────────────────────────────
   const _bo = {
@@ -132,21 +78,19 @@
   }
 
   function _boFacilityTerm() {
-    return _boActiveGame() === 'whiteout'
-      ? { sing: 'facility', plur: 'facilities', singCap: 'Facility', plurCap: 'Facilities' }
-      : { sing: 'outpost',  plur: 'outposts',   singCap: 'Outpost',  plurCap: 'Outposts'  };
+    return { sing: '전초기지',  plur: '전초기지',   singCap: '전초기지',  plurCap: '전초기지'  };
   }
 
   function _boUpdateTerminology() {
     const { sing, plur, plurCap } = _boFacilityTerm();
     const title = _el('boTargetSectionTitle');
-    if (title) title.textContent = `Target ${plurCap}`;
+    if (title) title.textContent = `목표 ${plurCap}`;
     const autoLbl = _el('boAutoPickLabelText');
-    if (autoLbl) autoLbl.textContent = `🎯 Auto-pick the closest ${sing} of each type`;
+    if (autoLbl) autoLbl.textContent = `🎯 종류별로 가장 가까운 ${sing} 자동 선택`;
     const manHint = _el('boTargetManualHint');
-    if (manHint) manHint.textContent = `Click ${plur} on the map, or expand a category to select by location.`;
+    if (manHint) manHint.textContent = `지도에서 ${plur}를 클릭하거나, 종류를 펼쳐 위치별로 선택하세요.`;
     const autoHint = _el('boTargetAutoHint');
-    if (autoHint) autoHint.textContent = `Will pick the nearest reachable ${sing} of each type when you run the optimizer.`;
+    if (autoHint) autoHint.textContent = `최적화를 실행하면 종류별로 도달 가능한 가장 가까운 ${sing}를 선택합니다.`;
   }
 
   function _boRenderAllianceDropdown() {
@@ -154,7 +98,7 @@
     if (!sel) return;
     const labels = _boActiveAllianceLabels();
     const current = _bo.startAlliance || '';
-    sel.innerHTML = `<option value="">— or pick an alliance —</option>` +
+    sel.innerHTML = `<option value="">— 또는 연맹 선택 —</option>` +
       labels.map(l =>
         `<option value="${_escAttr(l)}"${l === current ? ' selected' : ''}>${_escAttr(l)}</option>`
       ).join('');
@@ -242,7 +186,7 @@
     _bo.mode = 'pick-start';
     const btn = _el('boPickStartBtn');
     btn.classList.add('picking');
-    btn.textContent = '↖ Click a Banner or HQ on the map…';
+    btn.textContent = '↖ 지도에서 깃발 또는 본부를 클릭하세요…';
     canvas.style.cursor = 'crosshair';
     scheduleDraw();
   }
@@ -252,7 +196,7 @@
     const btn = _el('boPickStartBtn');
     if (btn) {
       btn.classList.remove('picking');
-      btn.textContent = '↖ Select from Map';
+      btn.textContent = '↖ 지도에서 선택';
     }
     canvas.style.cursor = getCursor();
     scheduleDraw();
@@ -362,7 +306,7 @@
         `<span class="bo-cat-dot" style="background:${firstB.color}"></span>` +
         `<span class="bo-cat-name">${dispName}</span>` +
         `<span class="bo-cat-total">${outposts.length}</span>` +
-        `<span class="bo-cat-sel" id="bo-csel-${sk}">${selPi >= 0 ? '1 sel' : ''}</span>` +
+        `<span class="bo-cat-sel" id="bo-csel-${sk}">${selPi >= 0 ? '1개 선택' : ''}</span>` +
         `<span class="bo-chevron">▶</span>`;
       hdr.onclick = () => _boToggleCat(hdr);
       typeDiv.appendChild(hdr);
@@ -458,7 +402,7 @@
     const el = _el('bo-csel-' + sk);
     if (!el) return;
     const selected = _bo.targets[lbl] != null;
-    el.textContent   = selected ? '1 sel' : '';
+    el.textContent   = selected ? '1개 선택' : '';
     el.style.color   = selected ? 'var(--blue)' : '';
   }
 
@@ -469,7 +413,7 @@
     const badge    = _el('boTargetCount');
     const clearBtn = _el('boClearTargetsBtn');
     if (badge) {
-      badge.textContent   = auto ? 'Auto' : (count > 0 ? count + ' selected' : '');
+      badge.textContent   = auto ? '자동' : (count > 0 ? count + '개 선택' : '');
       badge.style.display = (auto || count > 0) ? 'inline-flex' : 'none';
     }
     if (clearBtn) clearBtn.style.display = (!auto && count > 0) ? 'inline-block' : 'none';
@@ -485,7 +429,7 @@
     if (!display) return;
     const b = _bo.startBuilding;
     if (b) {
-      const typeLabel = b.type === 'hq' ? 'Alliance HQ' : 'Banner';
+      const typeLabel = b.type === 'hq' ? '연맹 본부' : '깃발';
       const iconColor = b.type === 'hq' ? '#8e44ad' : '#aaaaaa';
       const icon      = b.type === 'hq' ? '⬡' : '◆';
       display.innerHTML =
@@ -494,7 +438,7 @@
         `  <span class="bo-start-name">${_escAttr(b.label || typeLabel)}</span>` +
         `  <span class="bo-start-coords">${typeLabel} · ${b.gx}, ${b.gy}</span>` +
         `</div>` +
-        `<button class="bo-start-clear" onclick="boClearStart()" title="Clear">✕</button>`;
+        `<button class="bo-start-clear" onclick="boClearStart()" title="지우기">✕</button>`;
     } else if (_bo.startAlliance) {
       const swatch = (typeof allianceColors === 'function')
         ? allianceColors(_bo.startAlliance).swatch : '#58a6ff';
@@ -502,11 +446,11 @@
         `<span class="bo-start-icon" style="color:${swatch}">⛬</span>` +
         `<div class="bo-start-info">` +
         `  <span class="bo-start-name">${_escAttr(_bo.startAlliance)}</span>` +
-        `  <span class="bo-start-coords">Alliance · all connected banners</span>` +
+        `  <span class="bo-start-coords">연맹 · 연결된 모든 깃발</span>` +
         `</div>` +
-        `<button class="bo-start-clear" onclick="boClearStart()" title="Clear">✕</button>`;
+        `<button class="bo-start-clear" onclick="boClearStart()" title="지우기">✕</button>`;
     } else {
-      display.innerHTML = `<span class="bo-start-none">No starting point selected</span>`;
+      display.innerHTML = `<span class="bo-start-none">선택된 시작 지점이 없습니다</span>`;
     }
     _boSyncTargetUI();
   }
@@ -1082,7 +1026,7 @@
         const reach = _boNearestToTarget(pi, dist);
         if (!reach) {
           const b = PERMANENT_BUILDINGS[pi];
-          unreachable.push(`${b.label} (${b.gx},${b.gy})`);
+          unreachable.push(`${OUTPOST_DISPLAY[b.label] || b.label} (${b.gx},${b.gy})`);
           continue;
         }
         if (reach.minDist === 0) continue;
@@ -1107,7 +1051,7 @@
         if (nearestIdx < 0) {
           for (const pi of remaining.splice(0)) {
             const b = PERMANENT_BUILDINGS[pi];
-            unreachable.push(`${b.label} (${b.gx},${b.gy})`);
+            unreachable.push(`${OUTPOST_DISPLAY[b.label] || b.label} (${b.gx},${b.gy})`);
           }
           break;
         }
@@ -1184,12 +1128,10 @@
     if (_el('boResBanners')) _el('boResBanners').textContent = result.bannerCount;
     if (_el('boResNodes'))   _el('boResNodes').textContent   = result.resourceCount;
     let msg = result.bannerCount === 0
-      ? 'All targets already reachable — no new banners needed!'
-      : result.bannerCount === 1
-      ? '1 new banner to place.'
-      : `${result.bannerCount} new banners to place.`;
+      ? '모든 목표에 이미 도달 가능합니다 — 새 깃발이 필요 없습니다!'
+      : `새로 배치할 깃발 ${result.bannerCount}개`;
     if (result.unreachable.length > 0)
-      msg += '  ⚠ Unreachable: ' + result.unreachable.join('; ') + '.';
+      msg += '  ⚠ 도달 불가: ' + result.unreachable.join('; ');
     if (_el('boResMsg')) _el('boResMsg').textContent = msg;
 
     const total = _bo.solutions.length;
@@ -1218,7 +1160,7 @@
     if (res) res.style.display = 'flex';
     if (_el('boResBanners')) _el('boResBanners').textContent = '…';
     if (_el('boResNodes'))   _el('boResNodes').textContent   = '…';
-    if (_el('boResMsg'))     _el('boResMsg').textContent     = 'Calculating optimal route…';
+    if (_el('boResMsg'))     _el('boResMsg').textContent     = '최적 경로 계산 중…';
     const nav = _el('boResNav');
     if (nav) nav.style.display = 'none';
     const applyBtn = _el('boApplyBtn');
@@ -1235,7 +1177,7 @@
           _bo.targets = _boAutoPickTargets();
           if (Object.keys(_bo.targets).length === 0) {
             if (_el('boResMsg')) _el('boResMsg').textContent =
-              `No ${_boFacilityTerm().plur} are reachable from the chosen starting territory.`;
+              `선택한 시작 영토에서 도달 가능한 ${_boFacilityTerm().plur}가 없습니다.`;
             return;
           }
         }
@@ -1245,7 +1187,7 @@
         _bo.results   = solutions[0] || null;
         if (_bo.results) _boDisplayResults();
       } catch (e) {
-        if (_el('boResMsg')) _el('boResMsg').textContent = 'Error: ' + e.message;
+        if (_el('boResMsg')) _el('boResMsg').textContent = '오류: ' + e.message;
         console.error('[BannerOpt]', e);
       } finally {
         if (runBtn) runBtn.disabled = false;
@@ -1443,6 +1385,4 @@
   window.boClearResults      = boClearResults;
   window.boClearAllTargets   = boClearAllTargets;
   window.boHandleMapClick    = boHandleMapClick;
-  // Called by core.js switchGame() to re-pick label arrays for the new game
-  window._boReloadLabels     = _boReloadLabels;
 })();
